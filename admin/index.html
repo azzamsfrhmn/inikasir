@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=20">
+<link rel="stylesheet" href="../assets/app.css?v=21">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="../assets/icons/admin.svg">
 <link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/admin-192.png">
@@ -216,11 +216,18 @@
   <!-- ========== PRODUK ========== -->
   <section class="page" id="pg-produk">
     <div class="row" style="margin-bottom:12px">
-      <h2 class="grow">Produk</h2>
+      <h2 class="grow" id="prodHead">Produk</h2>
       <button class="btn primary" id="btnAddProd" data-ic="plus">Tambah produk</button>
     </div>
-    <div class="card stock-only" id="prodSummary" style="margin-bottom:12px"></div>
-    <div class="card"><div class="list" id="prodList"></div></div>
+    <div class="seg stock-only" id="prodTabs">
+      <button data-ptab="produk" class="active">Daftar produk</button>
+      <button data-ptab="stok" data-ic="box">Stok</button>
+    </div>
+    <div id="ptProduk"><div class="card"><div class="list" id="prodList"></div></div></div>
+    <div id="ptStok" hidden>
+      <div class="card" id="prodSummary" style="margin-bottom:12px"></div>
+      <div class="card"><div class="list" id="stockList"></div></div>
+    </div>
     <p class="muted no-stock-only" style="font-size:13px;margin:10px 2px 0">Fitur stok dan harga beli belum aktif. Pemilik aplikasi perlu menjalankan <b>supabase/migrations/003_stok_hpp.sql</b> di Supabase.</p>
   </section>
 
@@ -404,19 +411,6 @@
   <div class="muted stock-only" id="pMargin" style="font-size:13px"></div>
   <div><label class="f" for="pCat">Kategori</label><input class="in" id="pCat" list="catList" maxlength="30"><datalist id="catList"></datalist></div>
   <label class="row" style="font-size:14px;min-height:44px"><input type="checkbox" id="pActive" checked> Tampilkan di kasir</label>
-  <div class="stock-only stack" style="border-top:1px solid var(--line);padding-top:12px">
-    <label class="perm" style="padding:0"><input type="checkbox" id="pTrack"><span><b>Lacak stok</b><br><span class="muted">Stok berkurang otomatis setiap terjual. Kasir melihat sisa stok di kartu produk.</span></span></label>
-    <div id="pStockNew"><label class="f" for="pStock">Stok awal (jumlah yang ada sekarang)</label><input class="in num" id="pStock" inputmode="numeric" placeholder="0"></div>
-    <div id="pStockCur">
-      <div class="muted" style="font-size:13px">Stok sekarang</div>
-      <div class="row wrap" style="gap:8px;margin-top:2px">
-        <div class="grow" style="font-size:24px;font-weight:800" id="pStockNow"></div>
-        <button class="btn ghost small" id="pIn">Stok masuk</button>
-        <button class="btn ghost small" id="pFix">Koreksi</button>
-        <button class="btn ghost small" id="pLog">Riwayat</button>
-      </div>
-    </div>
-  </div>
   <div class="err" id="pErr"></div>
   <div class="row modal-actions">
     <button class="btn danger" id="pDelete" hidden>Hapus</button>
@@ -436,6 +430,15 @@
   <div><label class="f" for="siNote">Catatan (opsional)</label><input class="in" id="siNote" maxlength="120" placeholder="Contoh: produksi pagi"></div>
   <div class="err" id="siErr"></div>
   <div class="row modal-actions"><div class="grow"></div><button class="btn ghost" data-close="mStockIn">Batal</button><button class="btn primary" id="siSave">Tambah stok</button></div>
+</div></div>
+
+<!-- Mulai lacak stok -->
+<div class="modal" id="mStockStart"><div class="box stack" style="max-width:400px">
+  <h2 id="ssTitle">Mulai lacak stok</h2>
+  <p class="muted" style="margin:0;font-size:14px">Stok berkurang otomatis setiap terjual, dan HP kasir menampilkan sisa stok di kartu produk.</p>
+  <div><label class="f" for="ssQty">Stok sekarang (hitung yang ada)</label><input class="in num" id="ssQty" inputmode="numeric" placeholder="0" style="font-size:20px;font-weight:700"></div>
+  <div class="err" id="ssErr"></div>
+  <div class="row modal-actions"><div class="grow"></div><button class="btn ghost" data-close="mStockStart">Batal</button><button class="btn primary" id="ssSave">Mulai lacak</button></div>
 </div></div>
 
 <!-- Koreksi stok -->
@@ -461,6 +464,7 @@
 <div class="modal" id="mStockLog"><div class="box stack">
   <div class="row" style="justify-content:space-between"><h2 style="margin:0" id="slTitle">Riwayat stok</h2><button class="btn ghost small" data-close="mStockLog">Tutup</button></div>
   <div class="list" id="slList"></div>
+  <div class="row" style="border-top:1px solid var(--line);padding-top:12px"><span class="muted grow" style="font-size:13px">Tidak perlu menghitung stok produk ini lagi?</span><button class="btn ghost small" id="slStop">Berhenti lacak</button></div>
 </div></div>
 
 <!-- Catatan kas -->
@@ -498,9 +502,9 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="../config.js?v=20"></script>
+<script src="../config.js?v=21"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="../assets/common.js?v=20"></script>
+<script src="../assets/common.js?v=21"></script>
 <script>
 "use strict";
 let sb = null, user = null, shop = null;
@@ -1177,6 +1181,7 @@ async function loadProducts() {
         ${stockReady && cost ? `<div class="muted num" style="font-size:12px">untung ${rp(p.price - cost)}</div>` : ""}</div>
     </div>`;
   }).join("") : `<div class="empty">Belum ada produk. Tekan "Tambah produk" untuk mulai.</div>`;
+  renderStockList();
   $("#catList").innerHTML = [...new Set(products.map((p) => p.cat).filter(Boolean))].map((c) => `<option value="${esc(c)}">`).join("");
   if (stockReady) {
     const tracked = products.filter((p) => p.track_stock);
@@ -1191,13 +1196,68 @@ async function loadProducts() {
       : `<p style="margin:0;font-size:14px"><b>Mulai pakai stok & modal:</b> buka tiap produk, isi <b>harga beli</b>, lalu centang <b>Lacak stok</b> dan isi stok awal. Laporan akan menghitung modal barang terjual (HPP) dan laba bersih yang sebenarnya.</p>`;
   }
 }
-function renderStockSection(p) {
-  const tracked = $("#pTrack").checked;
-  const existingTracked = p && p.track_stock;
-  $("#pStockNew").hidden = !tracked || existingTracked;
-  $("#pStockCur").hidden = !tracked || !existingTracked;
-  if (existingTracked) $("#pStockNow").textContent = p.stock + " pcs";
+/* ---------- Tab Stok (terpisah dari popup produk) ---------- */
+let prodTab = "produk";
+function setProdTab(t) {
+  prodTab = stockReady ? t : "produk";
+  $$("#prodTabs button").forEach((b) => b.classList.toggle("active", b.dataset.ptab === prodTab));
+  $("#ptProduk").hidden = prodTab !== "produk";
+  $("#ptStok").hidden = prodTab !== "stok";
+  $("#btnAddProd").hidden = prodTab !== "produk";
+  $("#prodHead").textContent = prodTab === "stok" ? "Stok" : "Produk";
 }
+function renderStockList() {
+  if (!stockReady) return setProdTab("produk");
+  const rank = (p) => (!p.track_stock ? 3 : p.stock <= 0 ? 0 : p.stock <= LOW_STOCK ? 1 : 2);
+  const list = [...products].sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name));
+  $("#stockList").innerHTML = list.length ? list.map((p) => {
+    const t = p.track_stock, low = t && p.stock <= LOW_STOCK;
+    const state = !t ? "Stok tidak dilacak" : p.stock < 0 ? "Minus, perlu dicek" : p.stock === 0 ? "Habis" : low ? "Hampir habis" : "Aman";
+    return `<div class="stk${p.active ? "" : " off"}">
+      <div class="stk-top">
+        <div class="grow"><div style="font-weight:600">${esc(p.name)}</div>
+          <div class="stk-state ${!t ? "" : low ? "bad" : "ok"}">${state}${p.active ? "" : " · disembunyikan dari kasir"}</div></div>
+        ${t ? `<div class="stk-n${low ? " low" : ""}">${p.stock}<small>pcs</small></div>` : ""}
+      </div>
+      <div class="stk-act">${t
+        ? `<button class="btn small" data-sin="${p.id}" data-ic="plus">Stok masuk</button><button class="btn ghost small" data-sfix="${p.id}">Koreksi</button><button class="btn ghost small" data-slog="${p.id}">Riwayat</button>`
+        : `<button class="btn ghost small" data-sstart="${p.id}">Mulai lacak stok</button>`}</div>
+    </div>`;
+  }).join("") : `<div class="empty">Belum ada produk. Tambahkan dulu di tab Daftar produk.</div>`;
+  applyIcons($("#stockList"));
+  setProdTab(prodTab);
+}
+function openStockStart() {
+  const p = curProd(); if (!p) return;
+  $("#ssTitle").textContent = "Lacak stok: " + p.name;
+  $("#ssQty").value = ""; $("#ssErr").textContent = "";
+  openModal("mStockStart"); setTimeout(() => $("#ssQty").focus(), 50);
+}
+async function saveStockStart() {
+  if ($("#ssQty").value.trim() === "") return ($("#ssErr").textContent = "Isi stok sekarang (isi 0 kalau belum ada).");
+  const btn = $("#ssSave"); setBusy(btn, "Menyimpan...");
+  let { error } = await sb.from("products").update({ track_stock: true }).eq("id", editingPid);
+  if (!error) ({ error } = await sb.rpc("set_stock", { p_product: editingPid, p_qty: parseNum($("#ssQty").value), p_note: "Stok awal" }));
+  setBusy(btn);
+  if (error) return ($("#ssErr").textContent = errMsg(error));
+  closeModal("mStockStart"); await loadProducts(); toast("Stok mulai dilacak");
+}
+async function stopTracking() {
+  const p = curProd(); if (!p) return;
+  if (!confirm(`Berhenti melacak stok ${p.name}? Kasir tidak lagi melihat sisa stoknya. Riwayat stok lama tetap tersimpan.`)) return;
+  const { error } = await sb.from("products").update({ track_stock: false }).eq("id", p.id);
+  if (error) return toast(errMsg(error));
+  closeModal("mStockLog"); await loadProducts(); toast("Stok tidak dilacak lagi");
+}
+$("#prodTabs").addEventListener("click", (e) => { const b = e.target.closest("[data-ptab]"); if (b) setProdTab(b.dataset.ptab); });
+$("#stockList").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-sin],[data-sfix],[data-slog],[data-sstart]"); if (!b) return;
+  const d = b.dataset; editingPid = d.sin || d.sfix || d.slog || d.sstart;
+  if (d.sin) openStockIn(); else if (d.sfix) openStockFix(); else if (d.slog) openStockLog(); else openStockStart();
+});
+$("#ssSave").onclick = saveStockStart;
+$("#slStop").onclick = stopTracking;
+
 function openProd(pid) {
   editingPid = pid || null;
   const p = products.find((x) => x.id === pid) || { name: "", price: "", cat: "", active: true, track_stock: false, stock: 0 };
@@ -1206,9 +1266,8 @@ function openProd(pid) {
   const cost = costMap[p.id] || 0;
   $("#pCost").value = cost ? cost.toLocaleString("id-ID") : "";
   $("#pCat").value = p.cat || ""; $("#pActive").checked = p.active !== false;
-  $("#pTrack").checked = !!p.track_stock; $("#pStock").value = "";
   $("#pDelete").hidden = !pid; $("#pErr").textContent = "";
-  updateMargin(); renderStockSection(pid ? p : null);
+  updateMargin();
   openModal("mProd");
   if (!pid) setTimeout(() => $("#pName").focus(), 50);
 }
@@ -1218,8 +1277,6 @@ async function saveProd() {
   if (!name) return ($("#pErr").textContent = "Nama produk wajib diisi.");
   if (!price) return ($("#pErr").textContent = "Harga jual wajib diisi.");
   const row = { name, price, cat: $("#pCat").value.trim(), active: $("#pActive").checked };
-  if (stockReady) row.track_stock = $("#pTrack").checked;
-  const prev = products.find((x) => x.id === editingPid);
   const btn = $("#pSave"); setBusy(btn, "Menyimpan...");
   let id = editingPid, error;
   if (id) ({ error } = await sb.from("products").update(row).eq("id", id));
@@ -1227,12 +1284,12 @@ async function saveProd() {
   if (!error && stockReady) {
     const cost = parseNum($("#pCost").value);
     if (cost !== (costMap[id] || 0)) ({ error } = await sb.from("product_costs").upsert({ product_id: id, store_id: shop.id, cost }));
-    // mulai lacak stok: simpan stok awal
-    if (!error && row.track_stock && !(prev && prev.track_stock)) ({ error } = await sb.rpc("set_stock", { p_product: id, p_qty: parseNum($("#pStock").value), p_note: "Stok awal" }));
   }
   setBusy(btn);
   if (error) { if (!editingPid && id) editingPid = id; return ($("#pErr").textContent = errMsg(error)); }
-  closeModal("mProd"); loadProducts(); toast("Produk disimpan. HP kasir ikut berubah dalam 1 menit.");
+  const isNew = !editingPid;
+  closeModal("mProd"); loadProducts();
+  toast(isNew && stockReady ? "Produk ditambahkan. Atur stoknya di tab Stok." : "Produk disimpan. HP kasir ikut berubah dalam 1 menit.");
 }
 async function deleteProd() {
   if (!editingPid || !confirm("Hapus produk ini? Riwayat penjualan lama tetap aman, tapi riwayat stoknya ikut terhapus.")) return;
@@ -1258,7 +1315,6 @@ async function saveStockIn() {
   setBusy(btn);
   if (error) return ($("#siErr").textContent = errMsg(error));
   closeModal("mStockIn"); await loadProducts();
-  const p = curProd(); if (p) { renderStockSection(p); $("#pCost").value = data.cost ? data.cost.toLocaleString("id-ID") : ""; updateMargin(); }
   toast(`Stok jadi ${data.stock} pcs${costTxt ? `, modal ${rp(data.cost)}` : ""}`);
 }
 function openStockFix() {
@@ -1275,7 +1331,6 @@ async function saveStockFix() {
   setBusy(btn);
   if (error) return ($("#sfErr").textContent = errMsg(error));
   closeModal("mStockFix"); await loadProducts();
-  const p = curProd(); if (p) renderStockSection(p);
   toast(data.diff === 0 ? "Stok sudah cocok" : `Stok dikoreksi ${data.diff > 0 ? "+" : ""}${data.diff}, sekarang ${data.stock} pcs`);
 }
 async function openStockLog() {
@@ -1645,10 +1700,8 @@ $("#btnVoid").onclick = voidTx;
 $("#btnAddProd").onclick = () => openProd(null);
 $("#pSave").onclick = saveProd;
 $("#pDelete").onclick = deleteProd;
-bindMoneyInput($("#pCost")); bindMoneyInput($("#pStock")); bindMoneyInput($("#siQty")); bindMoneyInput($("#siCost")); bindMoneyInput($("#sfQty"));
+bindMoneyInput($("#pCost")); bindMoneyInput($("#ssQty")); bindMoneyInput($("#siQty")); bindMoneyInput($("#siCost")); bindMoneyInput($("#sfQty"));
 $("#pPrice").addEventListener("input", updateMargin); $("#pCost").addEventListener("input", updateMargin);
-$("#pTrack").addEventListener("change", () => renderStockSection(curProd()));
-$("#pIn").onclick = openStockIn; $("#pFix").onclick = openStockFix; $("#pLog").onclick = openStockLog;
 $("#siSave").onclick = saveStockIn; $("#sfSave").onclick = saveStockFix;
 $("#btnSaveInfo").onclick = () => updateShop({ name: $("#setName").value.trim() || "Toko Saya", address: $("#setAddr").value.trim(), phone: $("#setPhone").value.trim() }, "Info toko disimpan");
 $("#btnSetPin").onclick = () => { $("#pinErr").textContent = ""; $("#pinIn").value = ""; openModal("mPin"); setTimeout(() => $("#pinIn").focus(), 50); };

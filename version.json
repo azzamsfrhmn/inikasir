@@ -1,8 +1,8 @@
 {
-  "version": "1.3",
+  "version": "1.4",
   "date": "2026-11-24",
   "notes": [
-    "Penjualan dari HP kasir langsung muncul di admin tanpa muat ulang halaman",
-    "Pemberitahuan setiap ada penjualan baru, dan transaksi baru disorot di Riwayat"
+    "Stok sekarang punya tab sendiri di halaman Produk: stok masuk, koreksi, dan riwayat langsung dari daftar",
+    "Popup produk lebih ringkas: hanya nama, harga, kategori"
   ]
 }

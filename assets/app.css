@@ -496,3 +496,17 @@ main:has(>#view-connect.active),main:has(>#view-auth.active){max-width:none;padd
 .list .it.fresh{animation:freshrow 2.4s var(--ease)}
 @keyframes freshrow{0%,35%{background:var(--leaf-soft)}100%{background:transparent}}
 @media (prefers-reduced-motion:reduce){.live-dot.on,.list .it.fresh{animation:none}}
+
+/* ---------- Tab Stok ---------- */
+.stk{padding:14px 0;border-bottom:1px solid var(--line)}
+.stk:last-child{border-bottom:0}
+.stk.off{opacity:.6}
+.stk-top{display:flex;align-items:center;gap:12px}
+.stk-state{font-size:13px;color:var(--muted);margin-top:2px}
+.stk-state.ok{color:var(--leaf)} .stk-state.bad{color:var(--bad);font-weight:600}
+.stk-n{font-size:24px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
+.stk-n small{font-size:12px;font-weight:600;color:var(--muted);margin-left:3px}
+.stk-n.low{color:var(--bad)}
+.stk-act{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.stk-act .btn:not(.ghost){background:var(--leaf-soft);color:var(--leaf-ink);border-color:transparent}
+.stk-act .btn .ic{width:16px;height:16px}
