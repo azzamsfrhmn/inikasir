@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=22">
+<link rel="stylesheet" href="../assets/app.css?v=23">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="../assets/icons/admin.svg">
 <link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/admin-192.png">
@@ -223,9 +223,13 @@
       <button data-ptab="produk" class="active">Daftar produk</button>
       <button data-ptab="stok" data-ic="box">Stok</button>
     </div>
+    <div class="card" id="prodSummary" style="margin:12px 0" hidden></div>
+    <div class="pfilter">
+      <label class="searchbox" data-ic="search"><input type="search" class="in" id="prodQ" placeholder="Cari produk..." aria-label="Cari produk" autocomplete="off"></label>
+      <div class="chips" id="prodCats" role="group" aria-label="Saring produk"></div>
+    </div>
     <div id="ptProduk"><div class="card"><div class="list" id="prodList"></div></div></div>
     <div id="ptStok" hidden>
-      <div class="card" id="prodSummary" style="margin-bottom:12px"></div>
       <div class="card" style="margin-bottom:12px"><div class="list" id="stockList"></div></div>
       <div class="card">
         <h3 style="margin-bottom:4px">Rekap stok per hari</h3>
@@ -521,9 +525,9 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="../config.js?v=22"></script>
+<script src="../config.js?v=23"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="../assets/common.js?v=22"></script>
+<script src="../assets/common.js?v=23"></script>
 <script>
 "use strict";
 let sb = null, user = null, shop = null;
@@ -1074,16 +1078,29 @@ async function renderFinance() {
   $("#finCats").innerHTML = rows.length ? `<table class="t">${rows.map(([n, v]) =>
     `<tr><td>${esc(n)}<div class="bar"><i style="width:${(v / max) * 100}%"></i></div></td><td class="right num">${rp(v)}</td></tr>`).join("")}<tr><td><b>Total</b></td><td class="right num"><b>${rp(keluar)}</b></td></tr></table>`
     : `<div class="empty">Belum ada pengeluaran tercatat di periode ini.</div>`;
-  const list = cf.slice().sort((x, y) => (y.date + y.created_at).localeCompare(x.date + x.created_at));
-  $("#finList").innerHTML = list.length ? list.map((c) => `
-    <div class="it">
-      <div class="grow">
-        <div style="font-weight:600">${esc(c.cat)}</div>
-        <div class="muted" style="font-size:13px">${fmtDateShort(c.date)} · ${c.via === "tunai" ? "Tunai" : "Rekening"}${c.note ? " · " + esc(c.note) : ""}</div>
-      </div>
-      <div class="num ${c.type === "masuk" ? "amt-in" : "amt-out"}">${c.type === "masuk" ? "+" : "−"}${rp(c.amount)}</div>
-      <button class="btn ghost small" data-delfin="${c.id}">Hapus</button>
-    </div>`).join("") : `<div class="empty">Belum ada catatan di periode ini. Setiap belanja bahan, gas, atau bayar gaji, catat lewat tombol "Catat pengeluaran".</div>`;
+  // Catatan dikelompokkan per hari (terbaru di atas); hanya hari teratas yang terbuka supaya tidak memanjang
+  const groups = {};
+  cf.forEach((c) => (groups[String(c.date).slice(0, 10)] ||= []).push(c));
+  const keys = Object.keys(groups).sort((x, y) => y.localeCompare(x));
+  $("#finList").innerHTML = keys.length ? keys.map((k, i) => {
+    const items = groups[k].sort((x, y) => y.created_at.localeCompare(x.created_at));
+    const inn = items.filter((c) => c.type === "masuk").reduce((t, c) => t + c.amount, 0);
+    const out = items.filter((c) => c.type === "keluar").reduce((t, c) => t + c.amount, 0);
+    return `<details class="grp"${i === 0 ? " open" : ""}>
+      <summary><span class="grp-d"><b>${new Date(k + "T00:00:00").toLocaleDateString("id-ID", { weekday: "short", day: "numeric", month: "short" })}</b>
+        <span class="muted">${items.length} catatan</span></span>
+        <span class="grp-v num">${inn ? `<span class="amt-in">+${rp(inn)}</span>` : ""}${out ? `<span class="amt-out">−${rp(out)}</span>` : ""}</span></summary>
+      ${items.map((c) => `
+      <div class="it">
+        <div class="grow">
+          <div style="font-weight:600">${esc(c.cat)}</div>
+          <div class="muted" style="font-size:13px">${c.via === "tunai" ? "Tunai" : "Rekening"}${c.note ? " · " + esc(c.note) : ""}</div>
+        </div>
+        <div class="num ${c.type === "masuk" ? "amt-in" : "amt-out"}">${c.type === "masuk" ? "+" : "−"}${rp(c.amount)}</div>
+        <button class="btn ghost small" data-delfin="${c.id}">Hapus</button>
+      </div>`).join("")}
+    </details>`;
+  }).join("") : `<div class="empty">Belum ada catatan di periode ini. Setiap belanja bahan, gas, atau bayar gaji, catat lewat tombol "Catat pengeluaran".</div>`;
 }
 function openFin(type) {
   finType = type;
@@ -1189,7 +1206,36 @@ async function loadProducts() {
   stockReady = !pc.error && products.every((p) => "stock" in p);
   document.body.classList.toggle("no-stock", !stockReady);
   costMap = stockReady ? Object.fromEntries(pc.data.map((r) => [r.product_id, r.cost])) : {};
-  $("#prodList").innerHTML = products.length ? products.map((p) => {
+  renderProdList();
+  renderStockList();
+  $("#catList").innerHTML = [...new Set(products.map((p) => p.cat).filter(Boolean))].map((c) => `<option value="${esc(c)}">`).join("");
+  renderStockSummary();
+}
+/* ---------- Saring produk (cari & kategori), dipakai tab Daftar produk dan Stok ---------- */
+let prodQ = "", prodCat = "";   // prodCat: "" semua, "__low" hampir habis, selain itu nama kategori
+const isLow = (p) => p.track_stock && p.stock <= LOW_STOCK;
+function prodMatch(p) {
+  if (prodQ && !p.name.toLowerCase().includes(prodQ)) return false;
+  if (prodCat === "__low") return isLow(p);
+  if (prodCat) return (p.cat || "") === prodCat;
+  return true;
+}
+function renderProdCats() {
+  const cats = [...new Set(products.map((p) => p.cat || ""))].sort((x, y) => x.localeCompare(y));
+  if (prodCat === "__low" && prodTab !== "stok") prodCat = "";
+  if (prodCat && prodCat !== "__low" && !cats.includes(prodCat)) prodCat = "";
+  const low = products.filter(isLow).length;
+  const chip = (v, label) => `<button class="chip${prodCat === v ? " on" : ""}" data-pcat="${esc(v)}">${label}</button>`;
+  $("#prodCats").innerHTML = chip("", "Semua") +
+    (prodTab === "stok" && stockReady && low ? chip("__low", `Hampir habis (${low})`) : "") +
+    (cats.length > 1 ? cats.map((c) => chip(c, esc(c || "Tanpa kategori"))).join("") : "");
+}
+const noMatch = () => `<div class="empty">Tidak ada produk yang cocok${prodQ ? ` dengan "${esc(prodQ)}"` : ""}.</div>`;
+function renderProdList() {
+  renderProdCats();
+  const list = products.filter(prodMatch);
+  $("#prodList").innerHTML = !products.length ? `<div class="empty">Belum ada produk. Tekan "Tambah produk" untuk mulai.</div>`
+    : !list.length ? noMatch() : list.map((p) => {
     const cost = costMap[p.id] || 0;
     return `<div class="it" data-edit="${p.id}" style="cursor:pointer;${p.active ? "" : "opacity:.55"}">
       <div class="grow">
@@ -1199,9 +1245,9 @@ async function loadProducts() {
       <div class="right"><div class="num" style="font-weight:700">${rp(p.price)}</div>
         ${stockReady && cost ? `<div class="muted num" style="font-size:12px">untung ${rp(p.price - cost)}</div>` : ""}</div>
     </div>`;
-  }).join("") : `<div class="empty">Belum ada produk. Tekan "Tambah produk" untuk mulai.</div>`;
-  renderStockList();
-  $("#catList").innerHTML = [...new Set(products.map((p) => p.cat).filter(Boolean))].map((c) => `<option value="${esc(c)}">`).join("");
+  }).join("");
+}
+function renderStockSummary() {
   if (stockReady) {
     const tracked = products.filter((p) => p.track_stock);
     const value = tracked.reduce((s, p) => s + Math.max(0, p.stock) * (costMap[p.id] || 0), 0);
@@ -1222,14 +1268,16 @@ function setProdTab(t) {
   $$("#prodTabs button").forEach((b) => b.classList.toggle("active", b.dataset.ptab === prodTab));
   $("#ptProduk").hidden = prodTab !== "produk";
   $("#ptStok").hidden = prodTab !== "stok";
+  $("#prodSummary").hidden = prodTab !== "stok" || !stockReady;
   $("#btnAddProd").hidden = prodTab !== "produk";
   $("#prodHead").textContent = prodTab === "stok" ? "Stok" : "Produk";
 }
-function renderStockList() {
+function renderStockList(reloadDays) {
   if (!stockReady) return setProdTab("produk");
   const rank = (p) => (!p.track_stock ? 3 : p.stock <= 0 ? 0 : p.stock <= LOW_STOCK ? 1 : 2);
-  const list = [...products].sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name));
-  $("#stockList").innerHTML = list.length ? list.map((p) => {
+  const list = products.filter(prodMatch).sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name));
+  $("#stockList").innerHTML = !products.length ? `<div class="empty">Belum ada produk. Tambahkan dulu di tab Daftar produk.</div>`
+    : !list.length ? noMatch() : list.map((p) => {
     const t = p.track_stock, low = t && p.stock <= LOW_STOCK;
     const state = !t ? "Stok tidak dilacak" : p.stock < 0 ? "Minus, perlu dicek" : p.stock === 0 ? "Habis" : low ? "Hampir habis" : "Aman";
     return `<div class="stk${p.active ? "" : " off"}">
@@ -1242,11 +1290,15 @@ function renderStockList() {
         ? `<button class="btn small" data-sin="${p.id}" data-ic="plus">Stok masuk</button><button class="btn ghost small" data-sfix="${p.id}">Koreksi</button><button class="btn ghost small" data-slog="${p.id}">Riwayat</button>`
         : `<button class="btn ghost small" data-sstart="${p.id}">Mulai lacak stok</button>`}</div>
     </div>`;
-  }).join("") : `<div class="empty">Belum ada produk. Tambahkan dulu di tab Daftar produk.</div>`;
+  }).join("");
   applyIcons($("#stockList"));
   setProdTab(prodTab);
-  if (prodTab === "stok") renderStockDays();
+  if (prodTab === "stok" && reloadDays !== false) renderStockDays();
 }
+function applyProdFilter() { renderProdList(); renderStockList(false); drawStockDays(); }
+let prodQT = null;
+$("#prodQ").addEventListener("input", () => { clearTimeout(prodQT); prodQT = setTimeout(() => { prodQ = $("#prodQ").value.trim().toLowerCase(); applyProdFilter(); }, 150); });
+$("#prodCats").addEventListener("click", (e) => { const b = e.target.closest("[data-pcat]"); if (b) { prodCat = b.dataset.pcat; applyProdFilter(); } });
 /* ---------- Rekap stok per hari ---------- */
 let stkData = [];
 function setStkRange(r) {
@@ -1281,20 +1333,26 @@ async function renderStockDays() {
     stkData = await fetchAll(() => sb.from("stock_moves").select("product_name,qty,kind,stock_after,created_at,note")
       .eq("store_id", shop.id).gte("created_at", from).lt("created_at", to).order("created_at"));
   } catch (e) { return errorInto(e, "stkDays"); }
-  const days = stockDays(stkData);
-  $("#stkDays").innerHTML = days.length ? days.map(([k, d]) => {
+  drawStockDays();
+}
+function drawStockDays() {
+  if (!stockReady || !$("#stkDays")) return;
+  const byName = Object.fromEntries(products.map((p) => [p.name, p]));
+  const keep = (n) => { const p = byName[n]; return p ? prodMatch(p) : !prodCat && (!prodQ || n.toLowerCase().includes(prodQ)); };
+  const days = stockDays(stkData).map(([k, d]) => [k, Object.fromEntries(Object.entries(d).filter(([n]) => keep(n)))]).filter(([, d]) => Object.keys(d).length);
+  $("#stkDays").innerHTML = days.length ? days.map(([k, d], i) => {
     const rows = Object.entries(d).sort((x, y) => x[0].localeCompare(y[0]));
     const tot = rows.reduce((t, [, r]) => ({ masuk: t.masuk + r.masuk, terjual: t.terjual + r.terjual, koreksi: t.koreksi + r.koreksi }), { masuk: 0, terjual: 0, koreksi: 0 });
-    return `<div class="sday">
-      <div class="sday-h"><b>${new Date(k + "T00:00:00").toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "short" })}</b>
-        <span class="muted">masuk ${tot.masuk} · terjual ${tot.terjual}${tot.koreksi ? ` · koreksi ${sgn(tot.koreksi)}` : ""}</span></div>
+    return `<details class="grp"${i === 0 ? " open" : ""}>
+      <summary><span class="grp-d"><b>${new Date(k + "T00:00:00").toLocaleDateString("id-ID", { weekday: "short", day: "numeric", month: "short" })}</b>
+        <span class="muted">${rows.length} produk · masuk ${tot.masuk} · terjual ${tot.terjual}${tot.koreksi ? ` · koreksi ${sgn(tot.koreksi)}` : ""}</span></span></summary>
       <table class="t stbl"><tr><th>Produk</th><th class="right">Masuk</th><th class="right">Terjual</th><th class="right">Koreksi</th><th class="right">Sisa</th></tr>
       ${rows.map(([n, r]) => `<tr><td>${esc(n)}</td><td class="right num ${r.masuk ? "amt-in" : "muted"}">${r.masuk ? "+" + r.masuk : "0"}</td>
         <td class="right num ${r.terjual ? "" : "muted"}">${r.terjual}</td>
         <td class="right num ${r.koreksi < 0 ? "amt-out" : r.koreksi ? "amt-in" : "muted"}">${sgn(r.koreksi)}</td>
         <td class="right num"><b class="${r.sisa <= LOW_STOCK ? "amt-out" : ""}">${r.sisa}</b></td></tr>`).join("")}
-      </table></div>`;
-  }).join("") : `<div class="empty">Belum ada pergerakan stok di periode ini.</div>`;
+      </table></details>`;
+  }).join("") : `<div class="empty">${stkData.length ? "Tidak ada produk yang cocok di periode ini." : "Belum ada pergerakan stok di periode ini."}</div>`;
 }
 function exportStockCsv() {
   const q = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
@@ -1332,7 +1390,7 @@ async function stopTracking() {
   if (error) return toast(errMsg(error));
   closeModal("mStockLog"); await loadProducts(); toast("Stok tidak dilacak lagi");
 }
-$("#prodTabs").addEventListener("click", (e) => { const b = e.target.closest("[data-ptab]"); if (!b) return; setProdTab(b.dataset.ptab); if (prodTab === "stok") renderStockDays(); });
+$("#prodTabs").addEventListener("click", (e) => { const b = e.target.closest("[data-ptab]"); if (!b) return; setProdTab(b.dataset.ptab); renderProdList(); renderStockList(false); if (prodTab === "stok") renderStockDays(); });
 $("#stockList").addEventListener("click", (e) => {
   const b = e.target.closest("[data-sin],[data-sfix],[data-slog],[data-sstart]"); if (!b) return;
   const d = b.dataset; editingPid = d.sin || d.sfix || d.slog || d.sstart;

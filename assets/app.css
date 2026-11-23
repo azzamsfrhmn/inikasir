@@ -520,3 +520,22 @@ main:has(>#view-connect.active),main:has(>#view-auth.active){max-width:none;padd
 .stbl th:first-child,.stbl td:first-child{padding-left:0}
 .stbl th:last-child,.stbl td:last-child{padding-right:0}
 .stbl th{font-size:12px}
+
+/* ---------- Kelompok per hari yang bisa dilipat ---------- */
+.grp{border-top:1px solid var(--line)}
+.grp:first-child{border-top:0}
+.grp>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;min-height:48px}
+.grp>summary::-webkit-details-marker{display:none}
+.grp>summary::after{content:"";flex:none;width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);margin:-4px 4px 0 2px;transition:transform var(--t-fast)}
+.grp[open]>summary::after{transform:rotate(-135deg);margin-top:4px}
+.grp-d{display:flex;flex-direction:column;gap:1px;min-width:0}
+.grp-d .muted{font-size:12.5px}
+.grp-v{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:2px 10px;font-size:13px;font-weight:600;text-align:right;margin-left:auto}
+.grp>.it:first-of-type{border-top:1px solid var(--line)}
+.grp .stbl{margin-bottom:12px}
+/* ---------- Saring produk ---------- */
+.pfilter{margin:12px 0}
+.searchbox{position:relative;display:block}
+.searchbox .ic{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--muted);pointer-events:none}
+.searchbox .in{padding-left:42px}
+.pfilter .chips{margin-top:10px;margin-bottom:0}

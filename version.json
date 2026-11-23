@@ -1,7 +1,9 @@
 {
-  "version": "1.5",
+  "version": "1.6",
   "date": "2026-11-24",
   "notes": [
-    "Rekap stok per hari di tab Stok: masuk, terjual, koreksi, dan sisa tiap produk, bisa diunduh ke Excel"
+    "Catatan kas di Keuangan dikelompokkan per hari dan bisa dilipat, jadi tidak memanjang",
+    "Produk dan Stok bisa dicari dan disaring per kategori atau yang hampir habis",
+    "Rekap stok per hari juga bisa dilipat dan ikut saringan"
   ]
 }
