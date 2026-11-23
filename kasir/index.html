@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=23">
+<link rel="stylesheet" href="../assets/app.css?v=24">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="../assets/icons/kasir.svg">
 <link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/kasir-192.png">
@@ -214,9 +214,9 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="../config.js?v=23"></script>
+<script src="../config.js?v=24"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="../assets/common.js?v=23"></script>
+<script src="../assets/common.js?v=24"></script>
 <script>
 "use strict";
 const K = { store: "inikasir-kasir-store", cache: "inikasir-kasir-cache", queue: "inikasir-kasir-queue", shift: "inikasir-kasir-shift", cash: "inikasir-kasir-cash",
@@ -400,8 +400,11 @@ async function flushQueue() {
 }
 
 /* ---------- Kasir ---------- */
+// Urutan tab mengikuti daftar kategori dari pemilik (migrasi 009); kategori yang kosong tidak ditampilkan
 function categories() {
-  const set = []; products.forEach((p) => { if (p.cat && !set.includes(p.cat)) set.push(p.cat); });
+  const order = Array.isArray(shop && shop.categories) ? shop.categories : [];
+  const set = order.filter((c) => products.some((p) => p.cat === c));
+  products.forEach((p) => { if (p.cat && !set.includes(p.cat)) set.push(p.cat); });
   return set;
 }
 function renderCats() {

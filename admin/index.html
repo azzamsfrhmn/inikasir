@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=23">
+<link rel="stylesheet" href="../assets/app.css?v=24">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="../assets/icons/admin.svg">
 <link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/admin-192.png">
@@ -216,8 +216,9 @@
   <!-- ========== PRODUK ========== -->
   <section class="page" id="pg-produk">
     <div class="row" style="margin-bottom:12px">
-      <h2 class="grow" id="prodHead">Produk</h2>
-      <button class="btn primary" id="btnAddProd" data-ic="plus">Tambah produk</button>
+      <h2 class="grow" id="prodHead" style="min-width:0">Produk</h2>
+      <button class="btn ghost" id="btnCats" data-ic="sliders">Kategori</button>
+      <button class="btn primary" id="btnAddProd" data-ic="plus">Tambah<span class="hide-sm">&nbsp;produk</span></button>
     </div>
     <div class="seg stock-only" id="prodTabs">
       <button data-ptab="produk" class="active">Daftar produk</button>
@@ -432,7 +433,9 @@
     <div class="grow stock-only"><label class="f" for="pCost">Harga beli / modal (Rp)</label><input class="in num" id="pCost" inputmode="numeric" placeholder="0"></div>
   </div>
   <div class="muted stock-only" id="pMargin" style="font-size:13px"></div>
-  <div><label class="f" for="pCat">Kategori</label><input class="in" id="pCat" list="catList" maxlength="30"><datalist id="catList"></datalist></div>
+  <div><div class="row" style="justify-content:space-between;align-items:baseline"><label class="f" for="pCat">Kategori</label><button type="button" class="linkbtn" id="pCatManage" style="min-height:32px;padding:0">Kelola kategori</button></div>
+    <select class="in" id="pCat"></select>
+    <div class="muted" id="pCatHint" style="font-size:13px;margin-top:6px" hidden>Belum ada kategori. Tekan <b>Kelola kategori</b> untuk membuat, misalnya Gorengan atau Minuman.</div></div>
   <label class="row" style="font-size:14px;min-height:44px"><input type="checkbox" id="pActive" checked> Tampilkan di kasir</label>
   <div class="err" id="pErr"></div>
   <div class="row modal-actions">
@@ -453,6 +456,16 @@
   <div><label class="f" for="siNote">Catatan (opsional)</label><input class="in" id="siNote" maxlength="120" placeholder="Contoh: produksi pagi"></div>
   <div class="err" id="siErr"></div>
   <div class="row modal-actions"><div class="grow"></div><button class="btn ghost" data-close="mStockIn">Batal</button><button class="btn primary" id="siSave">Tambah stok</button></div>
+</div></div>
+
+<!-- Kelola kategori -->
+<div class="modal" id="mCats"><div class="box stack" style="max-width:440px">
+  <h2 style="margin:0">Kategori produk</h2>
+  <p class="muted" style="margin:0;font-size:14px">Urutan di sini sama dengan urutan tab kategori di HP kasir. Ubah nama langsung di kotaknya.</p>
+  <div class="row" style="gap:8px"><input class="in grow" id="catNew" maxlength="30" placeholder="Nama kategori baru, mis. Gorengan"><button class="btn primary" id="catAdd" data-ic="plus">Tambah</button></div>
+  <div class="err" id="catErr"></div>
+  <div class="list" id="catRows"></div>
+  <div class="row modal-actions"><div class="grow"></div><button class="btn primary" data-close="mCats">Selesai</button></div>
 </div></div>
 
 <!-- Mulai lacak stok -->
@@ -525,9 +538,9 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="../config.js?v=23"></script>
+<script src="../config.js?v=24"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="../assets/common.js?v=23"></script>
+<script src="../assets/common.js?v=24"></script>
 <script>
 "use strict";
 let sb = null, user = null, shop = null;
@@ -1208,7 +1221,6 @@ async function loadProducts() {
   costMap = stockReady ? Object.fromEntries(pc.data.map((r) => [r.product_id, r.cost])) : {};
   renderProdList();
   renderStockList();
-  $("#catList").innerHTML = [...new Set(products.map((p) => p.cat).filter(Boolean))].map((c) => `<option value="${esc(c)}">`).join("");
   renderStockSummary();
 }
 /* ---------- Saring produk (cari & kategori), dipakai tab Daftar produk dan Stok ---------- */
@@ -1221,7 +1233,7 @@ function prodMatch(p) {
   return true;
 }
 function renderProdCats() {
-  const cats = [...new Set(products.map((p) => p.cat || ""))].sort((x, y) => x.localeCompare(y));
+  const cats = [...allCats(), ...(products.some((p) => !p.cat) ? [""] : [])].filter((c) => c === "" || products.some((p) => p.cat === c));
   if (prodCat === "__low" && prodTab !== "stok") prodCat = "";
   if (prodCat && prodCat !== "__low" && !cats.includes(prodCat)) prodCat = "";
   const low = products.filter(isLow).length;
@@ -1270,6 +1282,7 @@ function setProdTab(t) {
   $("#ptStok").hidden = prodTab !== "stok";
   $("#prodSummary").hidden = prodTab !== "stok" || !stockReady;
   $("#btnAddProd").hidden = prodTab !== "produk";
+  $("#btnCats").hidden = prodTab !== "produk";
   $("#prodHead").textContent = prodTab === "stok" ? "Stok" : "Produk";
 }
 function renderStockList(reloadDays) {
@@ -1399,6 +1412,104 @@ $("#stockList").addEventListener("click", (e) => {
 $("#ssSave").onclick = saveStockStart;
 $("#slStop").onclick = stopTracking;
 
+/* ---------- Kategori (diatur pemilik, migrasi 009) ---------- */
+// Urutan dari stores.categories, ditambah kategori lama di produk yang belum masuk daftar
+function allCats() {
+  const list = Array.isArray(shop && shop.categories) ? [...shop.categories] : [];
+  products.forEach((p) => { if (p.cat && !list.includes(p.cat)) list.push(p.cat); });
+  return list;
+}
+function fillCatSelect(selected) {
+  const cats = allCats();
+  if (selected && !cats.includes(selected)) cats.push(selected);
+  $("#pCat").innerHTML = `<option value="">Tanpa kategori</option>` + cats.map((c) => `<option value="${esc(c)}"${c === selected ? " selected" : ""}>${esc(c)}</option>`).join("");
+  $("#pCatHint").hidden = cats.length > 0;
+}
+let catsFromProd = false;
+function openCats(fromProd) {
+  catsFromProd = !!fromProd;
+  $("#catNew").value = ""; $("#catErr").textContent = "";
+  renderCatRows(); openModal("mCats");
+  if (!allCats().length) setTimeout(() => $("#catNew").focus(), 50);
+}
+function renderCatRows() {
+  const cats = allCats(), n = (c) => products.filter((p) => p.cat === c).length;
+  $("#catRows").innerHTML = cats.length ? cats.map((c, i) => `
+    <div class="it catrow">
+      <input class="in" value="${esc(c)}" maxlength="30" data-catname="${i}" aria-label="Nama kategori ${esc(c)}">
+      <span class="muted catn">${n(c)} produk</span>
+      <button class="btn ghost small icon-only" data-catup="${i}" ${i ? "" : "disabled"} aria-label="Naikkan">↑</button>
+      <button class="btn ghost small icon-only" data-catdown="${i}" ${i < cats.length - 1 ? "" : "disabled"} aria-label="Turunkan">↓</button>
+      <button class="btn ghost small icon-only" data-catdel="${i}" aria-label="Hapus ${esc(c)}">${ic("x")}</button>
+    </div>`).join("") : `<div class="empty">Belum ada kategori.</div>`;
+}
+async function saveCats(list, msg) {
+  $("#catErr").textContent = "";
+  const { data, error } = await sb.from("stores").update({ categories: list }).eq("id", shop.id).select().single();
+  if (error) {
+    $("#catErr").textContent = /categories|PGRST204|schema cache|column/i.test(error.message || "")
+      ? "Fitur ini butuh migrasi 009_kategori.sql. Jalankan sekali di Supabase SQL Editor, lalu coba lagi."
+      : errMsg(error);
+    return false;
+  }
+  shop = data; renderCatRows(); renderProdList(); renderStockList(false);
+  if ($("#mProd").classList.contains("show")) fillCatSelect($("#pCat").value);
+  if (msg) toast(msg);
+  return true;
+}
+async function addCat() {
+  const name = $("#catNew").value.trim();
+  if (!name) return ($("#catErr").textContent = "Isi nama kategori dulu.");
+  if (allCats().some((c) => c.toLowerCase() === name.toLowerCase())) return ($("#catErr").textContent = "Kategori itu sudah ada.");
+  const btn = $("#catAdd"); setBusy(btn, "...");
+  const ok = await saveCats([...allCats(), name], "Kategori ditambahkan");
+  setBusy(btn);
+  if (!ok) return;
+  $("#catNew").value = ""; $("#catNew").focus();
+  if (catsFromProd) fillCatSelect(name);   // dari popup produk: langsung terpilih
+}
+async function renameCat(i, name) {
+  const cats = allCats(), old = cats[i];
+  name = name.trim();
+  if (!name || name === old) return renderCatRows();
+  if (cats.some((c, j) => j !== i && c.toLowerCase() === name.toLowerCase())) { $("#catErr").textContent = "Kategori itu sudah ada."; return renderCatRows(); }
+  cats[i] = name;
+  if (products.some((p) => p.cat === old)) {
+    const { error } = await sb.from("products").update({ cat: name }).eq("store_id", shop.id).eq("cat", old);
+    if (error) { $("#catErr").textContent = errMsg(error); return renderCatRows(); }
+    products.forEach((p) => { if (p.cat === old) p.cat = name; });
+  }
+  await saveCats(cats, "Nama kategori diganti");
+}
+async function deleteCat(i) {
+  const cats = allCats(), c = cats[i], n = products.filter((p) => p.cat === c).length;
+  if (!confirm(n ? `Hapus kategori ${c}? ${n} produk di dalamnya jadi "Tanpa kategori" (produknya tidak terhapus).` : `Hapus kategori ${c}?`)) return;
+  if (n) {
+    const { error } = await sb.from("products").update({ cat: "" }).eq("store_id", shop.id).eq("cat", c);
+    if (error) return ($("#catErr").textContent = errMsg(error));
+    products.forEach((p) => { if (p.cat === c) p.cat = ""; });
+  }
+  cats.splice(i, 1);
+  await saveCats(cats, "Kategori dihapus");
+}
+function moveCat(i, d) {
+  const cats = allCats(), j = i + d;
+  if (j < 0 || j >= cats.length) return;
+  [cats[i], cats[j]] = [cats[j], cats[i]];
+  saveCats(cats);
+}
+$("#btnCats").onclick = () => openCats(false);
+$("#pCatManage").onclick = () => openCats(true);
+$("#catAdd").onclick = addCat;
+$("#catNew").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); addCat(); } });
+$("#catRows").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-catup],[data-catdown],[data-catdel]"); if (!b) return;
+  const d = b.dataset;
+  if (d.catup) moveCat(+d.catup, -1); else if (d.catdown) moveCat(+d.catdown, 1); else deleteCat(+d.catdel);
+});
+$("#catRows").addEventListener("change", (e) => { const el = e.target.closest("[data-catname]"); if (el) renameCat(+el.dataset.catname, el.value); });
+$("#catRows").addEventListener("keydown", (e) => { if (e.key === "Enter" && e.target.matches("[data-catname]")) e.target.blur(); });
+
 function openProd(pid) {
   editingPid = pid || null;
   const p = products.find((x) => x.id === pid) || { name: "", price: "", cat: "", active: true, track_stock: false, stock: 0 };
@@ -1406,7 +1517,7 @@ function openProd(pid) {
   $("#pName").value = p.name; $("#pPrice").value = p.price ? p.price.toLocaleString("id-ID") : "";
   const cost = costMap[p.id] || 0;
   $("#pCost").value = cost ? cost.toLocaleString("id-ID") : "";
-  $("#pCat").value = p.cat || ""; $("#pActive").checked = p.active !== false;
+  fillCatSelect(pid ? p.cat || "" : prodCat && prodCat !== "__low" ? prodCat : ""); $("#pActive").checked = p.active !== false;
   $("#pDelete").hidden = !pid; $("#pErr").textContent = "";
   updateMargin();
   openModal("mProd");
@@ -1417,7 +1528,7 @@ async function saveProd() {
   const name = $("#pName").value.trim(), price = parseNum($("#pPrice").value);
   if (!name) return ($("#pErr").textContent = "Nama produk wajib diisi.");
   if (!price) return ($("#pErr").textContent = "Harga jual wajib diisi.");
-  const row = { name, price, cat: $("#pCat").value.trim(), active: $("#pActive").checked };
+  const row = { name, price, cat: $("#pCat").value, active: $("#pActive").checked };
   const btn = $("#pSave"); setBusy(btn, "Menyimpan...");
   let id = editingPid, error;
   if (id) ({ error } = await sb.from("products").update(row).eq("id", id));

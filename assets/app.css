@@ -539,3 +539,12 @@ main:has(>#view-connect.active),main:has(>#view-auth.active){max-width:none;padd
 .searchbox .ic{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--muted);pointer-events:none}
 .searchbox .in{padding-left:42px}
 .pfilter .chips{margin-top:10px;margin-bottom:0}
+
+/* ---------- Kelola kategori ---------- */
+.catrow{gap:8px;padding:8px 0}
+.catrow .in{flex:1;min-width:0;min-height:42px;padding:8px 12px}
+.catrow .catn{font-size:12.5px;white-space:nowrap}
+.btn.icon-only{width:38px;padding:0;flex:none}
+.btn.icon-only .ic{width:16px;height:16px}
+@media (max-width:420px){.catrow .catn{display:none}}
+@media (max-width:480px){.hide-sm{display:none}}
