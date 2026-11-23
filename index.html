@@ -195,14 +195,22 @@ body.is-admin .kasir-only{display:none!important}
       <div class="sub">Omzet hari ini</div>
       <div style="font-weight:800" id="hdrToday">Rp0</div>
     </div>
-    <button class="lockbtn kasir-only" id="btnUnlock">Masuk admin</button>
     <button class="lockbtn admin-only" id="btnLock">Kunci</button>
   </div>
 </header>
 
 <main>
+  <!-- ADMIN TERKUNCI -->
+  <section class="page" id="pg-lock">
+    <div class="card stack" style="max-width:420px;margin:40px auto;text-align:center">
+      <h2>Halaman admin</h2>
+      <p class="muted" style="margin:0">Masukkan PIN untuk melihat laporan, keuangan, dan mengatur produk.</p>
+      <button class="btn primary block" id="btnOpenPin">Masukkan PIN</button>
+    </div>
+  </section>
+
   <!-- KASIR -->
-  <section class="page active" id="pg-kasir">
+  <section class="page" id="pg-kasir">
     <div class="kasir">
       <div>
         <input class="in" id="search" type="search" placeholder="Cari produk">
@@ -330,8 +338,21 @@ body.is-admin .kasir-only{display:none!important}
 
       <div class="card stack">
         <h3>PIN admin</h3>
-        <p class="muted" style="margin:0;font-size:14px">Penjaga kasir cuma bisa input penjualan. Riwayat, laporan, keuangan, produk & setelan butuh PIN ini.</p>
+        <p class="muted" style="margin:0;font-size:14px">PIN ini diminta setiap kali halaman admin dibuka.</p>
         <button class="btn primary" id="btnChangePin">Ganti PIN</button>
+      </div>
+
+      <div class="card stack">
+        <h3>Link aplikasi</h3>
+        <div>
+          <label class="f">Halaman kasir, untuk penjaga</label>
+          <div class="row"><input class="in grow" id="linkKasir" readonly><button class="btn ghost" data-copy="linkKasir">Salin</button></div>
+        </div>
+        <div>
+          <label class="f">Halaman admin, simpan untuk sendiri</label>
+          <div class="row"><input class="in grow" id="linkAdmin" readonly><button class="btn ghost" data-copy="linkAdmin">Salin</button></div>
+        </div>
+        <p class="muted" style="margin:0;font-size:13px">Kedua halaman memakai data yang sama, jadi harus dibuka di HP dan browser yang sama.</p>
       </div>
 
       <div class="card stack">
@@ -355,10 +376,9 @@ body.is-admin .kasir-only{display:none!important}
 <div class="backdrop" id="backdrop"></div>
 
 <nav class="bottom admin-only" aria-label="Menu admin">
-  <button data-page="kasir" class="active">Kasir</button>
-  <button data-page="riwayat" class="admin-only">Riwayat</button>
   <button data-page="laporan" class="admin-only">Laporan</button>
   <button data-page="keuangan" class="admin-only">Keuangan</button>
+  <button data-page="riwayat" class="admin-only">Riwayat</button>
   <button data-page="produk" class="admin-only">Produk</button>
   <button data-page="setelan" class="admin-only">Setelan</button>
 </nav>
@@ -559,7 +579,9 @@ function renderHeader() {
   $("#hdrName").textContent = db.settings.storeName || "IniKasir";
   $("#hdrDate").textContent = fmtDate(new Date());
   $("#hdrToday").textContent = rp(txOfDay(dayKey(new Date())).reduce((s, t) => s + t.total, 0));
-  document.title = (db.settings.storeName || "IniKasir") + " · Kasir";
+  const nm = db.settings.storeName || "IniKasir";
+  $("#hdrName").textContent = MODE === "admin" ? nm + " · Admin" : nm;
+  document.title = MODE === "admin" ? "Admin · " + nm : nm + " · Kasir";
 }
 
 /* ================= Kasir ================= */
@@ -878,9 +900,12 @@ function hashPin(p) { // hash sederhana (bukan enkripsi kuat)
   for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
   return h.toString(16);
 }
+// Halaman ditentukan dari alamat: /inikasir/ = kasir, /inikasir/admin/ (atau ?admin) = admin
+const MODE = /[?&]admin\b/.test(location.search) ? "admin" : "kasir";
 function setAdmin(on) {
   isAdmin = on; document.body.classList.toggle("is-admin", on);
-  if (!on) go("kasir"); else renderHeader();
+  renderHeader();
+  go(on ? "laporan" : "lock");
 }
 function openPin(mode, after) {
   pinMode = mode; pinBuf = ""; pinFirst = ""; pinAfter = after || null;
@@ -905,7 +930,7 @@ function pinKey(k) {
 }
 function pinSubmit() {
   if (pinMode === "login") {
-    if (hashPin(pinBuf) === db.settings.pinHash) { closeModal("mPin"); setAdmin(true); toast("Mode admin aktif"); if (pinAfter) pinAfter(); }
+    if (hashPin(pinBuf) === db.settings.pinHash) { closeModal("mPin"); setAdmin(true); if (pinAfter) pinAfter(); }
     else { toast("PIN salah"); pinBuf = ""; renderPinPad(); }
     return;
   }
@@ -1017,7 +1042,9 @@ function exportFinCsv() {
 
 /* ================= Navigasi ================= */
 function go(page) {
-  if (page !== "kasir" && !isAdmin) return requestAdmin(() => go(page));
+  if (MODE === "kasir") page = "kasir";
+  else if (!isAdmin) page = "lock";
+  else if (page === "kasir" || page === "lock") page = "laporan";
   $$("section.page").forEach((s) => s.classList.toggle("active", s.id === "pg-" + page));
   $$("nav.bottom button").forEach((b) => b.classList.toggle("active", b.dataset.page === page));
   setCartOpen(false);
@@ -1033,10 +1060,11 @@ function refreshAll() { renderHeader(); renderCats(); renderCart(); renderProdLi
 
 /* ================= Events ================= */
 document.addEventListener("click", (e) => {
-  const t = e.target.closest("[data-page],[data-pid],[data-cat],[data-inc],[data-dec],[data-close],[data-method],[data-cash],[data-tx],[data-edit],[data-range],[data-pin],[data-frange],[data-addfin],[data-delfin]");
+  const t = e.target.closest("[data-page],[data-pid],[data-cat],[data-inc],[data-dec],[data-close],[data-method],[data-cash],[data-tx],[data-edit],[data-range],[data-pin],[data-copy],[data-frange],[data-addfin],[data-delfin]");
   if (!t) return;
   const d = t.dataset;
   if (d.pin !== undefined) { if (d.pin) pinKey(d.pin); }
+  else if (d.copy) { const el = $("#" + d.copy); el.select(); (navigator.clipboard ? navigator.clipboard.writeText(el.value) : Promise.reject()).then(() => toast("Link disalin"), () => { document.execCommand("copy"); toast("Link disalin"); }); }
   else if (d.frange) setFinRange(d.frange);
   else if (d.addfin) openFin(d.addfin);
   else if (d.delfin) {
@@ -1084,8 +1112,8 @@ $("#histToday").onclick = () => { $("#histDate").value = dayKey(new Date()); ren
 $("#repFrom").addEventListener("change", renderReport);
 $("#repTo").addEventListener("change", renderReport);
 $("#btnCsv").onclick = exportCsv;
-$("#btnUnlock").onclick = () => requestAdmin();
-$("#btnLock").onclick = () => { setAdmin(false); toast("Kembali ke mode kasir"); };
+$("#btnOpenPin").onclick = () => requestAdmin();
+$("#btnLock").onclick = () => { setAdmin(false); toast("Halaman admin dikunci"); };
 $("#btnChangePin").onclick = () => openPin("change");
 $("#finFrom").addEventListener("change", renderFinance);
 $("#finTo").addEventListener("change", renderFinance);
@@ -1142,6 +1170,11 @@ setRange("today");
 setFinRange("month");
 refreshAll();
 setInterval(renderHeader, 60000);
+{
+  const base = location.origin + location.pathname.replace(/(admin\/)?(index\.html)?$/, "");
+  $("#linkKasir").value = base; $("#linkAdmin").value = base + "admin/";
+}
+if (MODE === "admin") { go("lock"); requestAdmin(); } else go("kasir");
 </script>
 </body>
 </html>
