@@ -36,7 +36,7 @@ for (const [file, migs] of runs) {
   if (r.status !== 0 && fail === 0) console.log(out.slice(-2000));
 }
 // uji gaya baru (modul)
-for (const mod of ["template.test.mjs", "nama-hp.test.mjs"]) {
+for (const mod of ["template.test.mjs", "nama-hp.test.mjs", "realtime.test.mjs"]) {
   const run = (await import(new URL(`./db/${mod}`, import.meta.url))).default;
   if (await run()) failed++;
 }

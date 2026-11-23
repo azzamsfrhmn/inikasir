@@ -1,7 +1,8 @@
 {
-  "version": "1.2",
+  "version": "1.3",
   "date": "2026-11-24",
   "notes": [
-    "Nama aplikasi kasir sekarang IniKasir"
+    "Penjualan dari HP kasir langsung muncul di admin tanpa muat ulang halaman",
+    "Pemberitahuan setiap ada penjualan baru, dan transaksi baru disorot di Riwayat"
   ]
 }

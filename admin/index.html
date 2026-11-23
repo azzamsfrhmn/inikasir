@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=19">
+<link rel="stylesheet" href="../assets/app.css?v=20">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="../assets/icons/admin.svg">
 <link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/admin-192.png">
@@ -30,7 +30,7 @@
     </div>
   </div>
   <div class="hdr-stat admin-only">
-    <div class="sub">Omzet hari ini</div>
+    <div class="sub"><i class="live-dot" id="liveDot" title="Menyambungkan..."></i>Omzet hari ini</div>
     <b id="hdrToday">Rp0</b>
   </div>
 </header>
@@ -498,9 +498,9 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="../config.js?v=19"></script>
+<script src="../config.js?v=20"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="../assets/common.js?v=19"></script>
+<script src="../assets/common.js?v=20"></script>
 <script>
 "use strict";
 let sb = null, user = null, shop = null;
@@ -619,6 +619,7 @@ $("#fReset").addEventListener("submit", async (e) => {
 });
 
 async function logout() {
+  if (live) { sb.removeChannel(live).catch(() => {}); live = null; liveOk = false; $("#liveDot").classList.remove("on"); }
   await sb.auth.signOut();
   user = null; shop = null;
   history.replaceState(null, "", location.pathname);
@@ -665,7 +666,53 @@ function enterApp(page) {
   renderHeader();
   refreshToday();
   go(page || "laporan");
+  startLive();
 }
+
+/* ================= Data langsung (realtime) =================
+   Penjualan, batal, uang masuk/keluar, stok, dan buka/tutup kasir dari HP kasir langsung
+   muncul tanpa muat ulang halaman (butuh migrasi 008). Kalau realtime belum aktif atau
+   sambungan putus, halaman tetap diperbarui tiap 30 detik. */
+let live = null, liveOk = false, liveDirty = false, liveT = null, liveRunning = false;
+function startLive() {
+  if (live || !shop) return;
+  const filter = `store_id=eq.${shop.id}`;
+  live = sb.channel("toko-" + shop.id);
+  ["transactions", "cashflow", "products", "cash_sessions"].forEach((table) =>
+    live.on("postgres_changes", { event: "*", schema: "public", table, filter }, (p) => onLive(table, p)));
+  live.subscribe((status) => {
+    const was = liveOk;
+    liveOk = status === "SUBSCRIBED";
+    const dot = $("#liveDot");
+    dot.classList.toggle("on", liveOk);
+    dot.title = liveOk ? "Tersambung langsung: data dari HP kasir masuk otomatis" : "Diperbarui tiap 30 detik";
+    if (liveOk && !was) liveRefresh();   // tersambung lagi: ambil yang terlewat
+  });
+}
+function onLive(table, p) {
+  if (table === "transactions" && p.eventType === "INSERT" && p.new && !p.new.voided)
+    toast(`Penjualan baru ${rp(p.new.total)} · ${p.new.method === "qris" ? "QRIS" : "Tunai"}`);
+  clearTimeout(liveT);
+  liveT = setTimeout(liveRefresh, 700);   // gabungkan beberapa perubahan sekaligus
+}
+async function liveRefresh() {
+  if (!shop || !user) return;
+  if (document.hidden) { liveDirty = true; return; }
+  refreshToday();
+  // jangan ganggu pemilik yang sedang mengisi formulir / membuka jendela
+  if (document.querySelector(".modal.show") || busyTyping() || liveRunning) { liveDirty = true; return; }
+  liveDirty = false; liveRunning = true; quiet = true;
+  const y = window.scrollY;
+  try {
+    if (currentPage === "riwayat") await renderHistory();
+    else if (currentPage === "laporan") await renderReport();
+    else if (currentPage === "keuangan") await renderFinance();
+    else if (currentPage === "produk") await loadProducts();
+  } catch (e) { /* biarkan tampilan lama */ }
+  finally { quiet = false; liveRunning = false; window.scrollTo(0, y); }
+}
+setInterval(() => { if (liveDirty) liveRefresh(); }, 4000);
+setInterval(() => { if (!liveOk && !document.hidden) liveRefresh(); }, 30000);
 
 /* ================= Ambil data ================= */
 // Ambil semua baris (Supabase membatasi 1000 baris per permintaan)
@@ -688,7 +735,8 @@ async function fetchTx(fromKey, toKey) {
 async function fetchCashflow(fromKey, toKey) {
   return fetchAll(() => sb.from("cashflow").select("*").eq("store_id", shop.id).gte("date", fromKey).lte("date", toKey).order("date"));
 }
-function loadingInto(...ids) { ids.forEach((id) => ($("#" + id).innerHTML = `<div class="empty">Memuat...</div>`)); }
+let quiet = false;   // true saat halaman dimuat ulang oleh pembaruan langsung: jangan kosongkan isi dulu
+function loadingInto(...ids) { if (quiet) return; ids.forEach((id) => ($("#" + id).innerHTML = `<div class="empty">Memuat...</div>`)); }
 function errorInto(e, ...ids) { ids.forEach((id) => ($("#" + id).innerHTML = `<div class="empty">${esc(errMsg(e))}</div>`)); }
 
 /* ================= HPP (modal barang terjual) ================= */
@@ -1050,10 +1098,10 @@ function exportFinCsv() {
 }
 
 /* ================= Riwayat ================= */
-let histData = [], histFilter = "semua";
+let histData = [], histFilter = "semua", histSeen = null;
 async function renderHistory() {
   const k = $("#histDate").value || dayKey(new Date());
-  loadingInto("histList"); $("#histSplit").innerHTML = "";
+  loadingInto("histList"); if (!quiet) $("#histSplit").innerHTML = "";
   try { histData = (await fetchTx(k, k)).reverse(); } catch (e) { return errorInto(e, "histList"); }
   drawHistory(k);
 }
@@ -1064,8 +1112,10 @@ function drawHistory(k = $("#histDate").value || dayKey(new Date())) {
   const valid = shown.filter((t) => !t.voided);
   const sum = valid.reduce((s, t) => s + t.total, 0);
   const label = histFilter === "semua" ? "" : " " + PAY[histFilter].label;
+  const seen = histSeen && histSeen.day === k ? histSeen.ids : null;
+  histSeen = { day: k, ids: new Set(histData.map((t) => t.id)) };
   $("#histList").innerHTML = shown.length ? `<div class="muted" style="font-size:14px;padding-bottom:6px">${valid.length} transaksi${label}, total ${rp(sum)}</div>` + shown.map((t) => `
-    <div class="it ${t.voided ? "" : "m-" + t.method}" data-tx="${t.id}" style="cursor:pointer">
+    <div class="it ${t.voided ? "" : "m-" + t.method}${seen && !seen.has(t.id) ? " fresh" : ""}" data-tx="${t.id}" style="cursor:pointer">
       <div class="grow">
         <div><b class="num">${fmtTime(t.time)}</b> <span class="muted" style="font-size:12px">${esc(t.no)}${t.employee_name ? " · " + esc(t.employee_name) : ""}</span></div>
         <div class="muted" style="font-size:13px">${esc(t.items.map((i) => i.qty + "× " + i.name).join(", "))}</div>
@@ -1631,7 +1681,7 @@ $("#shFrom").addEventListener("change", renderShifts);
 $("#shTo").addEventListener("change", renderShifts);
 $("#btnShiftCsv").onclick = exportShiftCsv;
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") $$(".modal.show").forEach((m) => m.classList.remove("show")); });
-document.addEventListener("visibilitychange", () => { if (!document.hidden && shop) refreshToday(); });
+document.addEventListener("visibilitychange", () => { if (!document.hidden && shop) liveRefresh(); });
 setInterval(renderHeader, 60000);
 
 /* ================= Init ================= */
