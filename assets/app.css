@@ -604,3 +604,6 @@ main:has(>#view-connect.active),main:has(>#view-auth.active){max-width:none;padd
 .iconbtn .ic{width:20px;height:20px}
 .iconbtn:active{background:var(--sunk)}
 .pmenu a[role=menuitem]{text-decoration:none}
+
+/* omzet menempel di sebelah tombol akun, bukan di tengah header */
+header.top .hdr-stat{margin-left:auto}
