@@ -535,7 +535,7 @@ async function fetchAll(build) {
 async function fetchTx(fromKey, toKey) {
   const from = startOfDay(fromKey).toISOString();
   const to = new Date(startOfDay(toKey).getTime() + 864e5).toISOString();
-  const rows = await fetchAll(() => sb.from("transactions").select("id,no,created_at,items,total,method,paid,change,voided,employee_name")
+  const rows = await fetchAll(() => sb.from("transactions").select("*")
     .eq("store_id", shop.id).gte("created_at", from).lt("created_at", to).order("created_at"));
   return rows.map((r) => ({ ...r, time: r.created_at }));
 }
