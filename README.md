@@ -1,0 +1,51 @@
+# IniKasir
+
+Aplikasi kasir sederhana untuk usaha jajanan: jualan di HP penjaga, laporan dan keuangan di halaman pemilik.
+
+- **Halaman kasir** (`/`): untuk penjaga. Hanya bisa mencatat penjualan (tunai atau QRIS). Tetap bisa jualan saat sinyal hilang; penjualan dikirim otomatis begitu online.
+- **Halaman admin** (`/admin/`): untuk pemilik. Daftar dan masuk pakai email. Berisi laporan, keuangan, riwayat, produk, dan pengaturan kasir. Bisa dibuka dari HP mana saja.
+
+Data disimpan di [Supabase](https://supabase.com) (paket gratis cukup). Aturan akses ada di database, jadi penjaga benar-benar tidak bisa membaca transaksi atau keuangan, bukan sekadar disembunyikan di tampilan.
+
+## Setup (sekali saja, sekitar 15 menit)
+
+### 1. Buat proyek Supabase
+1. Daftar di https://supabase.com, lalu **New project**. Region: **Southeast Asia (Singapore)**. Simpan password database-nya.
+2. Tunggu proyek selesai dibuat (1–2 menit).
+
+### 2. Pasang database
+1. Buka **SQL Editor** > **New query**.
+2. Tempel seluruh isi [`supabase/schema.sql`](supabase/schema.sql), lalu **Run**. Harus muncul "Success. No rows returned".
+
+### 3. Atur login
+Di **Authentication**:
+1. **Sign In / Providers**: nyalakan **Allow anonymous sign-ins** (dipakai HP kasir, yang tidak punya email). Biarkan **Email** tetap menyala.
+2. **URL Configuration**:
+   - **Site URL**: `https://<akun-github>.github.io/inikasir/admin/`
+   - **Redirect URLs**: tambahkan `https://<akun-github>.github.io/inikasir/admin/`
+
+### 4. Sambungkan aplikasi
+Buka **Project Settings** > **Data API** (atau **API**). Salin **Project URL** dan **anon public** key ke [`config.js`](config.js):
+
+```js
+window.INIKASIR_CONFIG = {
+  supabaseUrl: "https://xxxx.supabase.co",
+  supabaseAnonKey: "eyJ...",
+};
+```
+
+Anon key aman ditaruh di sini karena semua akses dijaga aturan di database. **Jangan** pernah menaruh `service_role` key di aplikasi.
+
+### 5. Mulai pakai
+1. Pemilik buka `/admin/`, **Daftar**, klik link konfirmasi di email, lalu **Buat toko**.
+2. Di **Setelan**: atur **PIN kasir**, upload **QRIS**, cek **Produk**.
+3. Di HP penjaga buka `/` (halaman kasir), masukkan **kode toko** dan **PIN kasir**. Tambahkan ke layar utama lewat menu Chrome.
+
+## Catatan
+- Proyek Supabase gratis dijeda otomatis kalau tidak ada aktivitas sekitar seminggu. Kalau toko tutup lama, buka dashboard Supabase dan tekan **Restore**.
+- Email konfirmasi bawaan Supabase dibatasi beberapa email per jam. Untuk satu toko ini cukup.
+- Pemilik bisa memutus HP kasir yang hilang dari **Setelan > Penjaga kasir**, dan mengganti kode toko kalau kodenya bocor.
+
+## Pengembangan
+- `supabase/schema.sql`: tabel, aturan akses (RLS), dan fungsi `create_store`, `join_store`, `record_sale`, dll.
+- `index.html`: halaman kasir. `admin/index.html`: halaman admin. `assets/`: CSS dan kode bersama. `sw.js`: cache untuk mode offline.

@@ -2,13 +2,926 @@
 <html lang="id">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2c5a39">
 <meta name="robots" content="noindex">
 <title>Admin</title>
-<meta http-equiv="refresh" content="0; url=../?admin">
-<script>location.replace("../?admin");</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/app.css">
 </head>
-<body style="font-family:system-ui,sans-serif;padding:24px">
-<a href="../?admin">Buka halaman admin</a>
+<body>
+
+<header class="top">
+  <div>
+    <h1 id="hdrName">Admin</h1>
+    <div class="sub" id="hdrDate"></div>
+  </div>
+  <div class="row admin-only">
+    <div class="right">
+      <div class="sub">Omzet hari ini</div>
+      <div style="font-weight:800" id="hdrToday">Rp0</div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="loading" id="view-loading">Memuat...</div>
+
+  <!-- ========== MASUK / DAFTAR ========== -->
+  <section class="page" id="view-auth">
+    <form class="card auth stack" id="fLogin" data-auth="masuk">
+      <div><h2>Masuk</h2><p class="lede">Halaman pemilik toko: laporan, keuangan, produk, dan pengaturan kasir.</p></div>
+      <div><label class="f" for="lEmail">Email</label><input class="in" id="lEmail" type="email" autocomplete="email" required></div>
+      <div><label class="f" for="lPass">Password</label><input class="in" id="lPass" type="password" autocomplete="current-password" required></div>
+      <div class="err" id="lErr"></div>
+      <button class="btn primary block">Masuk</button>
+      <div class="row wrap" style="justify-content:space-between">
+        <a class="linkbtn" href="#daftar">Belum punya akun? Daftar</a>
+        <a class="linkbtn" href="#lupa">Lupa password</a>
+      </div>
+    </form>
+
+    <form class="card auth stack" id="fSignup" data-auth="daftar">
+      <div><h2>Daftar akun pemilik</h2><p class="lede">Satu akun untuk satu toko. Penjaga kasir tidak perlu daftar, HP-nya nanti disambungkan pakai kode toko.</p></div>
+      <div><label class="f" for="sEmail">Email</label><input class="in" id="sEmail" type="email" autocomplete="email" required></div>
+      <div><label class="f" for="sPass">Password (minimal 8 karakter)</label><input class="in" id="sPass" type="password" autocomplete="new-password" minlength="8" required></div>
+      <div><label class="f" for="sPass2">Ulangi password</label><input class="in" id="sPass2" type="password" autocomplete="new-password" minlength="8" required></div>
+      <div class="err" id="sErr"></div>
+      <button class="btn primary block">Daftar</button>
+      <a class="linkbtn" href="#masuk">Sudah punya akun? Masuk</a>
+    </form>
+
+    <div class="card auth stack" data-auth="cek-email">
+      <h2>Cek email kamu</h2>
+      <p style="margin:0">Kami mengirim link konfirmasi ke <b id="sentTo"></b>. Buka emailnya, klik link itu, dan kamu akan kembali ke halaman ini dalam keadaan sudah masuk.</p>
+      <p class="muted" style="margin:0;font-size:14px">Tidak ada di kotak masuk? Cek folder spam atau promosi.</p>
+      <a class="linkbtn" href="#masuk">Kembali ke halaman masuk</a>
+    </div>
+
+    <form class="card auth stack" id="fForgot" data-auth="lupa">
+      <div><h2>Lupa password</h2><p class="lede">Masukkan email akunmu. Kami kirim link untuk membuat password baru.</p></div>
+      <div><label class="f" for="fEmail">Email</label><input class="in" id="fEmail" type="email" autocomplete="email" required></div>
+      <div class="err" id="fErr"></div>
+      <button class="btn primary block">Kirim link</button>
+      <a class="linkbtn" href="#masuk">Kembali ke halaman masuk</a>
+    </form>
+
+    <form class="card auth stack" id="fReset" data-auth="reset">
+      <div><h2>Buat password baru</h2></div>
+      <div><label class="f" for="rPass">Password baru (minimal 8 karakter)</label><input class="in" id="rPass" type="password" autocomplete="new-password" minlength="8" required></div>
+      <div><label class="f" for="rPass2">Ulangi password baru</label><input class="in" id="rPass2" type="password" autocomplete="new-password" minlength="8" required></div>
+      <div class="err" id="rErr"></div>
+      <button class="btn primary block">Simpan password</button>
+    </form>
+  </section>
+
+  <!-- ========== BUAT TOKO ========== -->
+  <section class="page" id="view-create">
+    <form class="card auth stack" id="fCreate">
+      <div><h2>Buat toko</h2><p class="lede">Nama ini muncul di layar kasir dan di struk. Bisa diganti kapan saja.</p></div>
+      <div><label class="f" for="csName">Nama toko</label><input class="in" id="csName" maxlength="60" required placeholder="Contoh: Otak-otak Bu Ani"></div>
+      <div class="err" id="csErr"></div>
+      <button class="btn primary block">Buat toko</button>
+      <button type="button" class="linkbtn" data-logout>Keluar dari akun ini</button>
+    </form>
+  </section>
+
+  <!-- ========== LAPORAN ========== -->
+  <section class="page" id="pg-laporan">
+    <div class="card" style="margin-bottom:12px">
+      <div class="row wrap">
+        <div class="grow"><label class="f">Dari</label><input type="date" class="in" id="repFrom"></div>
+        <div class="grow"><label class="f">Sampai</label><input type="date" class="in" id="repTo"></div>
+      </div>
+      <div class="row wrap" style="margin-top:10px">
+        <button class="btn ghost" data-range="today">Hari ini</button>
+        <button class="btn ghost" data-range="yesterday">Kemarin</button>
+        <button class="btn ghost" data-range="7">7 hari</button>
+        <button class="btn ghost" data-range="month">Bulan ini</button>
+      </div>
+    </div>
+    <div class="card" id="repStats" style="margin-bottom:12px"></div>
+    <div class="card" style="margin-bottom:12px">
+      <h3 style="margin-bottom:8px">Yang paling laku</h3>
+      <div id="repItems"></div>
+    </div>
+    <div class="card">
+      <h3 style="margin-bottom:8px">Rekap per hari</h3>
+      <div id="repDays" class="tscroll"></div>
+      <div class="row wrap" style="margin-top:12px"><button class="btn primary" id="btnCsv">Unduh CSV (bisa dibuka di Excel)</button></div>
+    </div>
+  </section>
+
+  <!-- ========== KEUANGAN ========== -->
+  <section class="page" id="pg-keuangan">
+    <div class="card" style="margin-bottom:12px">
+      <div class="row wrap">
+        <div class="grow"><label class="f">Dari</label><input type="date" class="in" id="finFrom"></div>
+        <div class="grow"><label class="f">Sampai</label><input type="date" class="in" id="finTo"></div>
+      </div>
+      <div class="row wrap" style="margin-top:10px">
+        <button class="btn ghost" data-frange="today">Hari ini</button>
+        <button class="btn ghost" data-frange="7">7 hari</button>
+        <button class="btn ghost" data-frange="month">Bulan ini</button>
+        <button class="btn ghost" data-frange="lastmonth">Bulan lalu</button>
+      </div>
+    </div>
+    <div class="card" id="finStats" style="margin-bottom:12px"></div>
+    <div class="card" style="margin-bottom:12px">
+      <h3 style="margin-bottom:8px">Uang keluar untuk apa saja</h3>
+      <div id="finCats"></div>
+    </div>
+    <div class="card">
+      <div class="row wrap" style="margin-bottom:6px">
+        <h3 class="grow" style="min-width:120px">Catatan kas</h3>
+        <button class="btn danger small" data-addfin="keluar">Catat pengeluaran</button>
+        <button class="btn ghost small" data-addfin="masuk">Catat pemasukan</button>
+      </div>
+      <div class="list" id="finList"></div>
+      <div class="row wrap" style="margin-top:12px"><button class="btn primary" id="btnFinCsv">Unduh CSV (bisa dibuka di Excel)</button></div>
+    </div>
+  </section>
+
+  <!-- ========== RIWAYAT ========== -->
+  <section class="page" id="pg-riwayat">
+    <div class="row" style="margin-bottom:12px">
+      <input type="date" class="in grow" id="histDate">
+      <button class="btn ghost" id="histToday">Hari ini</button>
+    </div>
+    <div class="card"><div class="list" id="histList"></div></div>
+  </section>
+
+  <!-- ========== PRODUK ========== -->
+  <section class="page" id="pg-produk">
+    <div class="row" style="margin-bottom:12px">
+      <h2 class="grow">Produk</h2>
+      <button class="btn primary" id="btnAddProd">Tambah produk</button>
+    </div>
+    <div class="card"><div class="list" id="prodList"></div></div>
+  </section>
+
+  <!-- ========== SETELAN ========== -->
+  <section class="page" id="pg-setelan">
+    <div class="stack">
+      <div class="card stack" id="onboarding"></div>
+
+      <div class="card stack">
+        <h3>Penjaga kasir</h3>
+        <p class="muted" style="margin:0;font-size:14px">Di HP penjaga, buka halaman kasir lalu masukkan kode toko dan PIN kasir. Penjaga hanya bisa mencatat penjualan, tidak bisa melihat laporan atau keuangan.</p>
+        <div class="split">
+          <div>
+            <div class="muted" style="font-size:13px">Kode toko</div>
+            <div class="code-big" id="joinCode">------</div>
+            <button class="btn ghost small" id="btnNewCode">Ganti kode</button>
+          </div>
+          <div>
+            <div class="muted" style="font-size:13px">PIN kasir</div>
+            <div style="font-weight:700;margin:6px 0 10px" id="pinStatus">Memeriksa...</div>
+            <button class="btn primary small" id="btnSetPin">Atur PIN kasir</button>
+          </div>
+        </div>
+        <div>
+          <div class="muted" style="font-size:13px;margin-bottom:4px">HP kasir yang tersambung</div>
+          <div class="list" id="deviceList"></div>
+        </div>
+        <div>
+          <label class="f">Link halaman kasir (buka di HP penjaga)</label>
+          <div class="row"><input class="in grow" id="linkKasir" readonly><button class="btn ghost" data-copy="linkKasir">Salin</button></div>
+        </div>
+      </div>
+
+      <div class="card stack">
+        <h3>Info toko</h3>
+        <div><label class="f" for="setName">Nama toko</label><input class="in" id="setName" maxlength="60"></div>
+        <div><label class="f" for="setAddr">Alamat atau keterangan (muncul di struk)</label><input class="in" id="setAddr" maxlength="120"></div>
+        <div><label class="f" for="setPhone">No. WhatsApp (opsional, muncul di struk)</label><input class="in" id="setPhone" inputmode="tel" maxlength="20"></div>
+        <button class="btn primary" id="btnSaveInfo">Simpan</button>
+      </div>
+
+      <div class="card stack">
+        <h3>QRIS</h3>
+        <p class="muted" style="margin:0;font-size:14px">Upload foto atau screenshot QRIS statis BCA. Kalau kodenya terbaca, tiap transaksi di HP kasir muncul QR dengan nominal yang sudah terisi. Kalau tidak terbaca, yang ditampilkan foto QRIS aslinya.</p>
+        <input type="file" accept="image/*" id="qrisFile" class="in">
+        <div id="qrisStatus"></div>
+        <details>
+          <summary class="muted" style="font-size:13px;cursor:pointer">Atau tempel kode QRIS manual</summary>
+          <textarea class="in" id="qrisText" rows="4" style="margin-top:8px;font-family:monospace;font-size:12px" placeholder="00020101021126..."></textarea>
+          <button class="btn ghost" id="btnQrisText" style="margin-top:8px">Pakai kode ini</button>
+        </details>
+        <label class="row" style="font-size:14px"><input type="checkbox" id="setDynamic"> Isi nominal otomatis di QR (disarankan)</label>
+        <button class="btn danger" id="btnQrisDel">Hapus QRIS</button>
+      </div>
+
+      <div class="card stack">
+        <h3>Akun</h3>
+        <div class="muted" style="font-size:14px">Masuk sebagai <b id="accEmail"></b></div>
+        <div class="row wrap">
+          <button class="btn ghost" id="btnChangePass">Ganti password</button>
+          <button class="btn primary" id="btnExport">Unduh semua data</button>
+          <button class="btn danger" data-logout>Keluar</button>
+        </div>
+        <p class="muted" style="margin:0;font-size:13px">Kalau masuk di HP kasir, tekan Keluar setelah selesai. HP kasir tetap tersambung.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="backdrop" id="backdrop"></div>
+
+<nav class="bottom admin-only" aria-label="Menu admin">
+  <button data-page="laporan">Laporan</button>
+  <button data-page="keuangan">Keuangan</button>
+  <button data-page="riwayat">Riwayat</button>
+  <button data-page="produk">Produk</button>
+  <button data-page="setelan">Setelan</button>
+</nav>
+
+<!-- Detail transaksi -->
+<div class="modal" id="mReceipt"><div class="box">
+  <div class="row" style="justify-content:space-between;margin-bottom:10px"><h2 style="margin:0">Detail transaksi</h2><button class="btn ghost small" data-close="mReceipt">Tutup</button></div>
+  <div id="printArea"></div>
+  <div class="row wrap" style="margin-top:12px">
+    <button class="btn ghost grow" id="btnPrint">Cetak</button>
+    <button class="btn ghost grow" id="btnShare">Kirim struk</button>
+  </div>
+  <button class="btn danger block" id="btnVoid" style="margin-top:8px">Batalkan transaksi ini</button>
+</div></div>
+
+<!-- Produk -->
+<div class="modal" id="mProd"><div class="box stack">
+  <h2 id="prodTitle">Tambah produk</h2>
+  <div><label class="f" for="pName">Nama produk</label><input class="in" id="pName" maxlength="80"></div>
+  <div><label class="f" for="pPrice">Harga (Rp)</label><input class="in num" id="pPrice" inputmode="numeric"></div>
+  <div><label class="f" for="pCat">Kategori</label><input class="in" id="pCat" list="catList" maxlength="30"><datalist id="catList"></datalist></div>
+  <label class="row" style="font-size:14px"><input type="checkbox" id="pActive" checked> Tampilkan di kasir</label>
+  <div class="row">
+    <button class="btn danger" id="pDelete" hidden>Hapus</button>
+    <div class="grow"></div>
+    <button class="btn ghost" data-close="mProd">Batal</button>
+    <button class="btn primary" id="pSave">Simpan</button>
+  </div>
+</div></div>
+
+<!-- Catatan kas -->
+<div class="modal" id="mFin"><div class="box stack">
+  <h2 id="finTitle">Catat pengeluaran</h2>
+  <div><label class="f" for="fDate">Tanggal</label><input type="date" class="in" id="fDate"></div>
+  <div><label class="f" for="fAmt">Nominal (Rp)</label><input class="in num" id="fAmt" inputmode="numeric" style="font-size:18px;font-weight:700"></div>
+  <div><label class="f" for="fCat">Kategori</label><input class="in" id="fCat" list="finCatList" maxlength="40"><datalist id="finCatList"></datalist></div>
+  <div><label class="f" for="fVia">Dibayar atau diterima lewat</label>
+    <select class="in" id="fVia"><option value="tunai">Tunai (uang laci)</option><option value="bank">Rekening, QRIS, atau transfer</option></select></div>
+  <div><label class="f" for="fNote">Catatan (opsional)</label><input class="in" id="fNote" maxlength="120" placeholder="Contoh: beli ikan tenggiri 2 kg"></div>
+  <div class="row">
+    <div class="grow"></div>
+    <button class="btn ghost" data-close="mFin">Batal</button>
+    <button class="btn primary" id="fSave">Simpan</button>
+  </div>
+</div></div>
+
+<!-- PIN kasir -->
+<div class="modal" id="mPin"><div class="box stack" style="max-width:360px">
+  <h2>Atur PIN kasir</h2>
+  <p class="muted" style="margin:0;font-size:14px">4 sampai 6 angka. Kasih tahu PIN ini ke penjaga saat menyambungkan HP. HP yang sudah tersambung tidak perlu memasukkan ulang.</p>
+  <input class="in num" id="pinIn" type="password" inputmode="numeric" maxlength="6" style="font-size:22px;letter-spacing:.2em;text-align:center">
+  <div class="err" id="pinErr"></div>
+  <div class="row"><div class="grow"></div><button class="btn ghost" data-close="mPin">Batal</button><button class="btn primary" id="pinSave">Simpan</button></div>
+</div></div>
+
+<!-- Ganti password -->
+<div class="modal" id="mPass"><div class="box stack" style="max-width:360px">
+  <h2>Ganti password</h2>
+  <div><label class="f" for="cpPass">Password baru (minimal 8 karakter)</label><input class="in" id="cpPass" type="password" autocomplete="new-password" minlength="8"></div>
+  <div class="err" id="cpErr"></div>
+  <div class="row"><div class="grow"></div><button class="btn ghost" data-close="mPass">Batal</button><button class="btn primary" id="cpSave">Simpan</button></div>
+</div></div>
+
+<div class="toast" id="toast"></div>
+
+<script src="../config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<script src="../assets/common.js"></script>
+<script>
+"use strict";
+let sb = null, user = null, shop = null;
+let products = [];
+let currentPage = "laporan";
+let detailTx = null;
+let recovering = false;
+const BASE = location.origin + location.pathname.replace(/admin\/(index\.html)?$/, "");
+
+/* ================= Tampilan ================= */
+function show(view) {
+  $("#view-loading").style.display = view === "loading" ? "" : "none";
+  ["view-auth", "view-create"].forEach((id) => $("#" + id).classList.toggle("active", id === "view-" + view));
+  document.body.classList.toggle("is-admin", view === "app");
+  if (view !== "app") $$("section.page[id^=pg-]").forEach((s) => s.classList.remove("active"));
+}
+function showLoading(msg, retry) {
+  show("loading");
+  $("#view-loading").innerHTML = esc(msg || "Memuat...") + (retry ? `<br><br><button class="btn primary" onclick="location.reload()">Coba lagi</button>` : "");
+}
+function showAuth(which) {
+  show("auth");
+  $$("[data-auth]").forEach((f) => (f.style.display = f.dataset.auth === which ? "" : "none"));
+  $$("#view-auth .err").forEach((e) => (e.textContent = ""));
+  const first = $(`[data-auth="${which}"] input`); if (first) setTimeout(() => first.focus(), 50);
+  renderHeader();
+}
+function authRoute() {
+  if (recovering) return showAuth("reset");
+  const h = location.hash.slice(1);
+  showAuth(["daftar", "lupa", "cek-email"].includes(h) ? h : "masuk");
+}
+function renderHeader() {
+  $("#hdrName").textContent = shop ? shop.name + " · Admin" : "Admin";
+  $("#hdrDate").textContent = fmtDate(new Date());
+  document.title = shop ? "Admin · " + shop.name : "Admin";
+}
+async function refreshToday() {
+  if (!shop) return;
+  try {
+    const k = dayKey(new Date());
+    const tx = await fetchTx(k, k);
+    $("#hdrToday").textContent = rp(tx.filter((t) => !t.voided).reduce((s, t) => s + t.total, 0));
+  } catch (e) { /* biarkan angka lama */ }
+}
+function go(page) {
+  currentPage = page;
+  $$("section.page[id^=pg-]").forEach((s) => s.classList.toggle("active", s.id === "pg-" + page));
+  $$("nav.bottom button").forEach((b) => b.classList.toggle("active", b.dataset.page === page));
+  if (page === "riwayat") renderHistory();
+  if (page === "laporan") renderReport();
+  if (page === "keuangan") renderFinance();
+  if (page === "produk") loadProducts();
+  if (page === "setelan") renderSettings();
+  window.scrollTo(0, 0);
+}
+function setBusy(el, text) { el.dataset.label = el.dataset.label || el.textContent; el.disabled = !!text; el.textContent = text || el.dataset.label; }
+
+/* ================= Login, daftar, lupa password ================= */
+window.addEventListener("hashchange", () => { if (!user) authRoute(); });
+
+$("#fLogin").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const btn = e.submitter || $("#fLogin button"); setBusy(btn, "Masuk...");
+  const { error } = await sb.auth.signInWithPassword({ email: $("#lEmail").value.trim(), password: $("#lPass").value });
+  setBusy(btn);
+  if (error) return ($("#lErr").textContent = errMsg(error));
+  $("#lPass").value = "";
+  history.replaceState(null, "", location.pathname);
+  boot();
+});
+
+$("#fSignup").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = $("#sEmail").value.trim(), p1 = $("#sPass").value, p2 = $("#sPass2").value;
+  if (p1.length < 8) return ($("#sErr").textContent = "Password minimal 8 karakter.");
+  if (p1 !== p2) return ($("#sErr").textContent = "Kedua password tidak sama.");
+  const btn = e.submitter || $("#fSignup button"); setBusy(btn, "Mendaftar...");
+  const { data, error } = await sb.auth.signUp({ email, password: p1, options: { emailRedirectTo: location.origin + location.pathname } });
+  setBusy(btn);
+  if (error) return ($("#sErr").textContent = errMsg(error));
+  $("#sPass").value = $("#sPass2").value = "";
+  if (data.session) { history.replaceState(null, "", location.pathname); return boot(); }
+  // Supabase sengaja tidak memberi tahu kalau email sudah terdaftar (identities kosong)
+  if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+    return ($("#sErr").textContent = "Email ini sudah terdaftar. Silakan masuk atau pakai Lupa password.");
+  }
+  $("#sentTo").textContent = email;
+  location.hash = "cek-email";
+});
+
+$("#fForgot").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const btn = e.submitter || $("#fForgot button"); setBusy(btn, "Mengirim...");
+  const { error } = await sb.auth.resetPasswordForEmail($("#fEmail").value.trim(), { redirectTo: location.origin + location.pathname });
+  setBusy(btn);
+  if (error) return ($("#fErr").textContent = errMsg(error));
+  $("#fErr").textContent = "";
+  toast("Link dikirim. Cek email kamu.");
+  location.hash = "masuk";
+});
+
+$("#fReset").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const p1 = $("#rPass").value, p2 = $("#rPass2").value;
+  if (p1.length < 8) return ($("#rErr").textContent = "Password minimal 8 karakter.");
+  if (p1 !== p2) return ($("#rErr").textContent = "Kedua password tidak sama.");
+  const btn = e.submitter || $("#fReset button"); setBusy(btn, "Menyimpan...");
+  const { error } = await sb.auth.updateUser({ password: p1 });
+  setBusy(btn);
+  if (error) return ($("#rErr").textContent = errMsg(error));
+  recovering = false; $("#rPass").value = $("#rPass2").value = "";
+  toast("Password baru disimpan");
+  history.replaceState(null, "", location.pathname);
+  boot();
+});
+
+async function logout() {
+  await sb.auth.signOut();
+  user = null; shop = null;
+  history.replaceState(null, "", location.pathname);
+  authRoute();
+}
+
+/* ================= Buat toko ================= */
+$("#fCreate").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const btn = e.submitter || $("#fCreate button"); setBusy(btn, "Membuat toko...");
+  const { data, error } = await sb.rpc("create_store", { p_name: $("#csName").value.trim() });
+  setBusy(btn);
+  if (error) return ($("#csErr").textContent = errMsg(error));
+  shop = Array.isArray(data) ? data[0] : data;
+  enterApp("setelan");
+  toast("Toko dibuat. Lanjutkan langkah awal di bawah.");
+});
+
+/* ================= Mulai ================= */
+async function boot() {
+  showLoading("Memuat...");
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { user = null; return authRoute(); }
+  if (recovering) return showAuth("reset");
+  if (session.user.is_anonymous) { await sb.auth.signOut(); return authRoute(); }
+  user = session.user;
+  try {
+    const m = await sb.from("store_members").select("store_id").eq("user_id", user.id).eq("role", "owner").maybeSingle();
+    if (m.error) throw m.error;
+    if (!m.data) { show("create"); $("#csName").focus(); return; }
+    const s = await sb.from("stores").select("*").eq("id", m.data.store_id).single();
+    if (s.error) throw s.error;
+    shop = s.data;
+    enterApp();
+  } catch (e) {
+    showLoading(errMsg(e), true);
+  }
+}
+function enterApp(page) {
+  show("app");
+  renderHeader();
+  refreshToday();
+  go(page || "laporan");
+}
+
+/* ================= Ambil data ================= */
+// Ambil semua baris (Supabase membatasi 1000 baris per permintaan)
+async function fetchAll(build) {
+  const out = []; const size = 1000;
+  for (let from = 0; ; from += size) {
+    const { data, error } = await build().range(from, from + size - 1);
+    if (error) throw error;
+    out.push(...data);
+    if (data.length < size) return out;
+  }
+}
+async function fetchTx(fromKey, toKey) {
+  const from = startOfDay(fromKey).toISOString();
+  const to = new Date(startOfDay(toKey).getTime() + 864e5).toISOString();
+  const rows = await fetchAll(() => sb.from("transactions").select("id,no,created_at,items,total,method,paid,change,voided")
+    .eq("store_id", shop.id).gte("created_at", from).lt("created_at", to).order("created_at"));
+  return rows.map((r) => ({ ...r, time: r.created_at }));
+}
+async function fetchCashflow(fromKey, toKey) {
+  return fetchAll(() => sb.from("cashflow").select("*").eq("store_id", shop.id).gte("date", fromKey).lte("date", toKey).order("date"));
+}
+function loadingInto(...ids) { ids.forEach((id) => ($("#" + id).innerHTML = `<div class="empty">Memuat...</div>`)); }
+function errorInto(e, ...ids) { ids.forEach((id) => ($("#" + id).innerHTML = `<div class="empty">${esc(errMsg(e))}</div>`)); }
+
+/* ================= Laporan ================= */
+function setRange(r) {
+  const now = new Date(); let from = new Date(now), to = new Date(now);
+  if (r === "yesterday") { from.setDate(now.getDate() - 1); to = new Date(from); }
+  else if (r === "7") from.setDate(now.getDate() - 6);
+  else if (r === "month") from = new Date(now.getFullYear(), now.getMonth(), 1);
+  $("#repFrom").value = dayKey(from); $("#repTo").value = dayKey(to);
+  if (shop) renderReport();
+}
+const sortedRange = (a, b) => (a > b ? [b, a] : [a, b]);
+let repData = [];
+async function renderReport() {
+  const [a, b] = sortedRange($("#repFrom").value, $("#repTo").value);
+  loadingInto("repStats", "repItems", "repDays");
+  let list;
+  try { list = (await fetchTx(a, b)).filter((t) => !t.voided); } catch (e) { return errorInto(e, "repStats", "repItems", "repDays"); }
+  repData = list;
+  const omzet = list.reduce((s, t) => s + t.total, 0);
+  const tunai = list.filter((t) => t.method === "tunai").reduce((s, t) => s + t.total, 0);
+  const qris = omzet - tunai;
+  const items = {};
+  list.forEach((t) => t.items.forEach((i) => { const e = (items[i.name] ||= { qty: 0, sum: 0 }); e.qty += i.qty; e.sum += i.qty * i.price; }));
+  const totalQty = Object.values(items).reduce((s, e) => s + e.qty, 0);
+  const period = a === b ? fmtDateShort(a) : `${fmtDateShort(a)} sampai ${fmtDateShort(b)}`;
+  $("#repStats").innerHTML = `
+    <div class="lead"><div class="k">Omzet ${period}</div><div class="v num">${rp(omzet)}</div>
+      <div class="s">${list.length} transaksi, ${totalQty} item terjual${list.length ? `, rata-rata ${rp(omzet / list.length)} per transaksi` : ""}</div></div>
+    <table class="ledger"><tr><td>Tunai</td><td>${rp(tunai)}</td></tr><tr><td>QRIS</td><td>${rp(qris)}</td></tr></table>`;
+  const rows = Object.entries(items).sort((x, y) => y[1].qty - x[1].qty);
+  const maxQ = rows.length ? rows[0][1].qty : 1;
+  $("#repItems").innerHTML = rows.length ? `<table class="t"><tr><th>Produk</th><th class="right">Qty</th><th class="right">Nilai</th></tr>${rows.map(([n, e]) =>
+    `<tr><td>${esc(n)}<div class="bar"><i style="width:${(e.qty / maxQ) * 100}%"></i></div></td><td class="right num">${e.qty}</td><td class="right num">${rp(e.sum)}</td></tr>`).join("")}</table>`
+    : `<div class="empty">Tidak ada penjualan di periode ini. Coba ubah tanggalnya.</div>`;
+  const days = {};
+  list.forEach((t) => { const k = dayKey(t.time); const d = (days[k] ||= { n: 0, tunai: 0, qris: 0 }); d.n++; d[t.method] += t.total; });
+  const dRows = Object.entries(days).sort((x, y) => y[0].localeCompare(x[0]));
+  $("#repDays").innerHTML = dRows.length ? `<table class="t"><tr><th>Tanggal</th><th class="right">Trx</th><th class="right">Tunai</th><th class="right">QRIS</th><th class="right">Total</th></tr>${dRows.map(([k, d]) =>
+    `<tr><td>${fmtDateShort(k)}</td><td class="right num">${d.n}</td><td class="right num">${rp(d.tunai)}</td><td class="right num">${rp(d.qris)}</td><td class="right num"><b>${rp(d.tunai + d.qris)}</b></td></tr>`).join("")}</table>`
+    : `<div class="empty">Tidak ada penjualan di periode ini.</div>`;
+}
+function exportCsv() {
+  if (!repData.length) return toast("Tidak ada data di periode ini");
+  const q = (v) => `"${String(v).replace(/"/g, '""')}"`;
+  const lines = [["No Transaksi", "Tanggal", "Jam", "Produk", "Qty", "Harga", "Subtotal", "Metode", "Total Transaksi"].map(q).join(";")];
+  repData.forEach((t) => t.items.forEach((i) => lines.push([t.no, dayKey(t.time), fmtTime(t.time), i.name, i.qty, i.price, i.qty * i.price, t.method.toUpperCase(), t.total].map(q).join(";"))));
+  download(`laporan_${$("#repFrom").value}_${$("#repTo").value}.csv`, "﻿sep=;\n" + lines.join("\n"), "text/csv;charset=utf-8");
+}
+
+/* ================= Keuangan ================= */
+const EXP_CATS = ["Bahan baku", "Kemasan / plastik", "Gas / bahan bakar", "Gaji karyawan", "Sewa tempat", "Transport", "Listrik / air", "Prive (ambil pribadi)", "Lainnya"];
+const INC_CATS = ["Modal awal / tambahan", "Pinjaman", "Pendapatan lain", "Lainnya"];
+let finType = "keluar", finData = { tx: [], cf: [] };
+function setFinRange(r) {
+  const now = new Date(); let from = new Date(now), to = new Date(now);
+  if (r === "7") from.setDate(now.getDate() - 6);
+  else if (r === "month") from = new Date(now.getFullYear(), now.getMonth(), 1);
+  else if (r === "lastmonth") { from = new Date(now.getFullYear(), now.getMonth() - 1, 1); to = new Date(now.getFullYear(), now.getMonth(), 0); }
+  $("#finFrom").value = dayKey(from); $("#finTo").value = dayKey(to);
+  if (shop) renderFinance();
+}
+async function renderFinance() {
+  const [a, b] = sortedRange($("#finFrom").value, $("#finTo").value);
+  loadingInto("finStats", "finCats", "finList");
+  try {
+    const [tx, cf] = await Promise.all([fetchTx(a, b), fetchCashflow(a, b)]);
+    finData = { tx: tx.filter((t) => !t.voided), cf, a, b };
+  } catch (e) { return errorInto(e, "finStats", "finCats", "finList"); }
+  const { tx, cf } = finData;
+  const sTunai = tx.filter((t) => t.method === "tunai").reduce((s, t) => s + t.total, 0);
+  const sQris = tx.filter((t) => t.method === "qris").reduce((s, t) => s + t.total, 0);
+  const sum = (type, via) => cf.filter((c) => c.type === type && (!via || c.via === via)).reduce((s, c) => s + c.amount, 0);
+  const masuk = sum("masuk"), keluar = sum("keluar");
+  const sales = sTunai + sQris;
+  const kasTunai = sTunai + sum("masuk", "tunai") - sum("keluar", "tunai");
+  const kasBank = sQris + sum("masuk", "bank") - sum("keluar", "bank");
+  const opCost = cf.filter((c) => c.type === "keluar" && !c.cat.startsWith("Prive")).reduce((s, c) => s + c.amount, 0);
+  const prive = keluar - opCost;
+  const laba = sales - opCost;
+  const period = a === b ? fmtDateShort(a) : `${fmtDateShort(a)} sampai ${fmtDateShort(b)}`;
+  $("#finStats").innerHTML = `
+    <div class="lead"><div class="k">${laba >= 0 ? "Untung bersih" : "Rugi"} ${period}</div>
+      <div class="v num ${laba >= 0 ? "" : "amt-out"}">${rp(Math.abs(laba))}</div></div>
+    <div class="split">
+      <table class="ledger">
+        <tr><td>Penjualan</td><td>${rp(sales)}</td></tr>
+        <tr><td>Pengeluaran usaha</td><td>− ${rp(opCost)}</td></tr>
+        <tr class="sum"><td>${laba >= 0 ? "Untung bersih" : "Rugi"}</td><td>${rp(laba)}</td></tr>
+      </table>
+      <div>
+        <table class="ledger">
+          <tr><td>Seharusnya ada di laci</td><td>${rp(kasTunai)}</td></tr>
+          <tr><td>Seharusnya masuk rekening</td><td>${rp(kasBank)}</td></tr>
+        </table>
+        <p class="muted" style="font-size:13px;margin:8px 0 0">Bandingkan dengan uang di laci saat tutup toko. Angka ini menghitung penjualan, pemasukan lain${masuk ? ` (${rp(masuk)})` : ""}, dan semua pengeluaran${prive ? `, termasuk ambil pribadi ${rp(prive)}` : ""} di periode ini.</p>
+      </div>
+    </div>`;
+  const cats = {};
+  cf.filter((c) => c.type === "keluar").forEach((c) => { cats[c.cat] = (cats[c.cat] || 0) + c.amount; });
+  const rows = Object.entries(cats).sort((x, y) => y[1] - x[1]);
+  const max = rows.length ? rows[0][1] : 1;
+  $("#finCats").innerHTML = rows.length ? `<table class="t">${rows.map(([n, v]) =>
+    `<tr><td>${esc(n)}<div class="bar"><i style="width:${(v / max) * 100}%"></i></div></td><td class="right num">${rp(v)}</td></tr>`).join("")}<tr><td><b>Total</b></td><td class="right num"><b>${rp(keluar)}</b></td></tr></table>`
+    : `<div class="empty">Belum ada pengeluaran tercatat di periode ini.</div>`;
+  const list = cf.slice().sort((x, y) => (y.date + y.created_at).localeCompare(x.date + x.created_at));
+  $("#finList").innerHTML = list.length ? list.map((c) => `
+    <div class="it">
+      <div class="grow">
+        <div style="font-weight:600">${esc(c.cat)}</div>
+        <div class="muted" style="font-size:13px">${fmtDateShort(c.date)} · ${c.via === "tunai" ? "Tunai" : "Rekening"}${c.note ? " · " + esc(c.note) : ""}</div>
+      </div>
+      <div class="num ${c.type === "masuk" ? "amt-in" : "amt-out"}">${c.type === "masuk" ? "+" : "−"}${rp(c.amount)}</div>
+      <button class="btn ghost small" data-delfin="${c.id}">Hapus</button>
+    </div>`).join("") : `<div class="empty">Belum ada catatan di periode ini. Setiap belanja bahan, gas, atau bayar gaji, catat lewat tombol "Catat pengeluaran".</div>`;
+}
+function openFin(type) {
+  finType = type;
+  $("#finTitle").textContent = type === "keluar" ? "Catat pengeluaran" : "Catat pemasukan lain";
+  $("#fDate").value = dayKey(new Date()); $("#fAmt").value = ""; $("#fNote").value = ""; $("#fVia").value = "tunai";
+  const cats = type === "keluar" ? EXP_CATS : INC_CATS;
+  $("#fCat").value = cats[0];
+  $("#finCatList").innerHTML = [...new Set([...cats, ...finData.cf.filter((c) => c.type === type).map((c) => c.cat)])].map((c) => `<option value="${esc(c)}">`).join("");
+  openModal("mFin"); setTimeout(() => $("#fAmt").focus(), 50);
+}
+async function saveFin() {
+  const amount = parseNum($("#fAmt").value);
+  if (!amount) return toast("Nominal wajib diisi");
+  const btn = $("#fSave"); setBusy(btn, "Menyimpan...");
+  const { error } = await sb.from("cashflow").insert({
+    store_id: shop.id, date: $("#fDate").value || dayKey(new Date()), type: finType, amount,
+    cat: $("#fCat").value.trim() || "Lainnya", via: $("#fVia").value, note: $("#fNote").value.trim(),
+  });
+  setBusy(btn);
+  if (error) return toast(errMsg(error));
+  closeModal("mFin"); renderFinance(); toast("Tersimpan");
+}
+function exportFinCsv() {
+  const { tx, cf, a, b } = finData;
+  const q = (v) => `"${String(v).replace(/"/g, '""')}"`;
+  const lines = [["Tanggal", "Jenis", "Kategori", "Via", "Masuk", "Keluar", "Catatan"].map(q).join(";")];
+  const days = {};
+  tx.forEach((t) => { const k = dayKey(t.time) + "|" + t.method; days[k] = (days[k] || 0) + t.total; });
+  const rows = [];
+  Object.entries(days).forEach(([k, v]) => { const [d, m] = k.split("|"); rows.push([d, "Masuk", "Penjualan", m === "qris" ? "Rekening (QRIS)" : "Tunai", v, "", ""]); });
+  cf.forEach((c) => rows.push([c.date, c.type === "masuk" ? "Masuk" : "Keluar", c.cat, c.via === "tunai" ? "Tunai" : "Rekening", c.type === "masuk" ? c.amount : "", c.type === "keluar" ? c.amount : "", c.note]));
+  if (!rows.length) return toast("Tidak ada data di periode ini");
+  rows.sort((x, y) => x[0].localeCompare(y[0])).forEach((r) => lines.push(r.map(q).join(";")));
+  download(`keuangan_${a}_${b}.csv`, "﻿sep=;\n" + lines.join("\n"), "text/csv;charset=utf-8");
+}
+
+/* ================= Riwayat ================= */
+let histData = [];
+async function renderHistory() {
+  const k = $("#histDate").value || dayKey(new Date());
+  loadingInto("histList");
+  try { histData = (await fetchTx(k, k)).reverse(); } catch (e) { return errorInto(e, "histList"); }
+  const valid = histData.filter((t) => !t.voided);
+  const sum = valid.reduce((s, t) => s + t.total, 0);
+  $("#histList").innerHTML = histData.length ? `<div class="muted" style="font-size:14px;padding-bottom:6px">${valid.length} transaksi, total ${rp(sum)}</div>` + histData.map((t) => `
+    <div class="it" data-tx="${t.id}" style="cursor:pointer">
+      <div class="grow">
+        <div><b class="num">${fmtTime(t.time)}</b> <span class="muted" style="font-size:12px">${esc(t.no)}</span></div>
+        <div class="muted" style="font-size:13px">${esc(t.items.map((i) => i.qty + "× " + i.name).join(", "))}</div>
+      </div>
+      <div class="right">
+        <div class="num" style="font-weight:700;${t.voided ? "text-decoration:line-through;color:var(--muted)" : ""}">${rp(t.total)}</div>
+        <span class="tag ${t.voided ? "void" : t.method}">${t.voided ? "Batal" : t.method === "qris" ? "QRIS" : "Tunai"}</span>
+      </div>
+    </div>`).join("") : `<div class="empty">Tidak ada transaksi pada ${fmtDateShort(k)}. Pilih tanggal lain di atas.</div>`;
+}
+function showDetail(id) {
+  detailTx = histData.find((t) => t.id === id); if (!detailTx) return;
+  $("#printArea").innerHTML = receiptHTML(shop, detailTx);
+  $("#btnVoid").hidden = detailTx.voided;
+  openModal("mReceipt");
+}
+async function voidTx() {
+  const tx = detailTx;
+  if (!tx || !confirm(`Batalkan transaksi ${tx.no} senilai ${rp(tx.total)}?\nTransaksi tidak dihitung lagi di laporan.`)) return;
+  const { error } = await sb.from("transactions").update({ voided: true, voided_at: new Date().toISOString() }).eq("id", tx.id);
+  if (error) return toast(errMsg(error));
+  closeModal("mReceipt"); renderHistory(); refreshToday(); toast("Transaksi dibatalkan");
+}
+
+/* ================= Produk ================= */
+let editingPid = null;
+async function loadProducts() {
+  loadingInto("prodList");
+  const { data, error } = await sb.from("products").select("*").eq("store_id", shop.id).order("cat").order("name");
+  if (error) return errorInto(error, "prodList");
+  products = data;
+  $("#prodList").innerHTML = products.length ? products.map((p) => `
+    <div class="it" data-edit="${p.id}" style="cursor:pointer;${p.active ? "" : "opacity:.55"}">
+      <div class="grow"><div style="font-weight:600">${esc(p.name)}</div><div class="muted" style="font-size:13px">${esc(p.cat || "Tanpa kategori")}${p.active ? "" : " · disembunyikan dari kasir"}</div></div>
+      <div class="num" style="font-weight:700">${rp(p.price)}</div>
+    </div>`).join("") : `<div class="empty">Belum ada produk. Tekan "Tambah produk" untuk mulai.</div>`;
+  $("#catList").innerHTML = [...new Set(products.map((p) => p.cat).filter(Boolean))].map((c) => `<option value="${esc(c)}">`).join("");
+}
+function openProd(pid) {
+  editingPid = pid || null;
+  const p = products.find((x) => x.id === pid) || { name: "", price: "", cat: "", active: true };
+  $("#prodTitle").textContent = pid ? "Ubah produk" : "Tambah produk";
+  $("#pName").value = p.name; $("#pPrice").value = p.price ? p.price.toLocaleString("id-ID") : "";
+  $("#pCat").value = p.cat || ""; $("#pActive").checked = p.active !== false;
+  $("#pDelete").hidden = !pid;
+  openModal("mProd"); setTimeout(() => $("#pName").focus(), 50);
+}
+async function saveProd() {
+  const name = $("#pName").value.trim(), price = parseNum($("#pPrice").value);
+  if (!name) return toast("Nama produk wajib diisi");
+  if (!price) return toast("Harga wajib diisi");
+  const row = { name, price, cat: $("#pCat").value.trim(), active: $("#pActive").checked };
+  const btn = $("#pSave"); setBusy(btn, "Menyimpan...");
+  const { error } = editingPid
+    ? await sb.from("products").update(row).eq("id", editingPid)
+    : await sb.from("products").insert({ ...row, store_id: shop.id });
+  setBusy(btn);
+  if (error) return toast(errMsg(error));
+  closeModal("mProd"); loadProducts(); toast("Produk disimpan. HP kasir ikut berubah dalam 1 menit.");
+}
+async function deleteProd() {
+  if (!editingPid || !confirm("Hapus produk ini? Riwayat penjualan lama tetap aman.")) return;
+  const { error } = await sb.from("products").delete().eq("id", editingPid);
+  if (error) return toast(errMsg(error));
+  closeModal("mProd"); loadProducts(); toast("Produk dihapus");
+}
+
+/* ================= Setelan ================= */
+let hasPin = false, devices = [];
+async function renderSettings() {
+  $("#setName").value = shop.name; $("#setAddr").value = shop.address; $("#setPhone").value = shop.phone;
+  $("#setDynamic").checked = !!shop.dynamic_qris;
+  $("#joinCode").textContent = shop.join_code;
+  $("#linkKasir").value = BASE;
+  $("#accEmail").textContent = user.email || "";
+  renderQrisStatus();
+  renderOnboarding();
+  const [pin, dev] = await Promise.all([
+    sb.rpc("has_kasir_pin", { p_store: shop.id }),
+    sb.from("store_members").select("user_id,device_name,last_seen,created_at").eq("store_id", shop.id).eq("role", "kasir").order("created_at"),
+  ]);
+  hasPin = !pin.error && pin.data === true;
+  $("#pinStatus").textContent = pin.error ? "Gagal memeriksa" : hasPin ? "Sudah diatur" : "Belum diatur";
+  $("#btnSetPin").textContent = hasPin ? "Ganti PIN kasir" : "Atur PIN kasir";
+  devices = dev.data || [];
+  $("#deviceList").innerHTML = dev.error ? `<div class="empty">${esc(errMsg(dev.error))}</div>` : devices.length ? devices.map((d) => `
+    <div class="it">
+      <div class="grow"><div style="font-weight:600">${esc(d.device_name || "HP kasir")}</div>
+        <div class="muted" style="font-size:13px">${d.last_seen ? "Terakhir aktif " + new Date(d.last_seen).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "Belum pernah mencatat penjualan"}</div></div>
+      <button class="btn ghost small" data-unlink="${d.user_id}">Putuskan</button>
+    </div>`).join("") : `<div class="muted" style="font-size:14px">Belum ada. Buka link kasir di HP penjaga lalu masukkan kode toko dan PIN kasir.</div>`;
+  renderOnboarding();
+}
+function renderOnboarding() {
+  const steps = [
+    [hasPin, "Atur PIN kasir", "di bagian Penjaga kasir"],
+    [!!(shop.qris_string || shop.qris_image), "Upload QRIS BCA", "di bagian QRIS"],
+    [false, "Cek nama dan harga produk", "di menu Produk"],
+    [devices.length > 0, "Sambungkan HP penjaga", "buka link kasir di HP itu"],
+  ];
+  const done = steps.filter((s) => s[0]).length;
+  $("#onboarding").style.display = hasPin && devices.length && (shop.qris_string || shop.qris_image) ? "none" : "";
+  $("#onboarding").innerHTML = `<h3>Langkah awal (${done} dari ${steps.length})</h3>
+    <ol style="margin:0;padding-left:20px;line-height:1.9">${steps.map(([ok, t, w]) => `<li${ok ? ' style="color:var(--muted);text-decoration:line-through"' : ""}><b>${t}</b> <span class="muted">${w}</span></li>`).join("")}</ol>`;
+}
+function renderQrisStatus() {
+  let html = "";
+  if (shop.qris_string) html += `<div class="change ok" style="text-align:left">Kode QRIS terbaca: ${esc(qrisMerchantName(shop.qris_string) || "nama merchant tidak tercantum")}</div>`;
+  else if (shop.qris_image) html += `<div class="note">QRIS tersimpan sebagai gambar saja (kodenya tidak terbaca). Pembeli harus mengetik nominal sendiri.</div>`;
+  else html += `<div class="muted" style="font-size:14px">Belum ada QRIS. Pilih foto QRIS di atas.</div>`;
+  if (shop.qris_image) html += `<img src="${esc(shop.qris_image)}" alt="QRIS tersimpan" width="180" style="max-width:180px;height:auto;border:1px solid var(--line);border-radius:var(--r-sm);margin-top:8px;display:block">`;
+  $("#qrisStatus").innerHTML = html;
+}
+async function updateShop(patch, okMsg) {
+  const { data, error } = await sb.from("stores").update(patch).eq("id", shop.id).select().single();
+  if (error) { toast(errMsg(error)); return false; }
+  shop = data; renderHeader(); renderQrisStatus(); renderOnboarding();
+  if (okMsg) toast(okMsg);
+  return true;
+}
+function handleQrisFile(file) {
+  if (!file) return;
+  const img = new Image(), reader = new FileReader();
+  reader.onload = () => { img.src = reader.result; };
+  img.onload = async () => {
+    const maxSide = 700, sc = Math.min(1, maxSide / Math.max(img.width, img.height));
+    const c = document.createElement("canvas"); c.width = Math.round(img.width * sc); c.height = Math.round(img.height * sc);
+    const ctx = c.getContext("2d"); ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, c.width, c.height); ctx.drawImage(img, 0, 0, c.width, c.height);
+    const image = c.toDataURL("image/jpeg", 0.85);
+    let code = null;
+    if (window.jsQR) {
+      for (const side of [1600, 1000, 700]) {
+        const s2 = Math.min(1, side / Math.max(img.width, img.height));
+        const c2 = document.createElement("canvas"); c2.width = Math.round(img.width * s2); c2.height = Math.round(img.height * s2);
+        const x2 = c2.getContext("2d"); x2.drawImage(img, 0, 0, c2.width, c2.height);
+        const d = x2.getImageData(0, 0, c2.width, c2.height);
+        code = jsQR(d.data, d.width, d.height, { inversionAttempts: "attemptBoth" });
+        if (code) break;
+      }
+    }
+    const valid = code && !validateQris(code.data);
+    await updateShop({ qris_image: image, qris_string: valid ? code.data.trim() : "" },
+      valid ? "QRIS terbaca dan disimpan" : code ? "QR terbaca tapi: " + validateQris(code.data) : "Kode QR tidak terbaca, gambar tetap disimpan");
+  };
+  img.onerror = () => toast("Gambar tidak bisa dibuka");
+  reader.readAsDataURL(file);
+}
+async function savePin() {
+  const pin = $("#pinIn").value.trim();
+  if (!/^\d{4,6}$/.test(pin)) return ($("#pinErr").textContent = "PIN harus 4 sampai 6 angka.");
+  const btn = $("#pinSave"); setBusy(btn, "Menyimpan...");
+  const { error } = await sb.rpc("set_kasir_pin", { p_store: shop.id, p_pin: pin });
+  setBusy(btn);
+  if (error) return ($("#pinErr").textContent = errMsg(error));
+  $("#pinIn").value = ""; closeModal("mPin"); toast("PIN kasir disimpan"); renderSettings();
+}
+async function exportAll() {
+  try {
+    const [tx, cf, pr] = await Promise.all([
+      fetchAll(() => sb.from("transactions").select("*").eq("store_id", shop.id).order("created_at")),
+      fetchAll(() => sb.from("cashflow").select("*").eq("store_id", shop.id).order("date")),
+      fetchAll(() => sb.from("products").select("*").eq("store_id", shop.id)),
+    ]);
+    const { qris_image, ...info } = shop;
+    download(`data_${shop.name.replace(/\W+/g, "_")}_${dayKey(new Date())}.json`, JSON.stringify({ toko: info, produk: pr, transaksi: tx, kas: cf }, null, 1), "application/json");
+  } catch (e) { toast(errMsg(e)); }
+}
+
+/* ================= Event ================= */
+document.addEventListener("click", async (e) => {
+  const t = e.target.closest("[data-page],[data-close],[data-tx],[data-edit],[data-range],[data-frange],[data-addfin],[data-delfin],[data-copy],[data-unlink],[data-logout]");
+  if (!t) return;
+  const d = t.dataset;
+  if (d.page) go(d.page);
+  else if (d.close) closeModal(d.close);
+  else if (d.tx) showDetail(d.tx);
+  else if (d.edit) openProd(d.edit);
+  else if (d.range) setRange(d.range);
+  else if (d.frange) setFinRange(d.frange);
+  else if (d.addfin) openFin(d.addfin);
+  else if (d.logout !== undefined) logout();
+  else if (d.delfin) {
+    const c = finData.cf.find((x) => x.id === d.delfin);
+    if (!c || !confirm(`Hapus catatan ${c.cat} ${rp(c.amount)}?`)) return;
+    const { error } = await sb.from("cashflow").delete().eq("id", c.id);
+    if (error) return toast(errMsg(error));
+    renderFinance();
+  }
+  else if (d.copy) {
+    const el = $("#" + d.copy);
+    try { await navigator.clipboard.writeText(el.value); } catch (err) { el.select(); document.execCommand("copy"); }
+    toast("Link disalin");
+  }
+  else if (d.unlink) {
+    const dev = devices.find((x) => x.user_id === d.unlink);
+    if (!confirm(`Putuskan ${dev ? dev.device_name : "HP ini"}? HP itu tidak bisa jualan sampai disambungkan lagi pakai kode toko dan PIN kasir.`)) return;
+    const { error } = await sb.from("store_members").delete().eq("store_id", shop.id).eq("user_id", d.unlink);
+    if (error) return toast(errMsg(error));
+    toast("HP diputus"); renderSettings();
+  }
+});
+$("#repFrom").addEventListener("change", renderReport);
+$("#repTo").addEventListener("change", renderReport);
+$("#btnCsv").onclick = exportCsv;
+$("#finFrom").addEventListener("change", renderFinance);
+$("#finTo").addEventListener("change", renderFinance);
+$("#fSave").onclick = saveFin;
+$("#btnFinCsv").onclick = exportFinCsv;
+bindMoneyInput($("#fAmt")); bindMoneyInput($("#pPrice"));
+$("#histDate").addEventListener("change", renderHistory);
+$("#histToday").onclick = () => { $("#histDate").value = dayKey(new Date()); renderHistory(); };
+$("#btnPrint").onclick = () => window.print();
+$("#btnShare").onclick = () => detailTx && shareText(receiptText(shop, detailTx));
+$("#btnVoid").onclick = voidTx;
+$("#btnAddProd").onclick = () => openProd(null);
+$("#pSave").onclick = saveProd;
+$("#pDelete").onclick = deleteProd;
+$("#btnSaveInfo").onclick = () => updateShop({ name: $("#setName").value.trim() || "Toko Saya", address: $("#setAddr").value.trim(), phone: $("#setPhone").value.trim() }, "Info toko disimpan");
+$("#qrisFile").addEventListener("change", (e) => { handleQrisFile(e.target.files[0]); e.target.value = ""; });
+$("#btnQrisText").onclick = async () => {
+  // hanya buang baris baru; spasi di dalam kode QRIS (misal nama merchant) harus tetap ada
+  const s = $("#qrisText").value.replace(/[\r\n\t]+/g, "").trim(), err = validateQris(s);
+  if (err) return toast(err);
+  if (await updateShop({ qris_string: s }, "Kode QRIS disimpan")) $("#qrisText").value = "";
+};
+$("#setDynamic").addEventListener("change", (e) => updateShop({ dynamic_qris: e.target.checked }));
+$("#btnQrisDel").onclick = () => { if (confirm("Hapus QRIS yang tersimpan?")) updateShop({ qris_string: "", qris_image: "" }, "QRIS dihapus"); };
+$("#btnSetPin").onclick = () => { $("#pinErr").textContent = ""; $("#pinIn").value = ""; openModal("mPin"); setTimeout(() => $("#pinIn").focus(), 50); };
+$("#pinSave").onclick = savePin;
+$("#pinIn").addEventListener("keydown", (e) => { if (e.key === "Enter") savePin(); });
+$("#btnNewCode").onclick = async () => {
+  if (!confirm("Ganti kode toko? HP yang sudah tersambung tetap bisa jualan. Kode lama tidak bisa dipakai lagi untuk menyambungkan HP baru.")) return;
+  const { data, error } = await sb.rpc("regenerate_join_code", { p_store: shop.id });
+  if (error) return toast(errMsg(error));
+  shop.join_code = data; $("#joinCode").textContent = data; toast("Kode toko diganti");
+};
+$("#btnChangePass").onclick = () => { $("#cpErr").textContent = ""; $("#cpPass").value = ""; openModal("mPass"); };
+$("#cpSave").onclick = async () => {
+  const p = $("#cpPass").value;
+  if (p.length < 8) return ($("#cpErr").textContent = "Password minimal 8 karakter.");
+  const { error } = await sb.auth.updateUser({ password: p });
+  if (error) return ($("#cpErr").textContent = errMsg(error));
+  closeModal("mPass"); toast("Password diganti");
+};
+$("#btnExport").onclick = exportAll;
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") $$(".modal.show").forEach((m) => m.classList.remove("show")); });
+document.addEventListener("visibilitychange", () => { if (!document.hidden && shop) refreshToday(); });
+setInterval(renderHeader, 60000);
+
+/* ================= Init ================= */
+(async function init() {
+  renderHeader();
+  $("#histDate").value = dayKey(new Date());
+  setRange("today"); setFinRange("month");
+  if (!CONFIGURED) return renderNotConfigured($("main"));
+  if (!window.supabase) return showLoading("Gagal memuat aplikasi. Periksa koneksi internet.", true);
+  // Error dari link email (misal link kedaluwarsa)
+  const hp = new URLSearchParams(location.hash.slice(1));
+  const linkError = hp.get("error_description");
+  if (/type=recovery/.test(location.hash)) recovering = true;
+  sb = makeClient("inikasir-admin");
+  sb.auth.onAuthStateChange((event) => {
+    if (event === "PASSWORD_RECOVERY") { recovering = true; setTimeout(() => showAuth("reset"), 0); }
+    if (event === "SIGNED_OUT" && user) { user = null; shop = null; setTimeout(authRoute, 0); }
+  });
+  await boot();
+  if (linkError) {
+    history.replaceState(null, "", location.pathname);
+    if (!user) { showAuth("masuk"); $("#lErr").textContent = "Link dari email tidak berlaku lagi (" + linkError.replace(/\+/g, " ") + "). Coba masuk, atau minta link baru lewat Lupa password."; }
+  } else if (user && /access_token|type=/.test(location.hash)) {
+    history.replaceState(null, "", location.pathname);
+  }
+})();
+</script>
 </body>
 </html>
