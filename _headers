@@ -10,3 +10,5 @@
   Cache-Control: no-cache
 /config.js
   Cache-Control: no-cache
+/version.json
+  Cache-Control: no-cache

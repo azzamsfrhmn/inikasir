@@ -8,7 +8,7 @@ import { dirname, join } from "path";
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const OUT = join(ROOT, "dist");
 const PUBLIC = [
-  "index.html", "config.js", "sw.js", "_headers",
+  "index.html", "config.js", "sw.js", "_headers", "version.json",
   "kasir/index.html", "kasir/manifest.webmanifest",
   "admin/index.html", "admin/manifest.webmanifest",
   "assets",

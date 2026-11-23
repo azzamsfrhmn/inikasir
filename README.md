@@ -59,7 +59,13 @@ Anon key aman ditaruh di sini karena semua akses dijaga aturan di database. **Ja
 3. Di HP penjaga buka `/kasir/` (atau `/` lalu **Penjaga kasir**), masukkan **kode toko** dan **PIN kasir**. Tambahkan ke layar utama lewat menu Chrome.
 4. Opsional, di menu **Karyawan**: buat karyawan (nama + PIN + hak akses). Setelah ada karyawan aktif, penjaga harus pilih nama dan ketik PIN untuk **buka shift** (jam masuk + kas awal) dan **tutup shift** (jam pulang + kas akhir). Rekap absensi dan selisih kas ada di halaman yang sama.
 
-Setiap kali `assets/common.js` atau `assets/app.css` berubah, naikkan angka `?v=` di `index.html`, `kasir/index.html`, dan `admin/index.html` dan `CACHE` di `sw.js` supaya HP tidak memakai file lama.
+Setiap kali menerbitkan perubahan, jalankan dulu:
+
+```
+npm run rilis -- "Catatan perubahan 1" "Catatan perubahan 2"
+```
+
+Perintah ini menaikkan nomor versi di `version.json` (beserta catatannya), angka `?v=` di ketiga halaman, dan `CACHE` di `sw.js`. Setelah di-push, HP kasir dan admin yang sedang terbuka mendeteksi versi baru dalam 5 menit (atau saat aplikasi dibuka lagi), memuat ulang sendiri ketika keranjang kosong, lalu menampilkan catatan "Yang baru".
 
 ## Catatan
 - Proyek Supabase gratis dijeda otomatis kalau tidak ada aktivitas sekitar seminggu. Kalau toko tutup lama, buka dashboard Supabase dan tekan **Restore**.

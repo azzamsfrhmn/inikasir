@@ -476,3 +476,15 @@ main:has(>#view-connect.active),main:has(>#view-auth.active){max-width:none;padd
 .seg.seg3{grid-template-columns:repeat(3,1fr)}
 .seg button .ic{width:16px;height:16px;margin-right:4px;vertical-align:-3px}
 
+
+/* ---------- Pembaruan aplikasi ---------- */
+.updbar{position:fixed;z-index:55;left:12px;right:12px;top:calc(10px + env(safe-area-inset-top,0px));display:flex;align-items:center;justify-content:space-between;gap:12px;
+  background:var(--ink);color:#fff;padding:8px 8px 8px 18px;border-radius:999px;box-shadow:var(--sh-3);font-size:var(--fs-sm);white-space:nowrap;animation:fade var(--t-med) var(--ease)}
+.updbar span{overflow:hidden;text-overflow:ellipsis}
+@media (min-width:600px){.updbar{left:50%;right:auto;transform:translateX(-50%)}}
+.updbar .btn{background:#fff;color:var(--ink);border:0;min-height:36px;border-radius:999px;padding:0 14px}
+.wn-badge{display:inline-flex;align-items:center;gap:6px;background:var(--leaf-soft);color:var(--leaf-ink);font-weight:700;font-size:12.5px;padding:4px 10px 4px 8px;border-radius:999px}
+.wn-badge .ic{width:15px;height:15px}
+.wn{margin:0;padding:0;list-style:none;display:grid;gap:10px}
+.wn li{position:relative;padding-left:22px;line-height:1.45}
+.wn li::before{content:"";position:absolute;left:4px;top:7px;width:8px;height:8px;border-radius:50%;background:var(--leaf)}

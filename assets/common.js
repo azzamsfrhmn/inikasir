@@ -210,5 +210,75 @@ function renderNotConfigured(target) {
   </div>`;
 }
 
+/* ---------- Pembaruan aplikasi ----------
+   version.json berisi nomor versi + catatan. Halaman mengeceknya saat dibuka, saat kembali ke
+   layar, saat internet kembali, dan tiap 5 menit. Kalau ada versi baru, aplikasi memuat ulang
+   sendiri begitu aman (keranjang kosong, tidak ada jendela terbuka, tidak sedang mengetik).
+   Kalau belum aman, muncul bilah "Versi baru tersedia" dengan tombol Perbarui.
+   Setelah diperbarui, muncul catatan "Yang baru". */
+const UPD = { key: "inikasir-seen-version", current: null, pending: null, canReload: () => true, timer: null };
+async function fetchVersion() {
+  try {
+    const r = await fetch(new URL("../version.json", location.href).href + "?t=" + Date.now(), { cache: "no-store" });
+    return r.ok ? await r.json() : null;
+  } catch (e) { return null; }
+}
+function busyTyping() {
+  const a = document.activeElement;
+  return !!(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && a.value && a.type !== "date");
+}
+function updateSafe() { return !document.querySelector(".modal.show") && !busyTyping() && UPD.canReload(); }
+function doReload() {
+  toast("Memperbarui aplikasi...");
+  setTimeout(() => location.reload(), 900);
+}
+function tryApplyUpdate() {
+  if (!UPD.pending) return;
+  if (document.hidden || updateSafe()) return doReload();
+  if (!$("#updBar")) {
+    document.body.insertAdjacentHTML("beforeend", `<div class="updbar" id="updBar" role="status">
+      <span><b>Versi baru ${esc(UPD.pending.version)}</b> tersedia</span>
+      <button class="btn small" id="updGo">Perbarui</button></div>`);
+    $("#updGo").onclick = () => location.reload();
+  }
+}
+async function checkUpdate() {
+  const v = await fetchVersion();
+  if (!v || !v.version) return;
+  if (!UPD.current) {                       // pertama kali halaman ini mendapat nomor versi
+    UPD.current = v.version;
+    const seen = local.get(UPD.key, null);
+    local.set(UPD.key, v.version);
+    if (seen && seen !== v.version) showWhatsNew(v);
+    return;
+  }
+  if (v.version !== UPD.current) {
+    UPD.pending = v;
+    navigator.serviceWorker?.getRegistration?.().then((r) => r && r.update()).catch(() => {});
+    tryApplyUpdate();
+  }
+}
+function showWhatsNew(v) {
+  const notes = (v.notes || []).map((n) => `<li>${esc(n)}</li>`).join("");
+  document.body.insertAdjacentHTML("beforeend", `<div class="modal show" id="mWhatsNew"><div class="box stack" style="max-width:420px">
+    <div><span class="wn-badge">${ic("download")}Versi ${esc(v.version)}</span></div>
+    <h2 style="margin:0">${esc(BRAND.name)} sudah diperbarui</h2>
+    ${notes ? `<div><div class="muted" style="font-size:13px;font-weight:600;margin-bottom:6px">Yang baru</div><ul class="wn">${notes}</ul></div>` : ""}
+    <div class="row modal-actions"><div class="grow"></div><button class="btn primary" id="wnOk">Oke</button></div>
+  </div></div>`);
+  const close = () => $("#mWhatsNew")?.remove();
+  $("#wnOk").onclick = close;
+  $("#mWhatsNew").addEventListener("click", (e) => { if (e.target.id === "mWhatsNew") close(); });
+}
+// canReload: fungsi dari halaman, true kalau aman dimuat ulang (mis. keranjang kosong)
+function initUpdates(canReload) {
+  if (canReload) UPD.canReload = canReload;
+  checkUpdate();
+  setInterval(checkUpdate, 5 * 60 * 1000);
+  setInterval(tryApplyUpdate, 15 * 1000);   // versi baru menunggu: pasang begitu kasir senggang
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) checkUpdate(); else tryApplyUpdate(); });
+  window.addEventListener("online", checkUpdate);
+}
+
 // Pasang ikon pada elemen statis (skrip dimuat di akhir <body>, jadi DOM sudah ada)
 applyIcons();

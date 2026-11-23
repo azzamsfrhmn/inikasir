@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "test": "node tests/run.mjs",
-    "build": "node scripts/build.mjs"
+    "build": "node scripts/build.mjs",
+    "rilis": "node scripts/rilis.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.2.17"
