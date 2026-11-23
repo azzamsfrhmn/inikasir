@@ -1,9 +1,8 @@
 {
-  "version": "1.7",
+  "version": "1.8",
   "date": "2026-11-24",
   "notes": [
-    "Kategori diatur dulu lewat tombol Kategori di halaman Produk: tambah, ganti nama, urutkan, hapus",
-    "Saat menambah produk, kategori tinggal dipilih dari daftar",
-    "Urutan tab kategori di HP kasir mengikuti urutan dari admin"
+    "Menu Setelan sekarang bernama Akun, dengan kartu profil toko di paling atas",
+    "Tombol Keluar ada di menu profil kanan atas, bisa dibuka dari halaman mana saja"
   ]
 }

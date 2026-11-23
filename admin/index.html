@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=24">
+<link rel="stylesheet" href="../assets/app.css?v=25">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="../assets/icons/admin.svg">
 <link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/admin-192.png">
@@ -32,6 +32,14 @@
   <div class="hdr-stat admin-only">
     <div class="sub"><i class="live-dot" id="liveDot" title="Menyambungkan..."></i>Omzet hari ini</div>
     <b id="hdrToday">Rp0</b>
+  </div>
+  <div class="pwrap admin-only">
+    <button class="avatar" id="btnProfile" aria-haspopup="menu" aria-expanded="false" aria-controls="profileMenu" aria-label="Menu akun"><span id="avInit">A</span></button>
+    <div class="pmenu" id="profileMenu" role="menu" hidden>
+      <div class="pmenu-h"><b id="pmShop"></b><span id="pmEmail"></span></div>
+      <button role="menuitem" data-page="setelan" data-ic="user">Akun &amp; toko</button>
+      <button role="menuitem" class="danger" data-logout data-ic="logout">Keluar</button>
+    </div>
   </div>
 </header>
 
@@ -290,6 +298,19 @@
   <!-- ========== SETELAN ========== -->
   <section class="page" id="pg-setelan">
     <div class="stack">
+      <div class="card profile">
+        <div class="avatar lg" aria-hidden="true"><span id="accInit">A</span></div>
+        <div class="grow" style="min-width:0">
+          <div class="profile-name" id="accShop"></div>
+          <div class="muted profile-mail" id="accEmail"></div>
+        </div>
+        <div class="profile-act">
+          <button class="btn ghost small" id="btnChangePass">Ganti password</button>
+          <button class="btn ghost small" id="btnExport" data-ic="download">Unduh data</button>
+          <button class="btn danger small" data-logout data-ic="logout">Keluar</button>
+        </div>
+      </div>
+
       <div class="card stack" id="onboarding"></div>
 
       <div class="card stack">
@@ -364,16 +385,6 @@
         <div class="row wrap"><button class="btn primary install-only" data-install>Instal aplikasi Admin di HP ini</button></div>
       </div>
 
-      <div class="card stack">
-        <h3>Akun</h3>
-        <div class="muted" style="font-size:14px">Masuk sebagai <b id="accEmail"></b></div>
-        <div class="row wrap">
-          <button class="btn ghost" id="btnChangePass">Ganti password</button>
-          <button class="btn ghost" id="btnExport" data-ic="download">Unduh semua data</button>
-          <button class="btn danger" data-logout data-ic="logout">Keluar</button>
-        </div>
-        <p class="muted" style="margin:0;font-size:13px">Kalau masuk di HP kasir, tekan Keluar setelah selesai. HP kasir tetap tersambung.</p>
-      </div>
     </div>
   </section>
 </main>
@@ -389,7 +400,7 @@
   <!-- Fitur karyawan/shift/absensi ditunda atas permintaan owner. Aktifkan lagi dengan menghapus "hidden"
        setelah supabase/migrations/002_karyawan_shift.sql dijalankan. -->
   <button data-page="karyawan" data-ic="users" hidden>Karyawan</button>
-  <button data-page="setelan" data-ic="sliders">Setelan</button>
+  <button data-page="setelan" data-ic="user">Akun</button>
 </nav>
 
 <!-- Detail transaksi -->
@@ -538,9 +549,9 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="../config.js?v=24"></script>
+<script src="../config.js?v=25"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="../assets/common.js?v=24"></script>
+<script src="../assets/common.js?v=25"></script>
 <script>
 "use strict";
 let sb = null, user = null, shop = null;
@@ -575,7 +586,11 @@ function authRoute() {
 }
 function renderHeader() {
   $("#hdrName").textContent = shop ? shop.name : "Admin";
-  $("#hdrDate").textContent = (shop ? "Admin · " : "") + fmtDate(new Date());
+  $("#hdrDate").textContent = shop ? "Admin · " + new Date().toLocaleDateString("id-ID", { weekday: "short", day: "numeric", month: "short" }) : fmtDate(new Date());
+  const init = ((shop && shop.name) || (user && user.email) || "A").trim().charAt(0).toUpperCase();
+  $("#avInit").textContent = init; $("#accInit").textContent = init;
+  $("#pmShop").textContent = $("#accShop").textContent = shop ? shop.name : "";
+  $("#pmEmail").textContent = $("#accEmail").textContent = (user && user.email) || "";
   document.title = shop ? "Admin · " + shop.name : BRAND.name + " Admin";
 }
 async function refreshToday() {
@@ -708,6 +723,16 @@ function enterApp(page) {
   go(page || "laporan");
   startLive();
 }
+
+/* ================= Menu profil (kanan atas) ================= */
+function setProfileMenu(open) {
+  $("#profileMenu").hidden = !open;
+  $("#btnProfile").setAttribute("aria-expanded", String(open));
+  if (open) $("#profileMenu [role=menuitem]").focus();
+}
+$("#btnProfile").addEventListener("click", (e) => { e.stopPropagation(); setProfileMenu($("#profileMenu").hidden); });
+document.addEventListener("click", (e) => { if (!e.target.closest(".pwrap")) setProfileMenu(false); else if (e.target.closest("[role=menuitem]")) setTimeout(() => setProfileMenu(false), 0); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("#profileMenu").hidden) { setProfileMenu(false); $("#btnProfile").focus(); } });
 
 /* ================= Data langsung (realtime) =================
    Penjualan, batal, uang masuk/keluar, stok, dan buka/tutup kasir dari HP kasir langsung
@@ -1605,7 +1630,6 @@ async function renderSettings() {
   $("#setName").value = shop.name; $("#setAddr").value = shop.address; $("#setPhone").value = shop.phone;
   $("#joinCode").textContent = shop.join_code;
   $("#linkKasir").value = BASE + "kasir/";
-  $("#accEmail").textContent = user.email || "";
   renderOnboarding();
   renderReceiptSettings();
   const [pin, dev] = await Promise.all([

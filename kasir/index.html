@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=24">
+<link rel="stylesheet" href="../assets/app.css?v=25">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="../assets/icons/kasir.svg">
 <link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/kasir-192.png">
@@ -46,14 +46,14 @@
         <h1>Sambungkan HP ini, <em>langsung jualan.</em></h1>
         <p>Cukup sekali. Setelah tersambung, HP ini jadi kasir toko dan tetap bisa mencatat penjualan walau sinyal hilang.</p>
       </div>
-      <ol class="authx-steps"><li><div><b>Minta kode toko &amp; PIN</b><span>Pemilik melihatnya di Admin, menu Setelan.</span></div></li><li><div><b>Isi di form ini</b><span>Cukup kode toko dan PIN. HP diberi nama Kasir 1, Kasir 2, dst.</span></div></li><li><div><b>Pasang di layar utama</b><span>Ikon IniKasir muncul seperti aplikasi biasa.</span></div></li></ol>
+      <ol class="authx-steps"><li><div><b>Minta kode toko &amp; PIN</b><span>Pemilik melihatnya di Admin, menu Akun.</span></div></li><li><div><b>Isi di form ini</b><span>Cukup kode toko dan PIN. HP diberi nama Kasir 1, Kasir 2, dst.</span></div></li><li><div><b>Pasang di layar utama</b><span>Ikon IniKasir muncul seperti aplikasi biasa.</span></div></li></ol>
       <small class="authx-foot">© 2026 IniKasir · Kasir simpel untuk gerobak &amp; warung</small>
     </aside>
     <div class="authx-main">
     <form class="card auth stack" id="connectForm" autocomplete="off" data-lpignore="true">
       <div>
         <h2>Kode toko &amp; PIN</h2>
-        <p class="lede">Didapat dari pemilik toko, di menu Setelan halaman admin.</p>
+        <p class="lede">Didapat dari pemilik toko, di menu Akun halaman admin.</p>
       </div>
       <div><label class="f" for="cCode">Kode toko</label><input class="in" id="cCode" maxlength="6" autocomplete="off" autocapitalize="characters" style="text-transform:uppercase;font-size:20px;font-weight:700;letter-spacing:.1em" required></div>
       <div><label class="f" for="cPin">PIN kasir</label><input class="in pin-mask" id="cPin" type="text" inputmode="numeric" autocomplete="off" maxlength="6" required></div>
@@ -214,9 +214,9 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="../config.js?v=24"></script>
+<script src="../config.js?v=25"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="../assets/common.js?v=24"></script>
+<script src="../assets/common.js?v=25"></script>
 <script>
 "use strict";
 const K = { store: "inikasir-kasir-store", cache: "inikasir-kasir-cache", queue: "inikasir-kasir-queue", shift: "inikasir-kasir-shift", cash: "inikasir-kasir-cash",
