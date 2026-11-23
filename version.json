@@ -1,9 +1,7 @@
 {
-  "version": "1.1",
+  "version": "1.2",
   "date": "2026-11-24",
   "notes": [
-    "Aplikasi sekarang memperbarui diri otomatis dan memberi tahu kalau ada versi baru",
-    "HP kasir otomatis bernama Kasir 1, Kasir 2, dst. Pemilik bisa ganti nama di Setelan",
-    "Penanda Tunai (hijau) dan QRIS (biru) di riwayat dan laporan"
+    "Nama aplikasi kasir sekarang IniKasir"
   ]
 }

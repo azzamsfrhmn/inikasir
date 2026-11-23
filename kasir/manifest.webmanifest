@@ -1,7 +1,7 @@
 {
   "id": "./",
-  "name": "IniKasir Kasir",
-  "short_name": "Kasir",
+  "name": "IniKasir",
+  "short_name": "IniKasir",
   "description": "Catat penjualan tunai dan QRIS",
   "lang": "id",
   "start_url": "./",

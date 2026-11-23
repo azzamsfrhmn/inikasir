@@ -8,14 +8,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=18">
+<link rel="stylesheet" href="../assets/app.css?v=19">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="../assets/icons/kasir.svg">
 <link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/kasir-192.png">
 <link rel="apple-touch-icon" href="../assets/icons/kasir-180.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Kasir">
+<meta name="apple-mobile-web-app-title" content="IniKasir">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 </head>
 <body>
@@ -46,7 +46,7 @@
         <h1>Sambungkan HP ini, <em>langsung jualan.</em></h1>
         <p>Cukup sekali. Setelah tersambung, HP ini jadi kasir toko dan tetap bisa mencatat penjualan walau sinyal hilang.</p>
       </div>
-      <ol class="authx-steps"><li><div><b>Minta kode toko &amp; PIN</b><span>Pemilik melihatnya di Admin, menu Setelan.</span></div></li><li><div><b>Isi di form ini</b><span>Cukup kode toko dan PIN. HP diberi nama Kasir 1, Kasir 2, dst.</span></div></li><li><div><b>Pasang di layar utama</b><span>Ikon Kasir muncul seperti aplikasi biasa.</span></div></li></ol>
+      <ol class="authx-steps"><li><div><b>Minta kode toko &amp; PIN</b><span>Pemilik melihatnya di Admin, menu Setelan.</span></div></li><li><div><b>Isi di form ini</b><span>Cukup kode toko dan PIN. HP diberi nama Kasir 1, Kasir 2, dst.</span></div></li><li><div><b>Pasang di layar utama</b><span>Ikon IniKasir muncul seperti aplikasi biasa.</span></div></li></ol>
       <small class="authx-foot">© 2026 IniKasir · Kasir simpel untuk gerobak &amp; warung</small>
     </aside>
     <div class="authx-main">
@@ -214,9 +214,9 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="../config.js?v=18"></script>
+<script src="../config.js?v=19"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="../assets/common.js?v=18"></script>
+<script src="../assets/common.js?v=19"></script>
 <script>
 "use strict";
 const K = { store: "inikasir-kasir-store", cache: "inikasir-kasir-cache", queue: "inikasir-kasir-queue", shift: "inikasir-kasir-shift", cash: "inikasir-kasir-cash",
@@ -738,7 +738,7 @@ setInterval(renderHeader, 60000);
 
 /* ---------- Mulai ---------- */
 if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("../sw.js").catch(() => {});
-$("#installHint").textContent = installHintText("Kasir");
+$("#installHint").textContent = installHintText("IniKasir");
 // Pembaruan otomatis: jangan muat ulang saat keranjang masih berisi
 initUpdates(() => !cart.length);
 (async function init() {
