@@ -209,3 +209,26 @@ body.can-install .install-only{display:inline-flex!important;align-items:center}
 .emp-btn:active{background:var(--leaf-soft)}
 .shiftbar{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--leaf-soft);color:var(--leaf);padding:6px 16px;font-size:14px}
 .shiftbar:empty{display:none}
+
+/* Grafik laporan: satu seri, hijau grafik (#3f8a52, lolos uji kontras & kecerahan), garis bantu tipis */
+:root{--chart:#3f8a52;--chart-hl:#2f6e40}
+.chart-sub{font-size:13px;margin:2px 0 10px}
+.chart{position:relative;width:100%;overflow:visible}
+.chart svg{display:block;max-width:100%;height:auto;touch-action:pan-y}
+.chart .grid{stroke:#e6e0d3;stroke-width:1}
+.chart .tick{fill:var(--muted);font-size:11px;font-family:inherit}
+.chart .peak{fill:var(--ink);font-size:12px;font-weight:700;font-family:inherit}
+.chart .col{fill:var(--chart)}
+.chart .col.hl{fill:var(--chart-hl)}
+.chart .hit{fill:transparent;cursor:pointer;outline:none}
+.chart .hit:focus-visible{stroke:var(--ink);stroke-width:1}
+.chart-tip{position:absolute;pointer-events:none;background:var(--ink);color:#fff;border-radius:var(--r-sm);padding:6px 10px;font-size:12px;line-height:1.35;white-space:nowrap;z-index:2}
+.chart-tip b{font-size:14px;display:block}
+.chart-tip div{opacity:.8}
+.hbars{display:flex;flex-direction:column;gap:12px}
+.hb-top{display:flex;justify-content:space-between;gap:8px;font-size:14px;margin-bottom:4px}
+.hb-name{font-weight:600;min-width:0;overflow-wrap:anywhere}
+.hb-row{display:flex;align-items:center;gap:8px}
+.hb-bar{height:14px;background:var(--chart);border-radius:0 4px 4px 0;min-width:2px}
+.hb-val{font-size:13px;font-weight:700;white-space:nowrap}
+#repRanges .btn.on{background:var(--ink);border-color:var(--ink);color:#fff}
