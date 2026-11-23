@@ -57,7 +57,10 @@ section.page>h2,.sec-title{margin:4px 0 12px}
 
 /* Kasir */
 .kasir{display:grid;grid-template-columns:1fr;gap:20px}
-.cats{display:flex;gap:6px;overflow-x:auto;margin:10px 0 12px;padding-bottom:2px}
+.kasir>*{min-width:0} /* tanpa ini deretan kategori yang panjang melebarkan kolom melewati layar HP */
+.cats{display:flex;gap:6px;overflow-x:auto;margin:10px 0 12px;padding-bottom:2px;scrollbar-width:none}
+.cats::-webkit-scrollbar{display:none}
+.pin-mask{-webkit-text-security:disc;text-security:disc}
 .cat{border:1px solid var(--line);background:var(--card);border-radius:var(--r-sm);padding:0 14px;min-height:40px;white-space:nowrap;font-size:14px}
 .cat.active{background:var(--ink);border-color:var(--ink);color:#fff}
 .grid-prod{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}

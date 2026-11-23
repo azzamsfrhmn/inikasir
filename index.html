@@ -33,13 +33,13 @@
 
   <!-- Sambungkan HP ke toko -->
   <section class="page" id="view-connect">
-    <form class="card auth stack" id="connectForm" autocomplete="off">
+    <form class="card auth stack" id="connectForm" autocomplete="off" data-lpignore="true">
       <div>
         <h2>Sambungkan HP kasir</h2>
         <p class="lede">Minta kode toko dan PIN kasir ke pemilik. Cukup sekali, setelah itu HP ini langsung bisa dipakai jualan.</p>
       </div>
-      <div><label class="f" for="cCode">Kode toko</label><input class="in" id="cCode" maxlength="6" autocapitalize="characters" style="text-transform:uppercase;font-size:20px;font-weight:700;letter-spacing:.1em" required></div>
-      <div><label class="f" for="cPin">PIN kasir</label><input class="in" id="cPin" type="password" inputmode="numeric" maxlength="6" required></div>
+      <div><label class="f" for="cCode">Kode toko</label><input class="in" id="cCode" maxlength="6" autocomplete="off" autocapitalize="characters" style="text-transform:uppercase;font-size:20px;font-weight:700;letter-spacing:.1em" required></div>
+      <div><label class="f" for="cPin">PIN kasir</label><input class="in pin-mask" id="cPin" type="text" inputmode="numeric" autocomplete="off" maxlength="6" required></div>
       <div><label class="f" for="cDevice">Nama HP ini (biar pemilik tahu HP yang mana)</label><input class="in" id="cDevice" maxlength="40" placeholder="Contoh: HP gerobak depan"></div>
       <div class="err" id="cErr"></div>
       <button class="btn primary block" id="cSubmit">Sambungkan</button>
