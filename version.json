@@ -1,7 +1,8 @@
 {
-  "version": "1.10",
+  "version": "1.11",
   "date": "2026-11-24",
   "notes": [
-    "Omzet hari ini di header sekarang di samping tombol akun"
+    "Produk yang stoknya habis tidak bisa dijual, dan jumlah di pesanan tidak bisa melebihi sisa stok",
+    "Begitu pemilik menambah stok di admin, HP kasir langsung bisa menjual lagi"
   ]
 }

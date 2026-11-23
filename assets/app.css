@@ -607,3 +607,10 @@ main:has(>#view-connect.active),main:has(>#view-auth.active){max-width:none;padd
 
 /* omzet menempel di sebelah tombol akun, bukan di tengah header */
 header.top .hdr-stat{margin-left:auto}
+
+/* ---------- Produk habis di kasir ---------- */
+.prod.out{background:var(--sunk);box-shadow:none;cursor:not-allowed}
+.prod.out .nm{color:var(--muted)}
+.prod.out:active{transform:none}
+.ci-warn{font-size:12.5px;font-weight:600;color:var(--bad);margin-top:3px}
+.qty button:disabled{opacity:.35;cursor:not-allowed}

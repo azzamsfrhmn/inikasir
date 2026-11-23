@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=27">
+<link rel="stylesheet" href="../assets/app.css?v=28">
 <link rel="manifest" href="../manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="../assets/icons/kasir.svg">
 <link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/kasir-192.png">
@@ -217,9 +217,9 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="../config.js?v=27"></script>
+<script src="../config.js?v=28"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="../assets/common.js?v=27"></script>
+<script src="../assets/common.js?v=28"></script>
 <script>
 "use strict";
 const K = { store: "inikasir-kasir-store", cache: "inikasir-kasir-cache", queue: "inikasir-kasir-queue", shift: "inikasir-kasir-shift", cash: "inikasir-kasir-cash",
@@ -344,7 +344,7 @@ async function refreshData(force) {
       showConnect("HP ini sudah tidak tersambung ke toko. Minta kode toko dan PIN kasir ke pemilik, lalu sambungkan lagi.");
       return;
     }
-    shop = s.data; products = p.data;
+    shop = s.data; products = applyPendingStock(p.data);
     employees = e.error ? employees : e.data;   // tabel karyawan belum ada = toko tanpa shift
     if (!cs.error) setShift(cs.data);           // null = shift sudah ditutup (misal oleh pemilik)
     // kas harian aktif kalau fungsi current_cash ada (migrasi 005)
@@ -354,6 +354,7 @@ async function refreshData(force) {
     local.set(K.cache, { storeId, shop, products, employees, cashOn, devName });
     renderHeader(); renderCats(); renderCart();
     gate();
+    startLiveProducts();
   } catch (e) {
     if (!shop) {
       $("#view-loading").innerHTML = `${esc(errMsg(e))}<br><br><button class="btn primary" onclick="location.reload()">Coba lagi</button>`;
@@ -419,8 +420,8 @@ function renderProducts() {
   const q = $("#search").value.trim().toLowerCase();
   const list = products.filter((p) => (activeCat === "Semua" || p.cat === activeCat) && (!q || p.name.toLowerCase().includes(q)));
   $("#prodGrid").innerHTML = list.length ? list.map((p) => {
-    const inCart = cart.find((c) => c.pid === p.id);
-    return `<button class="prod ${inCart ? "on" : ""}" data-pid="${p.id}">
+    const inCart = cart.find((c) => c.pid === p.id), out = p.track_stock && p.stock <= 0;
+    return `<button class="prod ${inCart ? "on" : ""}${out ? " out" : ""}" data-pid="${p.id}"${out ? ` aria-disabled="true" aria-label="${esc(p.name)}, stok habis"` : ""}>
       ${inCart ? `<span class="badge">${inCart.qty}</span>` : ""}
       <div class="nm">${esc(p.name)}</div>
       <div class="pr num">${rp(p.price)}${p.track_stock ? ` <span class="stk ${p.stock <= 0 ? "out" : p.stock <= 5 ? "low" : ""}">${p.stock <= 0 ? "Habis" : "Sisa " + p.stock}</span>` : ""}</div>
@@ -433,20 +434,36 @@ const cartCount = () => cart.reduce((s, c) => s + c.qty, 0);
 function renderCart() {
   $("#cartItems").innerHTML = cart.length ? cart.map((c, i) => `
     <div class="ci">
-      <div class="grow"><div class="nm">${esc(c.name)}</div><div class="muted num" style="font-size:13px">${rp(c.price)} × ${c.qty} = <b style="color:var(--ink)">${rp(c.price * c.qty)}</b></div></div>
-      <div class="qty"><button data-dec="${i}" aria-label="Kurangi">−</button><span class="num">${c.qty}</span><button data-inc="${i}" aria-label="Tambah">+</button></div>
+      <div class="grow"><div class="nm">${esc(c.name)}</div><div class="muted num" style="font-size:13px">${rp(c.price)} × ${c.qty} = <b style="color:var(--ink)">${rp(c.price * c.qty)}</b></div>
+        ${c.qty > stockLeft(c.pid) ? `<div class="ci-warn">${stockLeft(c.pid) <= 0 ? "Stok habis" : `Stok tinggal ${stockLeft(c.pid)}`}. Kurangi jumlahnya atau tunggu pemilik menambah stok.</div>` : ""}</div>
+      <div class="qty"><button data-dec="${i}" aria-label="Kurangi">−</button><span class="num">${c.qty}</span><button data-inc="${i}" aria-label="Tambah"${c.qty >= stockLeft(c.pid) ? " disabled" : ""}>+</button></div>
     </div>`).join("") : `<div class="empty">Belum ada pesanan. Ketuk produk untuk menambahkan.</div>`;
-  const total = cartTotal();
+  const total = cartTotal(), over = overStock();
   $("#cartTotal").textContent = rp(total);
-  $("#btnPay").disabled = !cart.length;
+  $("#btnPay").disabled = !cart.length || over.length > 0;
+  $("#btnPay").textContent = over.length ? "Stok tidak cukup" : "Bayar";
   $("#cartBarCount").textContent = cartCount() + " item";
   $("#cartBarTotal").textContent = rp(total);
   $("#cartBar").classList.toggle("hide", !cart.length || $("#cart").classList.contains("open") || !$("#view-sell").classList.contains("active"));
   renderProducts();
 }
+/* ---------- Batas stok ----------
+   Produk yang dilacak stoknya tidak bisa dijual melebihi sisa stok. Kalau habis, penjaga
+   menunggu pemilik menambah stok di admin; HP kasir langsung tahu lewat realtime. */
+const stockLeft = (pid) => { const p = products.find((x) => x.id === pid); return p && p.track_stock ? p.stock : Infinity; };
+const overStock = () => cart.filter((c) => c.qty > stockLeft(c.pid));
+function stockMsg(name, left) { return left <= 0 ? `Stok ${name} habis. Tunggu pemilik menambah stok di admin.` : `Stok ${name} tinggal ${left}.`; }
+// stok dari server belum menghitung penjualan di HP ini yang belum terkirim
+function applyPendingStock(list) {
+  queue.filter((t) => !t.op && t.items).forEach((t) => t.items.forEach((i) => {
+    const p = list.find((x) => x.id === i.product_id); if (p && p.track_stock) p.stock -= i.qty;
+  }));
+  return list;
+}
 function addToCart(pid) {
   const p = products.find((x) => x.id === pid); if (!p) return;
   const c = cart.find((x) => x.pid === pid);
+  if ((c ? c.qty : 0) + 1 > stockLeft(pid)) { if (navigator.vibrate) navigator.vibrate([30, 40, 30]); return toast(stockMsg(p.name, stockLeft(pid))); }
   if (c) c.qty++; else cart.push({ pid, name: p.name, price: p.price, qty: 1 });
   if (navigator.vibrate) navigator.vibrate(15);
   renderCart();
@@ -460,6 +477,8 @@ function setCartOpen(open) {
 /* ---------- Bayar ---------- */
 function openPay() {
   if (!cart.length) return;
+  const over = overStock();
+  if (over.length) { setCartOpen(true); return toast(stockMsg(over[0].name, stockLeft(over[0].pid))); }
   setCartOpen(false);
   const total = cartTotal();
   $("#payTotal").textContent = rp(total);
@@ -489,6 +508,8 @@ function updateChange() {
 function finishPay() {
   if (employees.length && !shift) { closeModal("mPay"); gate(); return toast("Buka shift dulu sebelum jualan"); }
   if (!employees.length && cashOn && !cashSession) { closeModal("mPay"); gate(); return toast("Buka kasir dulu sebelum jualan"); }
+  const over = overStock();
+  if (over.length) { closeModal("mPay"); setCartOpen(true); return toast(stockMsg(over[0].name, stockLeft(over[0].pid))); }
   const total = cartTotal();
   let paid = total, change = 0;
   if (payMethod === "tunai") {
@@ -710,7 +731,7 @@ document.addEventListener("click", (e) => {
   else if (d.void) voidSale(d.void, d.no);
   else if (d.pid) addToCart(d.pid);
   else if (d.cat !== undefined) { activeCat = d.cat; renderCats(); renderProducts(); }
-  else if (d.inc !== undefined) { cart[+d.inc].qty++; renderCart(); }
+  else if (d.inc !== undefined) { const c = cart[+d.inc]; if (c.qty + 1 > stockLeft(c.pid)) return toast(stockMsg(c.name, stockLeft(c.pid))); c.qty++; renderCart(); }
   else if (d.dec !== undefined) { const c = cart[+d.dec]; if (--c.qty <= 0) cart.splice(+d.dec, 1); renderCart(); if (!cart.length) setCartOpen(false); }
   else if (d.close) closeModal(d.close);
   else if (d.method) setMethod(d.method);
@@ -740,6 +761,17 @@ document.addEventListener("keydown", (e) => { if (e.key === "Escape") { $$(".mod
 window.addEventListener("online", () => { flushQueue(); refreshData(true); });
 document.addEventListener("visibilitychange", () => { if (!document.hidden && storeId) { flushQueue(); refreshData(); } });
 setInterval(flushQueue, 20000);
+setInterval(() => { if (storeId && !document.hidden) refreshData(); }, 60000);
+// Perubahan produk dari admin (stok ditambah, harga diganti) langsung masuk ke HP kasir (migrasi 008)
+let liveProd = null, liveProdT = null;
+function startLiveProducts() {
+  if (liveProd || !sb || !storeId) return;
+  liveProd = sb.channel("kasir-produk-" + storeId)
+    .on("postgres_changes", { event: "*", schema: "public", table: "products", filter: `store_id=eq.${storeId}` }, () => {
+      clearTimeout(liveProdT); liveProdT = setTimeout(() => refreshData(true), 800);
+    })
+    .subscribe();
+}
 setInterval(renderHeader, 60000);
 
 /* ---------- Mulai ---------- */
