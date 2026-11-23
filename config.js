@@ -1,6 +1,7 @@
-// Isi dua nilai ini dari Supabase: Project Settings > API (atau Data API).
-// "anon public" key memang aman ditaruh di sini. JANGAN pernah taruh "service_role" key.
+// Nilai dari Supabase: Project Settings > API Keys.
+// Publishable key (atau anon key lama) memang aman ditaruh di sini.
+// JANGAN pernah taruh secret key / service_role key.
 window.INIKASIR_CONFIG = {
-  supabaseUrl: "",
-  supabaseAnonKey: "",
+  supabaseUrl: "https://mwhvhwkszxeiqffgzlly.supabase.co",
+  supabaseAnonKey: "sb_publishable_wWqgWNfq1GSnDDqmnVqZRA_kltPDWL9",
 };
