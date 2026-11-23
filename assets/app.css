@@ -446,3 +446,32 @@ main:has(>#view-connect.active),main:has(>#view-auth.active){max-width:none;padd
   .authx-main .auth h2{font-size:30px}
 }
 @media (min-width:1024px){ body.is-admin .hdr-logo{display:none} }  /* logo sudah ada di sidebar */
+
+/* ---------- Penanda cara bayar ---------- */
+:root{--cash:#2c5a39;--cash-soft:#e6f2e9;--qris:#2b55a8;--qris-soft:#e7eefb}
+.pay{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;padding:3px 9px 3px 6px;border-radius:999px;line-height:1.3;white-space:nowrap}
+.pay .ic{width:14px;height:14px;stroke-width:2.2}
+.pay-tunai{background:var(--cash-soft);color:var(--cash)}
+.pay-qris{background:var(--qris-soft);color:var(--qris)}
+.list .it.m-tunai,.list .it.m-qris{position:relative}
+.list .it.m-tunai::before,.list .it.m-qris::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:3px;border-radius:3px;background:var(--cash)}
+.list .it.m-qris::before{background:var(--qris)}
+.list .it[data-tx].m-tunai::before,.list .it[data-tx].m-qris::before{left:6px}
+.paysplit{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pbox{border-radius:var(--r-md);padding:12px 14px;border:1px solid transparent;min-width:0}
+.pbox-tunai{background:var(--cash-soft);border-color:rgba(44,90,57,.14)}
+.pbox-qris{background:var(--qris-soft);border-color:rgba(43,85,168,.14)}
+.pbox .k{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;flex-wrap:wrap}
+.pbox-tunai .k{color:var(--cash)} .pbox-qris .k{color:var(--qris)}
+.pbox .k .ic{width:18px;height:18px}
+.pbox .k span{display:block;flex-basis:100%;font-weight:500;opacity:.8;font-size:12px;margin-top:-2px}
+.pbox .v{font-size:20px;font-weight:800;letter-spacing:-.02em;margin-top:6px;color:var(--ink)}
+.pbox .s{font-size:12.5px;color:var(--muted);margin-top:2px}
+.pbar{grid-column:1/-1;height:8px;border-radius:999px;background:var(--qris);overflow:hidden;margin-top:4px}
+.pbar i{display:block;height:100%;background:var(--cash)}
+.pbar i.mid{border-right:2px solid var(--card)}
+.pbar-l{grid-column:1/-1;display:flex;justify-content:space-between;font-size:12px;color:var(--muted);font-weight:600;margin-top:-4px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:1px}
+.dot.tunai{background:var(--cash)} .dot.qris{background:var(--qris)}
+.seg.seg3{grid-template-columns:repeat(3,1fr)}
+.seg button .ic{width:16px;height:16px;margin-right:4px;vertical-align:-3px}

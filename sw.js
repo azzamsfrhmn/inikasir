@@ -2,7 +2,7 @@
 // saat tidak ada sinyal. Data (Supabase) tidak pernah di-cache di sini; penjualan offline
 // disimpan oleh halaman kasir sendiri lalu dikirim saat online.
 // Letaknya di akar situs supaya HP yang dulu memasang kasir di "/" tetap mendapat pembaruan.
-const CACHE = "inikasir-v22";
+const CACHE = "inikasir-v23";
 const SHELL = [
   "./", "kasir/", "kasir/index.html", "kasir/manifest.webmanifest", "config.js", "assets/app.css", "assets/common.js",
   "assets/icons/kasir.svg", "assets/icons/kasir-192.png", "assets/icons/kasir-512.png",

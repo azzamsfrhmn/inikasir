@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=14">
+<link rel="stylesheet" href="../assets/app.css?v=15">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="../assets/icons/kasir.svg">
 <link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/kasir-192.png">
@@ -215,9 +215,9 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="../config.js?v=14"></script>
+<script src="../config.js?v=15"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="../assets/common.js?v=14"></script>
+<script src="../assets/common.js?v=15"></script>
 <script>
 "use strict";
 const K = { store: "inikasir-kasir-store", cache: "inikasir-kasir-cache", queue: "inikasir-kasir-queue", shift: "inikasir-kasir-shift", cash: "inikasir-kasir-cash" };
@@ -605,7 +605,8 @@ function summaryTable(sm) {
     ${sm.cash_out ? `<tr><td>Uang keluar</td><td>− ${rp(sm.cash_out)}</td></tr>` : ""}
     <tr class="sum"><td>Seharusnya di laci</td><td>${rp(sm.expected_cash)}</td></tr>
   </table>
-  <div class="muted" style="font-size:13px;margin-top:6px">${sm.tx_count} transaksi · QRIS ${rp(sm.qris_sales)} (masuk rekening, tidak di laci)</div>`;
+  <div style="margin-top:12px">${paySplit({ tunai: sm.cash_sales, qris: sm.qris_sales })}</div>
+  <div class="muted" style="font-size:13px;margin-top:6px">${sm.tx_count} transaksi. Uang QRIS masuk rekening, tidak ada di laci.</div>`;
 }
 async function loadShiftSummary() {
   await flushQueue();
@@ -615,11 +616,11 @@ async function loadShiftSummary() {
   $("#msSummary").innerHTML = summaryTable(data) +
     (pending ? `<div class="note" style="margin-top:8px">${pending} penjualan belum terkirim dan belum masuk hitungan ini.</div>` : "") +
     `<h3 style="margin:14px 0 4px">Penjualan shift ini</h3><div class="list">${data.transactions.length ? data.transactions.map((t) => `
-      <div class="it">
+      <div class="it ${t.voided ? "" : "m-" + t.method}" style="padding-left:12px">
         <div class="grow"><div><b class="num">${fmtTime(t.created_at)}</b> <span class="muted" style="font-size:12px">${esc(t.no)}</span></div>
           <div class="muted" style="font-size:13px">${esc(t.items.map((i) => i.qty + "× " + i.name).join(", "))}</div></div>
         <div class="right"><div class="num" style="font-weight:700;${t.voided ? "text-decoration:line-through;color:var(--muted)" : ""}">${rp(t.total)}</div>
-          ${t.voided ? `<span class="tag void">Batal</span>` : can("void_own") ? `<button class="btn ghost small" data-void="${t.id}" data-no="${esc(t.no)}">Batalkan</button>` : `<span class="tag ${t.method}">${t.method === "qris" ? "QRIS" : "Tunai"}</span>`}</div>
+          ${payTag(t.method, t.voided)}${!t.voided && can("void_own") ? `<div style="margin-top:4px"><button class="btn ghost small" data-void="${t.id}" data-no="${esc(t.no)}">Batalkan</button></div>` : ""}</div>
       </div>`).join("") : `<div class="empty">Belum ada penjualan di shift ini.</div>`}</div>`;
 }
 async function voidSale(id, no) {

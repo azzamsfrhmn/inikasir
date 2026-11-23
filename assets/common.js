@@ -34,6 +34,8 @@ const ICONS = {
   download: '<path d="M12 3v12M7 10l5 5 5-5M5 21h14"/>',
   logout: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
   calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  cash: '<rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 9.5v5M18 9.5v5"/>',
+  qr: '<rect x="3.5" y="3.5" width="6.5" height="6.5" rx="1"/><rect x="14" y="3.5" width="6.5" height="6.5" rx="1"/><rect x="3.5" y="14" width="6.5" height="6.5" rx="1"/><path d="M14 14h2.5v2.5M20.5 14v.01M14 20.5h.01M17.5 18v2.5h3v-3"/>',
 };
 const ic = (name, cls = "") => `<svg class="ic ${cls}" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${ICONS[name] || ""}</svg>`;
 // Elemen dengan data-ic="nama" otomatis diberi ikon di depan teksnya
@@ -43,6 +45,24 @@ function applyIcons(root = document) {
     el.dataset.icDone = "1";
   });
 }
+
+/* ---------- Penanda cara bayar: Tunai (hijau, ikon uang) vs QRIS (biru, ikon QR) ---------- */
+const PAY = { tunai: { label: "Tunai", ic: "cash", where: "di laci" }, qris: { label: "QRIS", ic: "qr", where: "ke rekening" } };
+const payTag = (m, voided) => voided ? `<span class="tag void">Batal</span>`
+  : `<span class="pay pay-${m === "qris" ? "qris" : "tunai"}">${ic(m === "qris" ? "qr" : "cash")}${m === "qris" ? "QRIS" : "Tunai"}</span>`;
+// Ringkasan dua kotak + batang perbandingan. c = {tunai, qris, nTunai?, nQris?}
+function paySplit(c) {
+  const all = c.tunai + c.qris, pt = all ? Math.round((c.tunai / all) * 100) : 0;
+  const box = (m, v, n) => `<div class="pbox pbox-${m}"><div class="k">${ic(PAY[m].ic)}${PAY[m].label}<span>${PAY[m].where}</span></div>
+    <div class="v num">${rp(v)}</div>${n != null ? `<div class="s">${n} transaksi</div>` : ""}</div>`;
+  return `<div class="paysplit">${box("tunai", c.tunai, c.nTunai)}${box("qris", c.qris, c.nQris)}
+    ${all ? `<div class="pbar" role="img" aria-label="Tunai ${pt} persen, QRIS ${100 - pt} persen"><i class="${pt > 0 && pt < 100 ? "mid" : ""}" style="width:${pt}%"></i></div>
+    <div class="pbar-l"><span>Tunai ${pt}%</span><span>QRIS ${100 - pt}%</span></div>` : ""}</div>`;
+}
+const payCount = (list) => list.reduce((c, t) => {
+  if (!t.voided) { if (t.method === "qris") { c.qris += t.total; c.nQris++; } else { c.tunai += t.total; c.nTunai++; } }
+  return c;
+}, { tunai: 0, qris: 0, nTunai: 0, nQris: 0 });
 
 /* ---------- Utilitas ---------- */
 const $ = (s) => document.querySelector(s);

@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=14">
+<link rel="stylesheet" href="../assets/app.css?v=15">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="../assets/icons/admin.svg">
 <link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/admin-192.png">
@@ -203,6 +203,12 @@
     <div class="row" style="margin-bottom:12px">
       <input type="date" class="in grow" id="histDate">
       <button class="btn ghost" id="histToday">Hari ini</button>
+    </div>
+    <div id="histSplit" style="margin-bottom:12px"></div>
+    <div class="seg seg3" id="histFilter" style="margin-bottom:12px">
+      <button data-hf="semua" class="active">Semua</button>
+      <button data-hf="tunai" data-ic="cash">Tunai</button>
+      <button data-hf="qris" data-ic="qr">QRIS</button>
     </div>
     <div class="card"><div class="list" id="histList"></div></div>
   </section>
@@ -483,9 +489,9 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="../config.js?v=14"></script>
+<script src="../config.js?v=15"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="../assets/common.js?v=14"></script>
+<script src="../assets/common.js?v=15"></script>
 <script>
 "use strict";
 let sb = null, user = null, shop = null;
@@ -781,8 +787,6 @@ async function renderReport() {
   catch (e) { return errorInto(e, "repStats", "repItems", "repDays", "repTrend", "repHours"); }
   repData = list;
   const omzet = list.reduce((s, t) => s + t.total, 0);
-  const tunai = list.filter((t) => t.method === "tunai").reduce((s, t) => s + t.total, 0);
-  const qris = omzet - tunai;
   const biaya = cf.filter((c) => c.type === "keluar" && !c.cat.startsWith("Prive")).reduce((s, c) => s + c.amount, 0);
   const h = hppOf(list);
   const labaKotor = omzet - h.hpp, laba = labaKotor - biaya;
@@ -802,10 +806,7 @@ async function renderReport() {
         <tr><td>Pengeluaran usaha</td><td>− ${rp(biaya)}</td></tr>
         <tr class="sum"><td>Laba bersih</td><td class="${laba < 0 ? "amt-out" : ""}">${rp(laba)}</td></tr>
       </table>
-      <table class="ledger">
-        <tr><td>Tunai</td><td>${rp(tunai)}</td></tr>
-        <tr><td>QRIS</td><td>${rp(qris)}</td></tr>
-      </table>
+      ${paySplit(payCount(list))}
     </div>
     <p class="muted" style="font-size:13px;margin:8px 0 0">Pengeluaran usaha diambil dari menu Keuangan (ambil pribadi tidak dihitung). ${hppNote(h)}</p>`;
 
@@ -862,7 +863,7 @@ async function renderReport() {
   list.forEach((t) => { const k = byMonth ? monthKey(t.time) : dayKey(t.time); const d = (g[k] ||= { n: 0, tunai: 0, qris: 0 }); d.n++; d[t.method] += t.total; });
   const dRows = Object.entries(g).sort((x, y) => y[0].localeCompare(x[0]));
   const name = (k) => byMonth ? `${BULAN[+k.slice(5) - 1]} ${k.slice(0, 4)}` : fmtDateShort(k);
-  $("#repDays").innerHTML = dRows.length ? `<table class="t"><tr><th>${byMonth ? "Bulan" : "Tanggal"}</th><th class="right">Trx</th><th class="right">Tunai</th><th class="right">QRIS</th><th class="right">Total</th></tr>${dRows.map(([k, d]) =>
+  $("#repDays").innerHTML = dRows.length ? `<table class="t"><tr><th>${byMonth ? "Bulan" : "Tanggal"}</th><th class="right">Trx</th><th class="right"><span class="dot tunai"></span>Tunai</th><th class="right"><span class="dot qris"></span>QRIS</th><th class="right">Total</th></tr>${dRows.map(([k, d]) =>
     `<tr><td>${name(k)}</td><td class="right num">${d.n}</td><td class="right num">${rp(d.tunai)}</td><td class="right num">${rp(d.qris)}</td><td class="right num"><b>${rp(d.tunai + d.qris)}</b></td></tr>`).join("")}</table>`
     : `<div class="empty">Tidak ada penjualan di periode ini.</div>`;
 }
@@ -1040,24 +1041,31 @@ function exportFinCsv() {
 }
 
 /* ================= Riwayat ================= */
-let histData = [];
+let histData = [], histFilter = "semua";
 async function renderHistory() {
   const k = $("#histDate").value || dayKey(new Date());
-  loadingInto("histList");
+  loadingInto("histList"); $("#histSplit").innerHTML = "";
   try { histData = (await fetchTx(k, k)).reverse(); } catch (e) { return errorInto(e, "histList"); }
-  const valid = histData.filter((t) => !t.voided);
+  drawHistory(k);
+}
+function drawHistory(k = $("#histDate").value || dayKey(new Date())) {
+  $$("#histFilter button").forEach((b) => b.classList.toggle("active", b.dataset.hf === histFilter));
+  $("#histSplit").innerHTML = histData.length ? `<div class="card">${paySplit(payCount(histData))}</div>` : "";
+  const shown = histFilter === "semua" ? histData : histData.filter((t) => t.method === histFilter);
+  const valid = shown.filter((t) => !t.voided);
   const sum = valid.reduce((s, t) => s + t.total, 0);
-  $("#histList").innerHTML = histData.length ? `<div class="muted" style="font-size:14px;padding-bottom:6px">${valid.length} transaksi, total ${rp(sum)}</div>` + histData.map((t) => `
-    <div class="it" data-tx="${t.id}" style="cursor:pointer">
+  const label = histFilter === "semua" ? "" : " " + PAY[histFilter].label;
+  $("#histList").innerHTML = shown.length ? `<div class="muted" style="font-size:14px;padding-bottom:6px">${valid.length} transaksi${label}, total ${rp(sum)}</div>` + shown.map((t) => `
+    <div class="it ${t.voided ? "" : "m-" + t.method}" data-tx="${t.id}" style="cursor:pointer">
       <div class="grow">
         <div><b class="num">${fmtTime(t.time)}</b> <span class="muted" style="font-size:12px">${esc(t.no)}${t.employee_name ? " · " + esc(t.employee_name) : ""}</span></div>
         <div class="muted" style="font-size:13px">${esc(t.items.map((i) => i.qty + "× " + i.name).join(", "))}</div>
       </div>
       <div class="right">
         <div class="num" style="font-weight:700;${t.voided ? "text-decoration:line-through;color:var(--muted)" : ""}">${rp(t.total)}</div>
-        <span class="tag ${t.voided ? "void" : t.method}">${t.voided ? "Batal" : t.method === "qris" ? "QRIS" : "Tunai"}</span>
+        ${payTag(t.method, t.voided)}
       </div>
-    </div>`).join("") : `<div class="empty">Tidak ada transaksi pada ${fmtDateShort(k)}. Pilih tanggal lain di atas.</div>`;
+    </div>`).join("") : `<div class="empty">${histData.length ? `Tidak ada transaksi${label} pada ${fmtDateShort(k)}.` : `Tidak ada transaksi pada ${fmtDateShort(k)}. Pilih tanggal lain di atas.`}</div>`;
 }
 function showDetail(id) {
   detailTx = histData.find((t) => t.id === id); if (!detailTx) return;
@@ -1547,6 +1555,7 @@ $("#fSave").onclick = saveFin;
 $("#btnFinCsv").onclick = exportFinCsv;
 bindMoneyInput($("#fAmt")); bindMoneyInput($("#pPrice"));
 $("#histDate").addEventListener("change", renderHistory);
+$("#histFilter").addEventListener("click", (e) => { const b = e.target.closest("[data-hf]"); if (b) { histFilter = b.dataset.hf; drawHistory(); } });
 $("#histToday").onclick = () => { $("#histDate").value = dayKey(new Date()); renderHistory(); };
 $("#btnPrint").onclick = () => window.print();
 $("#btnShare").onclick = () => detailTx && shareText(receiptText(shop, detailTx));
