@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/app.css?v=3">
+<link rel="stylesheet" href="assets/app.css?v=4">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/kasir-192.png">
 <link rel="apple-touch-icon" href="assets/icons/kasir-180.png">
@@ -168,9 +168,9 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="config.js?v=3"></script>
+<script src="config.js?v=4"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="assets/common.js?v=3"></script>
+<script src="assets/common.js?v=4"></script>
 <script>
 "use strict";
 const K = { store: "inikasir-kasir-store", cache: "inikasir-kasir-cache", queue: "inikasir-kasir-queue", shift: "inikasir-kasir-shift" };
@@ -256,7 +256,7 @@ async function refreshData(force) {
   try {
     const [s, p, e, cs] = await Promise.all([
       sb.from("stores").select("id,name,address,phone").eq("id", storeId).maybeSingle(),
-      sb.from("products").select("id,name,price,cat,active").eq("store_id", storeId).eq("active", true).order("cat").order("name"),
+      sb.from("products").select("*").eq("store_id", storeId).eq("active", true).order("cat").order("name"),
       sb.from("employees").select("id,name,perms").eq("store_id", storeId).eq("active", true).order("name"),
       sb.rpc("current_shift", { p_store: storeId }),
     ]);
@@ -331,7 +331,8 @@ function renderProducts() {
     const inCart = cart.find((c) => c.pid === p.id);
     return `<button class="prod ${inCart ? "on" : ""}" data-pid="${p.id}">
       ${inCart ? `<span class="badge">${inCart.qty}</span>` : ""}
-      <div class="nm">${esc(p.name)}</div><div class="pr num">${rp(p.price)}</div>
+      <div class="nm">${esc(p.name)}</div>
+      <div class="pr num">${rp(p.price)}${p.track_stock ? ` <span class="stk ${p.stock <= 0 ? "out" : p.stock <= 5 ? "low" : ""}">${p.stock <= 0 ? "Habis" : "Sisa " + p.stock}</span>` : ""}</div>
     </button>`;
   }).join("") : (q ? `<div class="empty" style="grid-column:1/-1">Tidak ada produk bernama "${esc(q)}".</div>`
     : `<div class="empty" style="grid-column:1/-1">Belum ada produk. Pemilik bisa menambahkannya di halaman admin.</div>`);
@@ -409,6 +410,9 @@ function finishPay() {
     shift_id: shift ? shift.id : null, employee_name: shift ? shift.employee_name : "",
   };
   queue.push(tx); local.set(K.queue, queue);
+  // kurangi sisa stok di layar sekarang juga (server tetap jadi patokan saat sinkron)
+  tx.items.forEach((i) => { const p = products.find((x) => x.id === i.product_id); if (p && p.track_stock) p.stock -= i.qty; });
+  local.set(K.cache, { storeId, shop, products, employees });
   lastTx = tx;
   cart = []; renderCart();
   closeModal("mPay");

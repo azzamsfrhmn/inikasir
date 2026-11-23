@@ -17,7 +17,8 @@ Data disimpan di [Supabase](https://supabase.com) (paket gratis cukup). Aturan a
 1. Buka **SQL Editor** > **New query**.
 2. Tempel seluruh isi [`supabase/schema.sql`](supabase/schema.sql), lalu **Run**. Harus muncul "Success. No rows returned".
 3. Jalankan juga file di [`supabase/migrations/`](supabase/migrations/) **berurutan**, masing-masing sekali, dengan cara yang sama:
-   - `002_karyawan_shift.sql`: akun karyawan, hak akses, shift (kas awal/akhir), absensi.
+   - `002_karyawan_shift.sql`: akun karyawan, hak akses, shift (kas awal/akhir), absensi. (Opsional, saat ini ditunda.)
+   - `003_stok_hpp.sql`: stok barang jadi, harga beli (modal), HPP & laba. Tidak butuh 002.
 
 ### 3. Atur login
 Di **Authentication**:

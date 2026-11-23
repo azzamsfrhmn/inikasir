@@ -232,3 +232,11 @@ body.can-install .install-only{display:inline-flex!important;align-items:center}
 .hb-bar{height:14px;background:var(--chart);border-radius:0 4px 4px 0;min-width:2px}
 .hb-val{font-size:13px;font-weight:700;white-space:nowrap}
 #repRanges .btn.on{background:var(--ink);border-color:var(--ink);color:#fff}
+
+/* Stok: fitur aktif setelah migrasi 003 */
+.no-stock .stock-only{display:none!important}
+.no-stock-only{display:none}
+.no-stock .no-stock-only{display:block}
+.prod .stk{font-size:12px;font-weight:600;color:var(--muted);margin-left:4px}
+.prod .stk.low{color:#8a5a00}
+.prod .stk.out{color:var(--bad)}

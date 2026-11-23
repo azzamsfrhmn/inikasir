@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=3">
+<link rel="stylesheet" href="../assets/app.css?v=4">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/admin-192.png">
 <link rel="apple-touch-icon" href="../assets/icons/admin-180.png">
@@ -179,7 +179,9 @@
       <h2 class="grow">Produk</h2>
       <button class="btn primary" id="btnAddProd">Tambah produk</button>
     </div>
+    <div class="card stock-only" id="prodSummary" style="margin-bottom:12px"></div>
     <div class="card"><div class="list" id="prodList"></div></div>
+    <p class="muted no-stock-only" style="font-size:13px;margin:10px 2px 0">Fitur stok dan harga beli belum aktif. Pemilik aplikasi perlu menjalankan <b>supabase/migrations/003_stok_hpp.sql</b> di Supabase.</p>
   </section>
 
   <!-- ========== KARYAWAN ========== -->
@@ -322,15 +324,61 @@
 <div class="modal" id="mProd"><div class="box stack">
   <h2 id="prodTitle">Tambah produk</h2>
   <div><label class="f" for="pName">Nama produk</label><input class="in" id="pName" maxlength="80"></div>
-  <div><label class="f" for="pPrice">Harga (Rp)</label><input class="in num" id="pPrice" inputmode="numeric"></div>
+  <div class="row" style="gap:12px;align-items:flex-start">
+    <div class="grow"><label class="f" for="pPrice">Harga jual (Rp)</label><input class="in num" id="pPrice" inputmode="numeric"></div>
+    <div class="grow stock-only"><label class="f" for="pCost">Harga beli / modal (Rp)</label><input class="in num" id="pCost" inputmode="numeric" placeholder="0"></div>
+  </div>
+  <div class="muted stock-only" id="pMargin" style="font-size:13px;margin-top:-4px"></div>
   <div><label class="f" for="pCat">Kategori</label><input class="in" id="pCat" list="catList" maxlength="30"><datalist id="catList"></datalist></div>
-  <label class="row" style="font-size:14px"><input type="checkbox" id="pActive" checked> Tampilkan di kasir</label>
+  <label class="row" style="font-size:14px;min-height:44px"><input type="checkbox" id="pActive" checked> Tampilkan di kasir</label>
+  <div class="stock-only stack" style="border-top:1px solid var(--line);padding-top:12px">
+    <label class="perm" style="padding:0"><input type="checkbox" id="pTrack"><span><b>Lacak stok</b><br><span class="muted">Stok berkurang otomatis setiap terjual. Kasir melihat sisa stok di kartu produk.</span></span></label>
+    <div id="pStockNew"><label class="f" for="pStock">Stok awal (jumlah yang ada sekarang)</label><input class="in num" id="pStock" inputmode="numeric" placeholder="0"></div>
+    <div id="pStockCur">
+      <div class="muted" style="font-size:13px">Stok sekarang</div>
+      <div class="row wrap" style="gap:8px;margin-top:2px">
+        <div class="grow" style="font-size:24px;font-weight:800" id="pStockNow"></div>
+        <button class="btn ghost small" id="pIn">Stok masuk</button>
+        <button class="btn ghost small" id="pFix">Koreksi</button>
+        <button class="btn ghost small" id="pLog">Riwayat</button>
+      </div>
+    </div>
+  </div>
+  <div class="err" id="pErr"></div>
   <div class="row modal-actions">
     <button class="btn danger" id="pDelete" hidden>Hapus</button>
     <div class="grow"></div>
     <button class="btn ghost" data-close="mProd">Batal</button>
     <button class="btn primary" id="pSave">Simpan</button>
   </div>
+</div></div>
+
+<!-- Stok masuk -->
+<div class="modal" id="mStockIn"><div class="box stack" style="max-width:400px">
+  <h2 id="siTitle">Stok masuk</h2>
+  <p class="muted" style="margin:0;font-size:14px">Catat barang yang baru dibuat atau dibeli.</p>
+  <div><label class="f" for="siQty">Jumlah masuk</label><input class="in num" id="siQty" inputmode="numeric" style="font-size:20px;font-weight:700"></div>
+  <div><label class="f" for="siCost">Harga beli per pcs (Rp)</label><input class="in num" id="siCost" inputmode="numeric"></div>
+  <p class="muted" style="margin:0;font-size:13px" id="siHint">Kalau harga beli berubah, modal dihitung rata-rata dari stok lama dan stok masuk.</p>
+  <div><label class="f" for="siNote">Catatan (opsional)</label><input class="in" id="siNote" maxlength="120" placeholder="Contoh: produksi pagi"></div>
+  <div class="err" id="siErr"></div>
+  <div class="row modal-actions"><div class="grow"></div><button class="btn ghost" data-close="mStockIn">Batal</button><button class="btn primary" id="siSave">Tambah stok</button></div>
+</div></div>
+
+<!-- Koreksi stok -->
+<div class="modal" id="mStockFix"><div class="box stack" style="max-width:400px">
+  <h2 id="sfTitle">Koreksi stok</h2>
+  <p class="muted" style="margin:0;font-size:14px" id="sfHint"></p>
+  <div><label class="f" for="sfQty">Jumlah sebenarnya (hitung fisik)</label><input class="in num" id="sfQty" inputmode="numeric" style="font-size:20px;font-weight:700"></div>
+  <div><label class="f" for="sfNote">Alasan (opsional)</label><input class="in" id="sfNote" maxlength="120" placeholder="Contoh: rusak, dimakan sendiri, salah hitung"></div>
+  <div class="err" id="sfErr"></div>
+  <div class="row modal-actions"><div class="grow"></div><button class="btn ghost" data-close="mStockFix">Batal</button><button class="btn primary" id="sfSave">Simpan</button></div>
+</div></div>
+
+<!-- Riwayat stok -->
+<div class="modal" id="mStockLog"><div class="box stack">
+  <div class="row" style="justify-content:space-between"><h2 style="margin:0" id="slTitle">Riwayat stok</h2><button class="btn ghost small" data-close="mStockLog">Tutup</button></div>
+  <div class="list" id="slList"></div>
 </div></div>
 
 <!-- Catatan kas -->
@@ -368,9 +416,9 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="../config.js?v=3"></script>
+<script src="../config.js?v=4"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="../assets/common.js?v=3"></script>
+<script src="../assets/common.js?v=4"></script>
 <script>
 "use strict";
 let sb = null, user = null, shop = null;
@@ -558,6 +606,22 @@ async function fetchCashflow(fromKey, toKey) {
 function loadingInto(...ids) { ids.forEach((id) => ($("#" + id).innerHTML = `<div class="empty">Memuat...</div>`)); }
 function errorInto(e, ...ids) { ids.forEach((id) => ($("#" + id).innerHTML = `<div class="empty">${esc(errMsg(e))}</div>`)); }
 
+/* ================= HPP (modal barang terjual) ================= */
+// cost_total & costs ada setelah migrasi 003; sebelum itu HPP dianggap belum tersedia.
+function hppOf(list) {
+  const ready = list.some((t) => "cost_total" in t);
+  let hpp = 0, missing = 0;
+  list.forEach((t) => {
+    hpp += t.cost_total || 0;
+    if (ready) t.items.forEach((it, i) => { if (!(t.costs && t.costs[i])) missing += it.qty; });
+  });
+  return { ready, hpp, missing };
+}
+function hppNote(h) {
+  if (!h.ready) return "Belum dikurangi modal barang (harga beli). Itu ikut dihitung setelah fitur stok & harga beli aktif.";
+  return h.missing ? `${h.missing} item terjual belum punya harga beli, jadi modalnya dihitung Rp0. Isi harga beli di menu Produk supaya laba lebih akurat.` : "";
+}
+
 /* ================= Laporan ================= */
 function setRange(r) {
   const now = new Date(); let from = new Date(now), to = new Date(now);
@@ -650,22 +714,30 @@ async function renderReport() {
   const tunai = list.filter((t) => t.method === "tunai").reduce((s, t) => s + t.total, 0);
   const qris = omzet - tunai;
   const biaya = cf.filter((c) => c.type === "keluar" && !c.cat.startsWith("Prive")).reduce((s, c) => s + c.amount, 0);
-  const laba = omzet - biaya;
+  const h = hppOf(list);
+  const labaKotor = omzet - h.hpp, laba = labaKotor - biaya;
   const items = {};
-  list.forEach((t) => t.items.forEach((i) => { const e = (items[i.name] ||= { qty: 0, sum: 0 }); e.qty += i.qty; e.sum += i.qty * i.price; }));
+  list.forEach((t) => t.items.forEach((i, idx) => { const e = (items[i.name] ||= { qty: 0, sum: 0, cost: 0 }); e.qty += i.qty; e.sum += i.qty * i.price; e.cost += i.qty * ((t.costs && t.costs[idx]) || 0); }));
   const totalQty = Object.values(items).reduce((s, e) => s + e.qty, 0);
   const period = a === b ? fmtDateShort(a) : `${fmtDateShort(a)} sampai ${fmtDateShort(b)}`;
 
   $("#repStats").innerHTML = `
     <div class="lead"><div class="k">Omzet ${period}</div><div class="v num">${rp(omzet)}</div>
       <div class="s">${list.length} transaksi, ${totalQty} item terjual${list.length ? `, rata-rata ${rp(omzet / list.length)} per transaksi` : ""}</div></div>
-    <table class="ledger">
-      <tr><td>Tunai</td><td>${rp(tunai)}</td></tr>
-      <tr><td>QRIS</td><td>${rp(qris)}</td></tr>
-      <tr><td>Pengeluaran usaha</td><td>− ${rp(biaya)}</td></tr>
-      <tr class="sum"><td>Laba bersih</td><td class="${laba < 0 ? "amt-out" : ""}">${rp(laba)}</td></tr>
-    </table>
-    <p class="muted" style="font-size:13px;margin:8px 0 0">Laba bersih = omzet − pengeluaran usaha yang dicatat di menu Keuangan. Belum dikurangi modal barang (harga beli); itu masuk setelah fitur stok aktif.</p>`;
+    <div class="split">
+      <table class="ledger">
+        <tr><td>Omzet</td><td>${rp(omzet)}</td></tr>
+        ${h.ready ? `<tr><td>Modal barang terjual (HPP)</td><td>− ${rp(h.hpp)}</td></tr>
+        <tr class="sum"><td>Laba kotor</td><td>${rp(labaKotor)}</td></tr>` : ""}
+        <tr><td>Pengeluaran usaha</td><td>− ${rp(biaya)}</td></tr>
+        <tr class="sum"><td>Laba bersih</td><td class="${laba < 0 ? "amt-out" : ""}">${rp(laba)}</td></tr>
+      </table>
+      <table class="ledger">
+        <tr><td>Tunai</td><td>${rp(tunai)}</td></tr>
+        <tr><td>QRIS</td><td>${rp(qris)}</td></tr>
+      </table>
+    </div>
+    <p class="muted" style="font-size:13px;margin:8px 0 0">Pengeluaran usaha diambil dari menu Keuangan (ambil pribadi tidak dihitung). ${hppNote(h)}</p>`;
 
   // Omzet per hari (atau per bulan untuk rentang panjang)
   const days = Math.round((startOfDay(b) - startOfDay(a)) / 864e5) + 1;
@@ -709,7 +781,7 @@ async function renderReport() {
   const shown = rows.slice(0, 10), rest = rows.slice(10);
   $("#repItems").innerHTML = rows.length ? `<div class="hbars">${shown.map(([n, e]) => `
       <div class="hb">
-        <div class="hb-top"><span class="hb-name">${esc(n)}</span><span class="muted num">${rp(e.sum)}</span></div>
+        <div class="hb-top"><span class="hb-name">${esc(n)}</span><span class="muted num">${rp(e.sum)}${h.ready && e.cost ? ` · laba ${rp(e.sum - e.cost)}` : ""}</span></div>
         <div class="hb-row"><div class="hb-bar" style="width:${Math.max(2, (e.qty / maxQ) * 100)}%"></div><span class="num hb-val">${e.qty}</span></div>
       </div>`).join("")}</div>${rest.length ? `<p class="muted" style="font-size:13px;margin:8px 0 0">${rest.length} produk lain terjual ${rest.reduce((s, [, e]) => s + e.qty, 0)} item (${rp(rest.reduce((s, [, e]) => s + e.sum, 0))}).</p>` : ""}`
     : `<div class="empty">Tidak ada penjualan di periode ini. Coba ubah tanggalnya.</div>`;
@@ -763,7 +835,8 @@ async function renderFinance() {
   const kasBank = sQris + sum("masuk", "bank") - sum("keluar", "bank");
   const opCost = cf.filter((c) => c.type === "keluar" && !c.cat.startsWith("Prive")).reduce((s, c) => s + c.amount, 0);
   const prive = keluar - opCost;
-  const laba = sales - opCost;
+  const h = hppOf(tx);
+  const laba = sales - h.hpp - opCost;
   const period = a === b ? fmtDateShort(a) : `${fmtDateShort(a)} sampai ${fmtDateShort(b)}`;
   $("#finStats").innerHTML = `
     <div class="lead"><div class="k">${laba >= 0 ? "Untung bersih" : "Rugi"} ${period}</div>
@@ -771,6 +844,7 @@ async function renderFinance() {
     <div class="split">
       <table class="ledger">
         <tr><td>Penjualan</td><td>${rp(sales)}</td></tr>
+        ${h.ready ? `<tr><td>Modal barang terjual (HPP)</td><td>− ${rp(h.hpp)}</td></tr>` : ""}
         <tr><td>Pengeluaran usaha</td><td>− ${rp(opCost)}</td></tr>
         <tr class="sum"><td>${laba >= 0 ? "Untung bersih" : "Rugi"}</td><td>${rp(laba)}</td></tr>
       </table>
@@ -781,7 +855,8 @@ async function renderFinance() {
         </table>
         <p class="muted" style="font-size:13px;margin:8px 0 0">Bandingkan dengan uang di laci saat tutup toko. Angka ini menghitung penjualan, pemasukan lain${masuk ? ` (${rp(masuk)})` : ""}, dan semua pengeluaran${prive ? `, termasuk ambil pribadi ${rp(prive)}` : ""} di periode ini.</p>
       </div>
-    </div>`;
+    </div>
+    ${hppNote(h) ? `<p class="muted" style="font-size:13px;margin:10px 0 0">${hppNote(h)}</p>` : ""}`;
   const cats = {};
   cf.filter((c) => c.type === "keluar").forEach((c) => { cats[c.cat] = (cats[c.cat] || 0) + c.amount; });
   const rows = Object.entries(cats).sort((x, y) => y[1] - x[1]);
@@ -869,49 +944,156 @@ async function voidTx() {
   closeModal("mReceipt"); renderHistory(); refreshToday(); toast("Transaksi dibatalkan");
 }
 
-/* ================= Produk ================= */
-let editingPid = null;
+/* ================= Produk & stok ================= */
+let editingPid = null, costMap = {}, stockReady = false;
+const KIND = { masuk: "Stok masuk", koreksi: "Koreksi", terjual: "Terjual", batal: "Batal (kembali)", awal: "Stok awal" };
+const LOW_STOCK = 5;
+function stockBadge(p) {
+  if (!stockReady || !p.track_stock) return "";
+  if (p.stock < 0) return `<span class="tag void">Stok ${p.stock}, perlu dicek</span>`;
+  if (p.stock === 0) return `<span class="tag void">Habis</span>`;
+  return `<span class="tag ${p.stock <= LOW_STOCK ? "void" : "tunai"}">Stok ${p.stock}</span>`;
+}
+function marginText(price, cost) {
+  if (!cost) return "Isi harga beli supaya untung per pcs dan laba bersih bisa dihitung.";
+  const m = price - cost;
+  return m >= 0 ? `Untung ${rp(m)} per pcs (${Math.round((m / price) * 100)}% dari harga jual)` : `Rugi ${rp(-m)} per pcs: harga jual di bawah modal`;
+}
 async function loadProducts() {
   loadingInto("prodList");
-  const { data, error } = await sb.from("products").select("*").eq("store_id", shop.id).order("cat").order("name");
-  if (error) return errorInto(error, "prodList");
-  products = data;
-  $("#prodList").innerHTML = products.length ? products.map((p) => `
-    <div class="it" data-edit="${p.id}" style="cursor:pointer;${p.active ? "" : "opacity:.55"}">
-      <div class="grow"><div style="font-weight:600">${esc(p.name)}</div><div class="muted" style="font-size:13px">${esc(p.cat || "Tanpa kategori")}${p.active ? "" : " · disembunyikan dari kasir"}</div></div>
-      <div class="num" style="font-weight:700">${rp(p.price)}</div>
-    </div>`).join("") : `<div class="empty">Belum ada produk. Tekan "Tambah produk" untuk mulai.</div>`;
+  const [pr, pc] = await Promise.all([
+    sb.from("products").select("*").eq("store_id", shop.id).order("cat").order("name"),
+    sb.from("product_costs").select("product_id,cost").eq("store_id", shop.id),
+  ]);
+  if (pr.error) return errorInto(pr.error, "prodList");
+  products = pr.data;
+  stockReady = !pc.error && products.every((p) => "stock" in p);
+  document.body.classList.toggle("no-stock", !stockReady);
+  costMap = stockReady ? Object.fromEntries(pc.data.map((r) => [r.product_id, r.cost])) : {};
+  $("#prodList").innerHTML = products.length ? products.map((p) => {
+    const cost = costMap[p.id] || 0;
+    return `<div class="it" data-edit="${p.id}" style="cursor:pointer;${p.active ? "" : "opacity:.55"}">
+      <div class="grow">
+        <div style="font-weight:600">${esc(p.name)} ${stockBadge(p)}</div>
+        <div class="muted" style="font-size:13px">${esc(p.cat || "Tanpa kategori")}${p.active ? "" : " · disembunyikan dari kasir"}${stockReady ? (cost ? ` · modal ${rp(cost)}` : " · modal belum diisi") : ""}</div>
+      </div>
+      <div class="right"><div class="num" style="font-weight:700">${rp(p.price)}</div>
+        ${stockReady && cost ? `<div class="muted num" style="font-size:12px">untung ${rp(p.price - cost)}</div>` : ""}</div>
+    </div>`;
+  }).join("") : `<div class="empty">Belum ada produk. Tekan "Tambah produk" untuk mulai.</div>`;
   $("#catList").innerHTML = [...new Set(products.map((p) => p.cat).filter(Boolean))].map((c) => `<option value="${esc(c)}">`).join("");
+  if (stockReady) {
+    const tracked = products.filter((p) => p.track_stock);
+    const value = tracked.reduce((s, p) => s + Math.max(0, p.stock) * (costMap[p.id] || 0), 0);
+    const low = tracked.filter((p) => p.stock <= LOW_STOCK);
+    const noCost = products.filter((p) => p.active && !costMap[p.id]).length;
+    $("#prodSummary").innerHTML = tracked.length || noCost < products.length
+      ? `<table class="ledger"><tr><td>Nilai stok (stok × modal)</td><td>${rp(value)}</td></tr>
+          <tr><td>Produk dilacak stoknya</td><td>${tracked.length} dari ${products.length}</td></tr></table>
+        ${low.length ? `<div class="note" style="margin-top:8px">Hampir habis (≤ ${LOW_STOCK}): ${low.map((p) => `${esc(p.name)} (${p.stock})`).join(", ")}</div>` : ""}
+        ${noCost ? `<p class="muted" style="font-size:13px;margin:8px 0 0">${noCost} produk belum diisi harga belinya, jadi modalnya dihitung Rp0 di laporan.</p>` : ""}`
+      : `<p style="margin:0;font-size:14px"><b>Mulai pakai stok & modal:</b> buka tiap produk, isi <b>harga beli</b>, lalu centang <b>Lacak stok</b> dan isi stok awal. Laporan akan menghitung modal barang terjual (HPP) dan laba bersih yang sebenarnya.</p>`;
+  }
+}
+function renderStockSection(p) {
+  const tracked = $("#pTrack").checked;
+  const existingTracked = p && p.track_stock;
+  $("#pStockNew").hidden = !tracked || existingTracked;
+  $("#pStockCur").hidden = !tracked || !existingTracked;
+  if (existingTracked) $("#pStockNow").textContent = p.stock + " pcs";
 }
 function openProd(pid) {
   editingPid = pid || null;
-  const p = products.find((x) => x.id === pid) || { name: "", price: "", cat: "", active: true };
+  const p = products.find((x) => x.id === pid) || { name: "", price: "", cat: "", active: true, track_stock: false, stock: 0 };
   $("#prodTitle").textContent = pid ? "Ubah produk" : "Tambah produk";
   $("#pName").value = p.name; $("#pPrice").value = p.price ? p.price.toLocaleString("id-ID") : "";
+  const cost = costMap[p.id] || 0;
+  $("#pCost").value = cost ? cost.toLocaleString("id-ID") : "";
   $("#pCat").value = p.cat || ""; $("#pActive").checked = p.active !== false;
-  $("#pDelete").hidden = !pid;
+  $("#pTrack").checked = !!p.track_stock; $("#pStock").value = "";
+  $("#pDelete").hidden = !pid; $("#pErr").textContent = "";
+  updateMargin(); renderStockSection(pid ? p : null);
   openModal("mProd");
-  // keyboard langsung muncul hanya untuk produk baru; saat mengubah, biar pemilik lihat isinya dulu
   if (!pid) setTimeout(() => $("#pName").focus(), 50);
 }
+function updateMargin() { $("#pMargin").textContent = marginText(parseNum($("#pPrice").value), parseNum($("#pCost").value)); }
 async function saveProd() {
   const name = $("#pName").value.trim(), price = parseNum($("#pPrice").value);
-  if (!name) return toast("Nama produk wajib diisi");
-  if (!price) return toast("Harga wajib diisi");
+  if (!name) return ($("#pErr").textContent = "Nama produk wajib diisi.");
+  if (!price) return ($("#pErr").textContent = "Harga jual wajib diisi.");
   const row = { name, price, cat: $("#pCat").value.trim(), active: $("#pActive").checked };
+  if (stockReady) row.track_stock = $("#pTrack").checked;
+  const prev = products.find((x) => x.id === editingPid);
   const btn = $("#pSave"); setBusy(btn, "Menyimpan...");
-  const { error } = editingPid
-    ? await sb.from("products").update(row).eq("id", editingPid)
-    : await sb.from("products").insert({ ...row, store_id: shop.id });
+  let id = editingPid, error;
+  if (id) ({ error } = await sb.from("products").update(row).eq("id", id));
+  else { const r = await sb.from("products").insert({ ...row, store_id: shop.id }).select("id").single(); error = r.error; id = r.data && r.data.id; }
+  if (!error && stockReady) {
+    const cost = parseNum($("#pCost").value);
+    if (cost !== (costMap[id] || 0)) ({ error } = await sb.from("product_costs").upsert({ product_id: id, store_id: shop.id, cost }));
+    // mulai lacak stok: simpan stok awal
+    if (!error && row.track_stock && !(prev && prev.track_stock)) ({ error } = await sb.rpc("set_stock", { p_product: id, p_qty: parseNum($("#pStock").value), p_note: "Stok awal" }));
+  }
   setBusy(btn);
-  if (error) return toast(errMsg(error));
+  if (error) { if (!editingPid && id) editingPid = id; return ($("#pErr").textContent = errMsg(error)); }
   closeModal("mProd"); loadProducts(); toast("Produk disimpan. HP kasir ikut berubah dalam 1 menit.");
 }
 async function deleteProd() {
-  if (!editingPid || !confirm("Hapus produk ini? Riwayat penjualan lama tetap aman.")) return;
+  if (!editingPid || !confirm("Hapus produk ini? Riwayat penjualan lama tetap aman, tapi riwayat stoknya ikut terhapus.")) return;
   const { error } = await sb.from("products").delete().eq("id", editingPid);
-  if (error) return toast(errMsg(error));
+  if (error) return ($("#pErr").textContent = errMsg(error));
   closeModal("mProd"); loadProducts(); toast("Produk dihapus");
+}
+const curProd = () => products.find((x) => x.id === editingPid);
+function openStockIn() {
+  const p = curProd(); if (!p) return;
+  $("#siTitle").textContent = "Stok masuk: " + p.name;
+  $("#siQty").value = ""; $("#siNote").value = ""; $("#siErr").textContent = "";
+  const cost = costMap[p.id] || 0;
+  $("#siCost").value = cost ? cost.toLocaleString("id-ID") : "";
+  $("#siHint").textContent = cost ? `Modal sekarang ${rp(cost)}. Kalau harga beli berubah, modal dihitung rata-rata dari stok lama (${Math.max(0, p.stock)} pcs) dan stok masuk.` : "Harga beli ini jadi modal produk.";
+  openModal("mStockIn"); setTimeout(() => $("#siQty").focus(), 50);
+}
+async function saveStockIn() {
+  const qty = parseNum($("#siQty").value), costTxt = $("#siCost").value.trim();
+  if (!qty) return ($("#siErr").textContent = "Isi jumlah yang masuk.");
+  const btn = $("#siSave"); setBusy(btn, "Menyimpan...");
+  const { data, error } = await sb.rpc("add_stock", { p_product: editingPid, p_qty: qty, p_unit_cost: costTxt ? parseNum(costTxt) : null, p_note: $("#siNote").value.trim() });
+  setBusy(btn);
+  if (error) return ($("#siErr").textContent = errMsg(error));
+  closeModal("mStockIn"); await loadProducts();
+  const p = curProd(); if (p) { renderStockSection(p); $("#pCost").value = data.cost ? data.cost.toLocaleString("id-ID") : ""; updateMargin(); }
+  toast(`Stok jadi ${data.stock} pcs${costTxt ? `, modal ${rp(data.cost)}` : ""}`);
+}
+function openStockFix() {
+  const p = curProd(); if (!p) return;
+  $("#sfTitle").textContent = "Koreksi stok: " + p.name;
+  $("#sfHint").textContent = `Menurut catatan: ${p.stock} pcs. Isi jumlah yang benar-benar ada.`;
+  $("#sfQty").value = ""; $("#sfNote").value = ""; $("#sfErr").textContent = "";
+  openModal("mStockFix"); setTimeout(() => $("#sfQty").focus(), 50);
+}
+async function saveStockFix() {
+  if ($("#sfQty").value.trim() === "") return ($("#sfErr").textContent = "Isi jumlah sebenarnya (isi 0 kalau habis).");
+  const btn = $("#sfSave"); setBusy(btn, "Menyimpan...");
+  const { data, error } = await sb.rpc("set_stock", { p_product: editingPid, p_qty: parseNum($("#sfQty").value), p_note: $("#sfNote").value.trim() });
+  setBusy(btn);
+  if (error) return ($("#sfErr").textContent = errMsg(error));
+  closeModal("mStockFix"); await loadProducts();
+  const p = curProd(); if (p) renderStockSection(p);
+  toast(data.diff === 0 ? "Stok sudah cocok" : `Stok dikoreksi ${data.diff > 0 ? "+" : ""}${data.diff}, sekarang ${data.stock} pcs`);
+}
+async function openStockLog() {
+  const p = curProd(); if (!p) return;
+  $("#slTitle").textContent = "Riwayat stok: " + p.name;
+  loadingInto("slList"); openModal("mStockLog");
+  const { data, error } = await sb.from("stock_moves").select("*").eq("product_id", p.id).order("created_at", { ascending: false }).limit(50);
+  if (error) return errorInto(error, "slList");
+  $("#slList").innerHTML = data.length ? data.map((m) => `
+    <div class="it">
+      <div class="grow"><div style="font-weight:600">${KIND[m.kind] || esc(m.kind)}${m.unit_cost != null ? ` <span class="muted" style="font-weight:400">@ ${rp(m.unit_cost)}</span>` : ""}</div>
+        <div class="muted" style="font-size:13px">${new Date(m.created_at).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}${m.note ? " · " + esc(m.note) : ""}</div></div>
+      <div class="right"><div class="num ${m.qty < 0 ? "amt-out" : "amt-in"}">${m.qty > 0 ? "+" : ""}${m.qty}</div><div class="muted num" style="font-size:12px">sisa ${m.stock_after}</div></div>
+    </div>`).join("") : `<div class="empty">Belum ada riwayat.</div>`;
 }
 
 /* ================= Setelan ================= */
@@ -1187,6 +1369,11 @@ $("#btnVoid").onclick = voidTx;
 $("#btnAddProd").onclick = () => openProd(null);
 $("#pSave").onclick = saveProd;
 $("#pDelete").onclick = deleteProd;
+bindMoneyInput($("#pCost")); bindMoneyInput($("#pStock")); bindMoneyInput($("#siQty")); bindMoneyInput($("#siCost")); bindMoneyInput($("#sfQty"));
+$("#pPrice").addEventListener("input", updateMargin); $("#pCost").addEventListener("input", updateMargin);
+$("#pTrack").addEventListener("change", () => renderStockSection(curProd()));
+$("#pIn").onclick = openStockIn; $("#pFix").onclick = openStockFix; $("#pLog").onclick = openStockLog;
+$("#siSave").onclick = saveStockIn; $("#sfSave").onclick = saveStockFix;
 $("#btnSaveInfo").onclick = () => updateShop({ name: $("#setName").value.trim() || "Toko Saya", address: $("#setAddr").value.trim(), phone: $("#setPhone").value.trim() }, "Info toko disimpan");
 $("#btnSetPin").onclick = () => { $("#pinErr").textContent = ""; $("#pinIn").value = ""; openModal("mPin"); setTimeout(() => $("#pinIn").focus(), 50); };
 $("#pinSave").onclick = savePin;
