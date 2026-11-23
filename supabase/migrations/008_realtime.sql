@@ -4,8 +4,8 @@
 -- Tidak bergantung pada migrasi lain: tabel dari migrasi yang belum dipasang dilewati,
 -- jadi jalankan ulang file ini setelah memasang migrasi baru (003/005).
 --
--- Supabase Realtime tetap mengikuti aturan RLS: pemilik hanya menerima data tokonya sendiri,
--- HP kasir tidak bisa mendengarkan data toko.
+-- Supabase Realtime tetap mengikuti aturan RLS: pemilik hanya menerima data tokonya sendiri;
+-- HP kasir hanya bisa mendengar perubahan produk (yang memang sudah boleh ia baca), bukan penjualan.
 -- =====================================================================
 
 do $$
