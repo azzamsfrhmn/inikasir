@@ -4,17 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
+<link rel="manifest" href="manifest.webmanifest">
 <title>IniKasir · Kasir simpel untuk gerobak & warung</title>
 <meta name="description" content="Catat penjualan tunai dan QRIS dari HP penjaga, tetap jalan tanpa sinyal. Pemilik melihat laporan, stok, dan selisih kas dari mana saja.">
 <script>
   // HP yang sudah tersambung sebagai kasir (termasuk aplikasi lama yang dipasang di alamat ini)
   // langsung masuk ke halaman kasir, tanpa lewat halaman depan.
-  try { if (localStorage.getItem("inikasir-kasir-store")) location.replace("kasir/"); } catch (e) {}
+  try { if (localStorage.getItem("inikasir-kasir-store")) location.replace("masuk/"); } catch (e) {}
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/app.css?v=25">
+<link rel="stylesheet" href="assets/app.css?v=26">
 <link rel="icon" type="image/svg+xml" href="assets/icons/kasir.svg">
 <link rel="apple-touch-icon" href="assets/icons/kasir-180.png">
 <style>

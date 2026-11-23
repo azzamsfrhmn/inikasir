@@ -2,9 +2,9 @@
 // saat tidak ada sinyal. Data (Supabase) tidak pernah di-cache di sini; penjualan offline
 // disimpan oleh halaman kasir sendiri lalu dikirim saat online.
 // Letaknya di akar situs supaya HP yang dulu memasang kasir di "/" tetap mendapat pembaruan.
-const CACHE = "inikasir-v33";
+const CACHE = "inikasir-v34";
 const SHELL = [
-  "./", "kasir/", "kasir/index.html", "kasir/manifest.webmanifest", "config.js", "assets/app.css", "assets/common.js",
+  "./", "masuk/", "masuk/index.html", "manifest.webmanifest", "kasir/", "kasir/index.html", "config.js", "assets/app.css", "assets/common.js",
   "assets/icons/kasir.svg", "assets/icons/kasir-192.png", "assets/icons/kasir-512.png",
   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js",
 ];
@@ -28,6 +28,7 @@ self.addEventListener("fetch", (e) => {
     }).catch(() => caches.match(req, { ignoreSearch: true }).then((r) => {
       if (r) return r;
       if (url.pathname.includes("/admin/")) return Response.error();
+      if (url.pathname.includes("/masuk/")) return caches.match(new URL("masuk/index.html", self.registration.scope).href);
       // halaman yang belum tersimpan: HP kasir tetap bisa jualan
       return caches.match(new URL("kasir/index.html", self.registration.scope).href);
     })));

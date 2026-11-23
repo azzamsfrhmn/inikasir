@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#121714">
+<title>IniKasir</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/app.css?v=26">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="../assets/icons/kasir.svg">
+<link rel="apple-touch-icon" href="../assets/icons/kasir-180.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="IniKasir">
+</head>
+<body class="choose-body">
+<!-- Pintu masuk aplikasi: satu aplikasi IniKasir, pilih peran setiap kali dibuka -->
+<main class="choose">
+  <div class="choose-top">
+    <img src="../assets/icons/kasir.svg" alt="" width="56" height="56">
+    <h1>Masuk sebagai</h1>
+    <p>Pilih sesuai yang memakai HP ini sekarang.</p>
+  </div>
+
+  <div class="choose-list">
+    <a class="role" href="../kasir/" id="goKasir">
+      <span class="role-ic"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M7 20h10M12 16v4M7 9h4"/></svg></span>
+      <span class="role-tx"><b>Kasir</b><span>Untuk penjaga: catat penjualan tunai dan QRIS.</span><em id="kasirState"></em></span>
+      <svg class="ic role-go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+    </a>
+    <a class="role dark" href="../admin/" id="goAdmin">
+      <span class="role-ic"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v18h18"/><path d="M8 16v-4M13 16V8M18 16v-7"/></svg></span>
+      <span class="role-tx"><b>Pemilik / Admin</b><span>Laporan, keuangan, stok, dan pengaturan toko.</span><em id="adminState"></em></span>
+      <svg class="ic role-go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+    </a>
+  </div>
+
+  <p class="choose-foot" id="installHint"></p>
+  <button class="btn ghost install-only choose-install" data-install>Pasang IniKasir di layar utama</button>
+</main>
+
+<script src="../config.js?v=26"></script>
+<script>
+// Keadaan tiap peran dibaca dari simpanan HP saja (tanpa internet), supaya halaman ini cepat
+(function () {
+  const get = (k) => { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return null; } };
+  const cache = get("inikasir-kasir-cache"), store = get("inikasir-kasir-store");
+  const k = document.getElementById("kasirState");
+  if (store && cache && cache.shop) k.textContent = "Tersambung: " + cache.shop.name + (cache.devName ? " · " + cache.devName : "");
+  else k.textContent = "Belum disambungkan. Perlu kode toko dan PIN.";
+  const auth = get("inikasir-admin");
+  const email = auth && (auth.user ? auth.user.email : auth.currentSession && auth.currentSession.user && auth.currentSession.user.email);
+  document.getElementById("adminState").textContent = email ? "Masuk sebagai " + email : "Masuk dengan email pemilik toko.";
+})();
+</script>
+<script src="../assets/common.js?v=26"></script>
+<script>
+document.getElementById("installHint").textContent = installHintText("IniKasir");
+if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("../sw.js").catch(() => {});
+</script>
+</body>
+</html>

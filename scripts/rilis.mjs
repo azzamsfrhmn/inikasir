@@ -20,7 +20,7 @@ const d = new Date(), pad = (n) => String(n).padStart(2, "0");
 wr("version.json", JSON.stringify({ version: next, date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`, notes }, null, 2) + "\n");
 
 // 2. ?v=N di semua halaman (nomor sama di ketiganya)
-const HTML = ["index.html", "kasir/index.html", "admin/index.html"];
+const HTML = ["index.html", "masuk/index.html", "kasir/index.html", "admin/index.html"];
 const cur = Math.max(...HTML.map((p) => Math.max(0, ...[...rd(p).matchAll(/\?v=(\d+)/g)].map((m) => +m[1]))));
 for (const p of HTML) wr(p, rd(p).replace(/\?v=\d+/g, `?v=${cur + 1}`));
 

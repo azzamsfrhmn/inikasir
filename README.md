@@ -4,7 +4,8 @@ Kasir simpel untuk pedagang jajanan & gerobak: jualan di HP penjaga (bisa offlin
 
 Rencana menjadikannya produk untuk banyak pedagang ada di [ROADMAP.md](ROADMAP.md).
 
-- **Halaman depan** (`/`): perkenalan singkat dan pilihan masuk sebagai penjaga kasir atau pemilik. HP yang sudah tersambung sebagai kasir langsung dialihkan ke `/kasir/`.
+- **Halaman depan** (`/`): perkenalan singkat dan pilihan masuk sebagai penjaga kasir atau pemilik. HP yang sudah tersambung sebagai kasir langsung dialihkan ke `/masuk/`.
+- **Aplikasi IniKasir** (`/masuk/`, satu manifest `manifest.webmanifest` untuk semua halaman): satu aplikasi di layar utama. Saat dibuka, pilih masuk sebagai **Kasir** atau **Pemilik / Admin**; dari kasir dan admin ada tombol **Ganti peran** untuk kembali ke sini.
 - **Halaman kasir** (`/kasir/`): untuk penjaga. Hanya bisa mencatat penjualan, tunai atau QRIS (pembeli scan QRIS yang tercetak di toko). Tetap bisa jualan saat sinyal hilang; penjualan dikirim otomatis begitu online.
 - **Halaman admin** (`/admin/`): untuk pemilik. Daftar dan masuk pakai email. Berisi laporan, keuangan, riwayat, produk, dan pengaturan kasir. Bisa dibuka dari HP mana saja.
 
@@ -58,7 +59,7 @@ Anon key aman ditaruh di sini karena semua akses dijaga aturan di database. **Ja
 ### 5. Mulai pakai
 1. Pemilik buka `/admin/`, **Daftar**, klik link konfirmasi di email, lalu **Buat toko**.
 2. Di **Setelan**: atur **PIN kasir**, lalu cek nama dan harga di **Produk**.
-3. Di HP penjaga buka `/kasir/` (atau `/` lalu **Penjaga kasir**), masukkan **kode toko** dan **PIN kasir**. Tambahkan ke layar utama lewat menu Chrome.
+3. Di HP penjaga buka `/masuk/` lalu pilih **Kasir**, masukkan **kode toko** dan **PIN kasir**. Tambahkan ke layar utama lewat menu Chrome.
 4. Opsional, di menu **Karyawan**: buat karyawan (nama + PIN + hak akses). Setelah ada karyawan aktif, penjaga harus pilih nama dan ketik PIN untuk **buka shift** (jam masuk + kas awal) dan **tutup shift** (jam pulang + kas akhir). Rekap absensi dan selisih kas ada di halaman yang sama.
 
 Setiap kali menerbitkan perubahan, jalankan dulu:

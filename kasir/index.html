@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="theme-color" content="#ffffff">
-<title>IniKasir Kasir</title>
+<title>IniKasir · Kasir</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=25">
-<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="../assets/app.css?v=26">
+<link rel="manifest" href="../manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="../assets/icons/kasir.svg">
 <link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/kasir-192.png">
 <link rel="apple-touch-icon" href="../assets/icons/kasir-180.png">
@@ -28,7 +28,10 @@
       <div class="sub" id="hdrDate"></div>
     </div>
   </div>
-  <button class="lockbtn install-only" data-install>Instal aplikasi</button>
+  <div class="hdr-right">
+    <button class="lockbtn install-only" data-install>Instal aplikasi</button>
+    <a class="iconbtn" href="../masuk/" aria-label="Ganti peran (kasir atau admin)" title="Ganti peran"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4L3 8l4 4M3 8h13M17 20l4-4-4-4M21 16H8"/></svg></a>
+  </div>
 </header>
 <div class="shiftbar" id="shiftBar"></div>
 <div class="banner" id="syncBanner"></div>
@@ -40,7 +43,7 @@
   <section class="page" id="view-connect">
    <div class="authx">
     <aside class="authx-side">
-      <div class="authx-top"><a class="authx-logo" href="../"><img src="../assets/icons/kasir.svg" alt="" width="32" height="32">IniKasir</a><a class="authx-back" href="../"><svg class="ic" viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>Beranda</a></div>
+      <div class="authx-top"><a class="authx-logo" href="../"><img src="../assets/icons/kasir.svg" alt="" width="32" height="32">IniKasir</a><a class="authx-back" href="../masuk/"><svg class="ic" viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>Ganti peran</a></div>
       <div>
         <span class="authx-eyebrow"><i></i>Untuk penjaga kasir</span>
         <h1>Sambungkan HP ini, <em>langsung jualan.</em></h1>
@@ -214,9 +217,9 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="../config.js?v=25"></script>
+<script src="../config.js?v=26"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="../assets/common.js?v=25"></script>
+<script src="../assets/common.js?v=26"></script>
 <script>
 "use strict";
 const K = { store: "inikasir-kasir-store", cache: "inikasir-kasir-cache", queue: "inikasir-kasir-queue", shift: "inikasir-kasir-shift", cash: "inikasir-kasir-cash",

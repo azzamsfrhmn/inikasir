@@ -1,8 +1,8 @@
 {
-  "version": "1.8",
+  "version": "1.9",
   "date": "2026-11-24",
   "notes": [
-    "Menu Setelan sekarang bernama Akun, dengan kartu profil toko di paling atas",
-    "Tombol Keluar ada di menu profil kanan atas, bisa dibuka dari halaman mana saja"
+    "Kasir dan admin sekarang satu aplikasi IniKasir: saat dibuka, pilih masuk sebagai Kasir atau Pemilik/Admin",
+    "Tombol Ganti peran di kasir (kanan atas) dan di menu profil admin"
   ]
 }

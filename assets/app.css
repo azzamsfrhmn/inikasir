@@ -569,3 +569,38 @@ main:has(>#view-connect.active),main:has(>#view-auth.active){max-width:none;padd
 .profile-mail{font-size:13.5px;overflow-wrap:anywhere}
 .profile-act{display:flex;flex-wrap:wrap;gap:8px;flex-basis:100%}
 @media (min-width:700px){.profile-act{flex-basis:auto}}
+
+/* ---------- Pilih peran (/masuk/) ---------- */
+.choose-body{background:var(--ink);min-height:100dvh}
+.choose{max-width:460px;margin:0 auto;padding:calc(40px + env(safe-area-inset-top,0px)) 20px calc(28px + env(safe-area-inset-bottom,0px));min-height:100dvh;display:flex;flex-direction:column}
+.choose-top{color:#fff;text-align:center;margin-bottom:28px}
+.choose-top img{border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.35)}
+.choose-top h1{font-size:28px;font-weight:800;letter-spacing:-.03em;margin:18px 0 6px;color:#fff}
+.choose-top p{margin:0;color:rgba(255,255,255,.65);font-size:15px}
+.choose-list{display:grid;gap:12px}
+.role{display:flex;align-items:center;gap:14px;background:var(--card);color:var(--ink);border-radius:var(--r-lg);padding:18px;text-decoration:none;
+  box-shadow:var(--sh-2);transition:transform var(--t-fast),box-shadow var(--t-fast);min-height:96px}
+.role:active{transform:scale(.985)}
+.role:focus-visible{outline:3px solid #8fd1a3;outline-offset:2px}
+@media (hover:hover){.role:hover{box-shadow:var(--sh-3)}}
+.role-ic{width:52px;height:52px;border-radius:14px;background:var(--leaf-soft);color:var(--leaf);display:flex;align-items:center;justify-content:center;flex:none}
+.role-ic .ic{width:26px;height:26px}
+.role-tx{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+.role-tx b{font-size:18px;font-weight:800;letter-spacing:-.01em}
+.role-tx span{font-size:13.5px;color:var(--muted);line-height:1.4}
+.role-tx em{font-style:normal;font-size:12.5px;font-weight:600;color:var(--leaf);margin-top:4px;overflow-wrap:anywhere}
+.role-go{width:20px;height:20px;color:var(--muted);flex:none}
+.role.dark{background:#22281f;color:#fff;border:1px solid rgba(255,255,255,.08)}
+.role.dark .role-ic{background:rgba(143,209,163,.14);color:#8fd1a3}
+.role.dark .role-tx span{color:rgba(255,255,255,.65)}
+.role.dark .role-tx em{color:#8fd1a3}
+.role.dark .role-go{color:rgba(255,255,255,.5)}
+.choose-foot{color:rgba(255,255,255,.55);font-size:13px;text-align:center;margin:auto 0 0;padding-top:28px;line-height:1.5}
+.choose-foot:empty{display:none}
+.btn.choose-install{margin:14px auto 0;background:transparent;color:#fff;border-color:rgba(255,255,255,.25);box-shadow:none}
+/* tombol ganti peran di header */
+.hdr-right{display:flex;align-items:center;gap:8px;flex:none}
+.iconbtn{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);display:inline-flex;align-items:center;justify-content:center;flex:none}
+.iconbtn .ic{width:20px;height:20px}
+.iconbtn:active{background:var(--sunk)}
+.pmenu a[role=menuitem]{text-decoration:none}

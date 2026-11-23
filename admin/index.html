@@ -9,8 +9,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=25">
-<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="../assets/app.css?v=26">
+<link rel="manifest" href="../manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="../assets/icons/admin.svg">
 <link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/admin-192.png">
 <link rel="apple-touch-icon" href="../assets/icons/admin-180.png">
@@ -38,6 +38,7 @@
     <div class="pmenu" id="profileMenu" role="menu" hidden>
       <div class="pmenu-h"><b id="pmShop"></b><span id="pmEmail"></span></div>
       <button role="menuitem" data-page="setelan" data-ic="user">Akun &amp; toko</button>
+      <a role="menuitem" href="../masuk/"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4L3 8l4 4M3 8h13M17 20l4-4-4-4M21 16H8"/></svg>Ganti peran</a>
       <button role="menuitem" class="danger" data-logout data-ic="logout">Keluar</button>
     </div>
   </div>
@@ -50,7 +51,7 @@
   <section class="page" id="view-auth">
    <div class="authx">
     <aside class="authx-side">
-      <div class="authx-top"><a class="authx-logo" href="../"><img src="../assets/icons/admin.svg" alt="" width="32" height="32">IniKasir</a><a class="authx-back" href="../"><svg class="ic" viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>Beranda</a></div>
+      <div class="authx-top"><a class="authx-logo" href="../"><img src="../assets/icons/admin.svg" alt="" width="32" height="32">IniKasir</a><a class="authx-back" href="../masuk/"><svg class="ic" viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>Ganti peran</a></div>
       <div>
         <span class="authx-eyebrow"><i></i>Untuk pemilik toko</span>
         <h1>Pantau jualan <em>dari mana saja.</em></h1>
@@ -380,9 +381,9 @@
 
       <div class="card stack">
         <h3>Pasang aplikasi</h3>
-        <p class="muted" style="margin:0;font-size:14px">Pasang dua aplikasi supaya bisa dibuka dari layar utama tanpa mengetik link: <b>Admin</b> di HP kamu, <b>Kasir</b> di HP penjaga.</p>
+        <p class="muted" style="margin:0;font-size:14px">Cukup satu aplikasi <b>IniKasir</b> di layar utama. Saat dibuka, pilih masuk sebagai <b>Kasir</b> (HP penjaga) atau <b>Pemilik / Admin</b>.</p>
         <p style="margin:0;font-size:14px" id="installHint"></p>
-        <div class="row wrap"><button class="btn primary install-only" data-install>Instal aplikasi Admin di HP ini</button></div>
+        <div class="row wrap"><button class="btn primary install-only" data-install>Instal aplikasi IniKasir di HP ini</button></div>
       </div>
 
     </div>
@@ -549,9 +550,9 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="../config.js?v=25"></script>
+<script src="../config.js?v=26"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="../assets/common.js?v=25"></script>
+<script src="../assets/common.js?v=26"></script>
 <script>
 "use strict";
 let sb = null, user = null, shop = null;
@@ -2016,7 +2017,7 @@ setInterval(renderHeader, 60000);
 /* ================= Init ================= */
 if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("../sw.js").catch(() => {});
 initUpdates();
-$("#installHint").textContent = installHintText("Admin");
+$("#installHint").textContent = installHintText("IniKasir");
 (async function init() {
   renderHeader();
   $("#histDate").value = dayKey(new Date());
