@@ -172,6 +172,8 @@ body.is-admin .kasir-only{display:none!important}
   body *{visibility:hidden}
   #printArea,#printArea *{visibility:visible}
   #printArea{position:absolute;left:0;top:0;width:58mm}
+  #printArea .receipt.p80{width:80mm}
+  #printArea .rc-logo{filter:grayscale(1)}
   #printArea .receipt{border:0;padding:0;font-size:11px}
 }
 
@@ -240,3 +242,7 @@ body.can-install .install-only{display:inline-flex!important;align-items:center}
 .prod .stk{font-size:12px;font-weight:600;color:var(--muted);margin-left:4px}
 .prod .stk.low{color:#8a5a00}
 .prod .stk.out{color:var(--bad)}
+
+/* Logo di struk */
+.receipt .rc-logo{display:block;margin:0 auto 6px;max-width:120px;max-height:80px;width:auto;height:auto}
+.receipt-preview{max-width:300px;margin:0 auto}

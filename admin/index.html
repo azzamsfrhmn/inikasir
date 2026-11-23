@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=4">
+<link rel="stylesheet" href="../assets/app.css?v=5">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/admin-192.png">
 <link rel="apple-touch-icon" href="../assets/icons/admin-180.png">
@@ -254,6 +254,38 @@
         <button class="btn primary" id="btnSaveInfo">Simpan</button>
       </div>
 
+      <div class="card stack" id="rcCard" hidden>
+        <h3>Struk</h3>
+        <p class="muted" style="margin:0;font-size:14px">Atur isi struk yang dibagikan atau dicetak dari HP kasir. Perubahan sampai ke HP kasir dalam 1 menit.</p>
+        <div class="split">
+          <div class="stack">
+            <div><label class="f" for="rcHeader">Teks tambahan di atas (opsional)</label><textarea class="in" id="rcHeader" rows="2" maxlength="120" placeholder="Contoh: Halal · Buka 15.00–22.00 · IG @otakotak"></textarea></div>
+            <div><label class="f" for="rcFooter">Teks di bawah</label><textarea class="in" id="rcFooter" rows="2" maxlength="120" placeholder="Terima kasih"></textarea></div>
+            <fieldset style="border:1px solid var(--line);border-radius:var(--r-sm);padding:4px 12px;margin:0">
+              <legend class="f" style="padding:0 4px">Tampilkan di struk</legend>
+              <label class="row" style="min-height:40px;font-size:14px"><input type="checkbox" id="rcAddr"> Alamat</label>
+              <label class="row" style="min-height:40px;font-size:14px"><input type="checkbox" id="rcPhone"> No. WhatsApp</label>
+              <label class="row" style="min-height:40px;font-size:14px"><input type="checkbox" id="rcNo"> Nomor transaksi</label>
+              <!-- muncul lagi kalau fitur shift diaktifkan -->
+              <label class="row" style="min-height:40px;font-size:14px" hidden><input type="checkbox" id="rcCashier"> Nama kasir</label>
+            </fieldset>
+            <div><label class="f" for="rcPaper">Lebar kertas printer</label>
+              <select class="in" id="rcPaper"><option value="58">58 mm (printer kecil, paling umum)</option><option value="80">80 mm</option></select></div>
+            <div>
+              <label class="f" for="rcLogoFile">Logo (opsional, otomatis hitam-putih)</label>
+              <input type="file" accept="image/*" id="rcLogoFile" class="in">
+              <button type="button" class="linkbtn" id="rcLogoDel" hidden>Hapus logo</button>
+            </div>
+            <div class="err" id="rcErr"></div>
+            <button class="btn primary" id="btnSaveReceipt">Simpan struk</button>
+          </div>
+          <div>
+            <div class="f">Pratinjau</div>
+            <div class="receipt-preview" id="rcPreview"></div>
+          </div>
+        </div>
+      </div>
+
       <div class="card stack">
         <h3>Pasang aplikasi</h3>
         <p class="muted" style="margin:0;font-size:14px">Pasang dua aplikasi supaya bisa dibuka dari layar utama tanpa mengetik link: <b>Admin</b> di HP kamu, <b>Kasir</b> di HP penjaga.</p>
@@ -416,9 +448,9 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="../config.js?v=4"></script>
+<script src="../config.js?v=5"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="../assets/common.js?v=4"></script>
+<script src="../assets/common.js?v=5"></script>
 <script>
 "use strict";
 let sb = null, user = null, shop = null;
@@ -1104,6 +1136,7 @@ async function renderSettings() {
   $("#linkKasir").value = BASE;
   $("#accEmail").textContent = user.email || "";
   renderOnboarding();
+  renderReceiptSettings();
   const [pin, dev] = await Promise.all([
     sb.rpc("has_kasir_pin", { p_store: shop.id }),
     sb.from("store_members").select("user_id,device_name,last_seen,created_at").eq("store_id", shop.id).eq("role", "kasir").order("created_at"),
@@ -1316,6 +1349,58 @@ function exportShiftCsv() {
   download(`shift_${$("#shFrom").value}_${$("#shTo").value}.csv`, "﻿sep=;\n" + lines.join("\n"), "text/csv;charset=utf-8");
 }
 
+/* ================= Struk ================= */
+let rcLogo = "";
+const SAMPLE_TX = () => ({ no: "20261123-012", time: new Date().toISOString(), method: "tunai", total: 13000, paid: 20000, change: 7000,
+  items: [{ name: "Otak-otak ikan", price: 2000, qty: 5 }, { name: "Es teh", price: 3000, qty: 1 }] });
+function receiptForm() {
+  return { header_text: $("#rcHeader").value.trim(), footer_text: $("#rcFooter").value.trim(),
+    show_address: $("#rcAddr").checked, show_phone: $("#rcPhone").checked, show_no: $("#rcNo").checked, show_cashier: $("#rcCashier").checked,
+    paper: $("#rcPaper").value, ...(rcLogo ? { logo: rcLogo } : {}) };
+}
+function renderReceiptPreview() {
+  $("#rcPreview").innerHTML = receiptHTML({ ...shop, receipt: receiptForm() }, SAMPLE_TX());
+  $("#rcLogoDel").hidden = !rcLogo;
+}
+function renderReceiptSettings() {
+  // kolom receipt baru ada setelah migrasi 004
+  $("#rcCard").hidden = !("receipt" in shop);
+  if (!("receipt" in shop)) return;
+  const o = receiptOpts(shop);
+  $("#rcHeader").value = o.header; $("#rcFooter").value = (shop.receipt.footer_text || "");
+  $("#rcAddr").checked = o.address; $("#rcPhone").checked = o.phone; $("#rcNo").checked = o.no; $("#rcCashier").checked = o.cashier;
+  $("#rcPaper").value = o.paper; rcLogo = o.logo; $("#rcErr").textContent = "";
+  renderReceiptPreview();
+}
+// Logo: diperkecil (maks 240 px) dan dijadikan hitam-putih supaya jelas di printer thermal
+function loadLogo(file) {
+  if (!file) return;
+  const img = new Image(), fr = new FileReader();
+  fr.onload = () => { img.src = fr.result; };
+  img.onload = () => {
+    const sc = Math.min(1, 240 / Math.max(img.width, img.height));
+    const c = document.createElement("canvas"); c.width = Math.max(1, Math.round(img.width * sc)); c.height = Math.max(1, Math.round(img.height * sc));
+    const x = c.getContext("2d"); x.fillStyle = "#fff"; x.fillRect(0, 0, c.width, c.height); x.drawImage(img, 0, 0, c.width, c.height);
+    const d = x.getImageData(0, 0, c.width, c.height);
+    for (let i = 0; i < d.data.length; i += 4) {
+      const g = 0.299 * d.data[i] + 0.587 * d.data[i + 1] + 0.114 * d.data[i + 2];
+      const v = g < 150 ? 0 : 255; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255;
+    }
+    x.putImageData(d, 0, 0);
+    const url = c.toDataURL("image/png");
+    if (url.length > 90000) return ($("#rcErr").textContent = "Logo terlalu rumit. Coba gambar yang lebih sederhana.");
+    rcLogo = url; $("#rcErr").textContent = ""; renderReceiptPreview();
+  };
+  img.onerror = () => ($("#rcErr").textContent = "Gambar tidak bisa dibuka.");
+  fr.readAsDataURL(file);
+}
+async function saveReceipt() {
+  const btn = $("#btnSaveReceipt"); setBusy(btn, "Menyimpan...");
+  const ok = await updateShop({ receipt: receiptForm() }, "Struk disimpan");
+  setBusy(btn);
+  if (ok) renderReceiptSettings();
+}
+
 /* ================= Event ================= */
 document.addEventListener("click", async (e) => {
   const t = e.target.closest("[data-page],[data-close],[data-tx],[data-edit],[data-range],[data-frange],[data-addfin],[data-delfin],[data-copy],[data-unlink],[data-logout],[data-emp],[data-shrange],[data-forceclose]");
@@ -1393,6 +1478,11 @@ $("#cpSave").onclick = async () => {
   closeModal("mPass"); toast("Password diganti");
 };
 $("#btnExport").onclick = exportAll;
+["rcHeader", "rcFooter", "rcAddr", "rcPhone", "rcNo", "rcCashier", "rcPaper"].forEach((id) => $("#" + id).addEventListener("input", renderReceiptPreview));
+["rcAddr", "rcPhone", "rcNo", "rcCashier", "rcPaper"].forEach((id) => $("#" + id).addEventListener("change", renderReceiptPreview));
+$("#rcLogoFile").addEventListener("change", (e) => { loadLogo(e.target.files[0]); e.target.value = ""; });
+$("#rcLogoDel").onclick = () => { rcLogo = ""; renderReceiptPreview(); };
+$("#btnSaveReceipt").onclick = saveReceipt;
 $("#btnAddEmp").onclick = () => openEmp(null);
 $("#eSave").onclick = saveEmp;
 $("#eDelete").onclick = deleteEmp;

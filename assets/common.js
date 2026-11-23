@@ -94,13 +94,24 @@ function installHintText(appName) {
 }
 
 /* ---------- Struk ---------- */
-// shop: {name, address, phone}; tx: {no, time, items:[{name,price,qty}], total, method, paid, change, voided}
+// Pengaturan struk dari pemilik (kolom stores.receipt, migrasi 004). Kosong = tampilan bawaan.
+function receiptOpts(shop) {
+  const r = (shop && shop.receipt) || {};
+  return {
+    header: (r.header_text || "").trim(), footer: (r.footer_text || "").trim() || "Terima kasih",
+    address: r.show_address !== false, phone: r.show_phone !== false, no: r.show_no !== false, cashier: r.show_cashier !== false,
+    paper: r.paper === "80" ? "80" : "58", logo: typeof r.logo === "string" && r.logo.startsWith("data:image/") ? r.logo : "",
+  };
+}
+const nl2br = (t) => esc(t).replace(/\n/g, "<br>");
+// shop: {name, address, phone, receipt}; tx: {no, time, items:[{name,price,qty}], total, method, paid, change, voided, employee_name}
 function receiptHTML(shop, tx) {
-  return `<div class="receipt">
-    <div class="c"><b style="font-size:15px">${esc(shop.name)}</b>${shop.address ? "<br>" + esc(shop.address) : ""}${shop.phone ? "<br>WA " + esc(shop.phone) : ""}</div>
+  const o = receiptOpts(shop);
+  return `<div class="receipt p${o.paper}">
+    <div class="c">${o.logo ? `<img class="rc-logo" src="${esc(o.logo)}" alt="">` : ""}<b style="font-size:15px">${esc(shop.name)}</b>${o.address && shop.address ? "<br>" + esc(shop.address) : ""}${o.phone && shop.phone ? "<br>WA " + esc(shop.phone) : ""}${o.header ? "<br>" + nl2br(o.header) : ""}</div>
     <hr>
-    <div class="l"><span>${tx.no ? esc(tx.no) : "No. menyusul"}</span><span>${new Date(tx.time).toLocaleDateString("id-ID")} ${fmtTime(tx.time)}</span></div>
-    ${tx.employee_name ? `<div class="l"><span>Kasir</span><span>${esc(tx.employee_name)}</span></div>` : ""}
+    <div class="l"><span>${o.no ? (tx.no ? esc(tx.no) : "No. menyusul") : ""}</span><span>${new Date(tx.time).toLocaleDateString("id-ID")} ${fmtTime(tx.time)}</span></div>
+    ${o.cashier && tx.employee_name ? `<div class="l"><span>Kasir</span><span>${esc(tx.employee_name)}</span></div>` : ""}
     <hr>
     ${tx.items.map((i) => `<div>${esc(i.name)}</div><div class="l"><span>&nbsp;${i.qty} x ${i.price.toLocaleString("id-ID")}</span><span>${(i.qty * i.price).toLocaleString("id-ID")}</span></div>`).join("")}
     <hr>
@@ -108,21 +119,24 @@ function receiptHTML(shop, tx) {
     <div class="l"><span>${tx.method === "qris" ? "QRIS" : "Tunai"}</span><span>${rp(tx.paid)}</span></div>
     ${tx.method === "tunai" ? `<div class="l"><span>Kembali</span><span>${rp(tx.change)}</span></div>` : ""}
     ${tx.voided ? `<hr><div class="c"><b>DIBATALKAN</b></div>` : ""}
-    <hr><div class="c">Terima kasih</div>
+    <hr><div class="c">${nl2br(o.footer)}</div>
   </div>`;
 }
 function receiptText(shop, tx) {
-  const L = [];
-  L.push(`*${shop.name}*`); if (shop.address) L.push(shop.address);
-  if (tx.no) L.push(`No: ${tx.no}`);
+  const o = receiptOpts(shop), L = [];
+  L.push(`*${shop.name}*`);
+  if (o.address && shop.address) L.push(shop.address);
+  if (o.phone && shop.phone) L.push("WA " + shop.phone);
+  if (o.header) L.push(o.header);
+  if (o.no && tx.no) L.push(`No: ${tx.no}`);
   L.push(`${new Date(tx.time).toLocaleDateString("id-ID")} ${fmtTime(tx.time)}`);
-  if (tx.employee_name) L.push(`Kasir: ${tx.employee_name}`);
+  if (o.cashier && tx.employee_name) L.push(`Kasir: ${tx.employee_name}`);
   L.push("------------------");
   tx.items.forEach((i) => L.push(i.name, `  ${i.qty} x ${rp(i.price)} = ${rp(i.qty * i.price)}`));
   L.push("------------------", `*TOTAL ${rp(tx.total)}*`, `Bayar (${tx.method === "qris" ? "QRIS" : "Tunai"}): ${rp(tx.paid)}`);
   if (tx.method === "tunai") L.push(`Kembali: ${rp(tx.change)}`);
   if (tx.voided) L.push("DIBATALKAN");
-  L.push("", "Terima kasih");
+  L.push("", o.footer);
   return L.join("\n");
 }
 async function shareText(text) {
