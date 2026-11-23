@@ -20,6 +20,7 @@ Data disimpan di [Supabase](https://supabase.com) (paket gratis cukup). Aturan a
    - `002_karyawan_shift.sql`: akun karyawan, hak akses, shift (kas awal/akhir), absensi. (Opsional, saat ini ditunda.)
    - `003_stok_hpp.sql`: stok barang jadi, harga beli (modal), HPP & laba. Tidak butuh 002.
    - `004_struk.sql`: pengaturan struk (teks atas/bawah, info yang tampil, logo, lebar kertas). Tidak butuh 002/003.
+   - `005_kas_harian.sql`: buka & tutup kasir (kas awal/akhir) versi sederhana tanpa karyawan/PIN; selisih kas di menu Keuangan. Tidak butuh 002/003/004.
 
 ### 3. Atur login
 Di **Authentication**:

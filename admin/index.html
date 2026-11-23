@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=8">
+<link rel="stylesheet" href="../assets/app.css?v=9">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/admin-192.png">
 <link rel="apple-touch-icon" href="../assets/icons/admin-180.png">
@@ -153,6 +153,12 @@
       </div>
     </div>
     <div class="card" id="finStats" style="margin-bottom:12px"></div>
+    <div class="card" id="kasCard" style="margin-bottom:12px" hidden>
+      <h3>Kas harian</h3>
+      <p class="muted chart-sub">Dari tombol buka &amp; tutup kasir di HP kasir. Seharusnya = kas awal + penjualan tunai selama kasir buka. Penjaga tidak melihat angka ini.</p>
+      <div id="kasSummary"></div>
+      <div class="list" id="kasList"></div>
+    </div>
     <div class="card" style="margin-bottom:12px">
       <h3 style="margin-bottom:8px">Uang keluar untuk apa saja</h3>
       <div id="finCats"></div>
@@ -453,9 +459,9 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="../config.js?v=8"></script>
+<script src="../config.js?v=9"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="../assets/common.js?v=8"></script>
+<script src="../assets/common.js?v=9"></script>
 <script>
 "use strict";
 let sb = null, user = null, shop = null;
@@ -869,12 +875,57 @@ function toggleCustom(prefix) {
   box.hidden = !box.hidden; btn.setAttribute("aria-expanded", String(!box.hidden));
   if (!box.hidden) { btn.classList.add("on"); setTimeout(() => $(`#${prefix}From`).focus(), 50); }
 }
+/* ---------- Kas harian (buka & tutup kasir, migrasi 005) ---------- */
+let kasData = [];
+async function renderCashSessions(a, b, txs) {
+  const from = startOfDay(a).toISOString(), to = new Date(startOfDay(b).getTime() + 864e5).toISOString();
+  const r = await sb.from("cash_sessions").select("*").eq("store_id", shop.id).gte("opened_at", from).lt("opened_at", to).order("opened_at", { ascending: false });
+  if (r.error) { $("#kasCard").hidden = true; return; }   // migrasi 005 belum dipasang
+  $("#kasCard").hidden = false;
+  kasData = r.data.map((ss) => {
+    const end = ss.closed_at ? new Date(ss.closed_at) : new Date();
+    const cash = txs.filter((t) => t.created_by === ss.device_user && t.method === "tunai" && new Date(t.time) >= new Date(ss.opened_at) && new Date(t.time) <= end)
+      .reduce((x, t) => x + t.total, 0);
+    const expected = ss.opening_cash + cash;
+    return { ...ss, cash, expected, diff: ss.closing_cash == null ? null : ss.closing_cash - expected };
+  });
+  const closed = kasData.filter((k) => k.diff != null);
+  const total = closed.reduce((x, k) => x + k.diff, 0);
+  $("#kasSummary").innerHTML = closed.length ? `<div class="change ${total < 0 ? "bad" : "ok"}" style="text-align:left;margin-bottom:4px">
+      ${total === 0 ? "Semua cocok, tidak ada selisih" : `Total selisih periode ini: ${total > 0 ? "lebih" : "kurang"} ${rp(Math.abs(total))}`} (${closed.length} kali tutup kasir)</div>` : "";
+  $("#kasList").innerHTML = kasData.length ? kasData.map((k) => {
+    const open = !k.closed_at;
+    const status = open ? `<span class="tag qris">Masih buka</span>`
+      : k.diff == null ? `<span class="tag void">${k.closed_by === "otomatis" ? "Lupa ditutup" : "Ditutup pemilik"}</span>`
+      : k.diff === 0 ? `<span class="tag tunai">Pas</span>` : `<span class="tag ${k.diff < 0 ? "void" : "tunai"}">${k.diff > 0 ? "Lebih" : "Kurang"} ${rp(Math.abs(k.diff))}</span>`;
+    return `<div class="it" style="flex-direction:column;align-items:stretch;gap:6px">
+      <div class="row"><div class="grow"><b>${new Date(k.opened_at).toLocaleDateString("id-ID", { weekday: "short", day: "numeric", month: "short" })}</b>
+        <span class="muted" style="font-size:13px">${fmtTime(k.opened_at)}–${open ? "sekarang" : fmtTime(k.closed_at)}${k.device_name ? " · " + esc(k.device_name) : ""}</span></div>${status}</div>
+      <table class="ledger" style="font-size:14px">
+        <tr><td>Kas awal</td><td>${rp(k.opening_cash)}</td></tr>
+        <tr><td>Penjualan tunai</td><td>${rp(k.cash)}</td></tr>
+        <tr class="sum"><td>Seharusnya di laci</td><td>${rp(k.expected)}</td></tr>
+        ${open ? "" : `<tr><td>Dihitung penjaga</td><td>${k.closing_cash == null ? "–" : rp(k.closing_cash)}</td></tr>`}
+      </table>
+      ${k.close_note ? `<div class="muted" style="font-size:13px">Catatan: ${esc(k.close_note)}</div>` : ""}
+      ${open ? `<div><button class="btn ghost small" data-forcecash="${k.id}">Tutup paksa</button></div>` : ""}
+    </div>`;
+  }).join("") : `<div class="empty">Belum ada catatan buka/tutup kasir di periode ini.</div>`;
+}
+async function forceCloseCash(id) {
+  if (!confirm("Tutup paksa kasir ini? Pakai kalau penjaga lupa menutup. Kas akhir tidak tercatat.")) return;
+  const { error } = await sb.rpc("force_close_cash", { p_id: id });
+  if (error) return toast(errMsg(error));
+  toast("Kasir ditutup"); renderFinance();
+}
+
 async function renderFinance() {
   const [a, b] = sortedRange($("#finFrom").value, $("#finTo").value);
   loadingInto("finStats", "finCats", "finList");
   try {
     const [tx, cf] = await Promise.all([fetchTx(a, b), fetchCashflow(a, b)]);
     finData = { tx: tx.filter((t) => !t.voided), cf, a, b };
+    renderCashSessions(a, b, finData.tx);
   } catch (e) { return errorInto(e, "finStats", "finCats", "finList"); }
   const { tx, cf } = finData;
   const sTunai = tx.filter((t) => t.method === "tunai").reduce((s, t) => s + t.total, 0);
@@ -1422,7 +1473,7 @@ async function saveReceipt() {
 
 /* ================= Event ================= */
 document.addEventListener("click", async (e) => {
-  const t = e.target.closest("[data-custom],[data-page],[data-close],[data-tx],[data-edit],[data-range],[data-frange],[data-addfin],[data-delfin],[data-copy],[data-unlink],[data-logout],[data-emp],[data-shrange],[data-forceclose]");
+  const t = e.target.closest("[data-custom],[data-page],[data-close],[data-tx],[data-edit],[data-range],[data-frange],[data-addfin],[data-delfin],[data-copy],[data-unlink],[data-logout],[data-emp],[data-shrange],[data-forceclose],[data-forcecash]");
   if (!t) return;
   const d = t.dataset;
   if (d.custom) toggleCustom(d.custom);
@@ -1430,6 +1481,7 @@ document.addEventListener("click", async (e) => {
   else if (d.emp) openEmp(d.emp);
   else if (d.shrange) setShiftRange(d.shrange);
   else if (d.forceclose) forceClose(d.forceclose);
+  else if (d.forcecash) forceCloseCash(d.forcecash);
   else if (d.close) closeModal(d.close);
   else if (d.tx) showDetail(d.tx);
   else if (d.edit) openProd(d.edit);

@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/app.css?v=8">
+<link rel="stylesheet" href="assets/app.css?v=9">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/kasir-192.png">
 <link rel="apple-touch-icon" href="assets/icons/kasir-180.png">
@@ -46,6 +46,20 @@
       <div class="err" id="cErr"></div>
       <button class="btn primary block" id="cSubmit">Sambungkan</button>
       <p class="muted" style="margin:0;font-size:13px" id="installHint"></p>
+    </form>
+  </section>
+
+  <!-- Buka kasir (kas harian) -->
+  <section class="page" id="view-open">
+    <form class="card auth stack" id="openForm" autocomplete="off">
+      <div>
+        <h2>Buka kasir</h2>
+        <p class="lede">Hitung uang tunai di laci sebelum mulai jualan, lalu isi jumlahnya. Isi 0 kalau laci kosong.</p>
+      </div>
+      <div><label class="f" for="opCash">Kas awal: uang di laci sekarang (Rp)</label>
+        <input class="in num" id="opCash" inputmode="numeric" placeholder="0" style="font-size:22px;font-weight:700"></div>
+      <div class="err" id="opErr"></div>
+      <button class="btn primary block" id="opGo">Buka kasir</button>
     </form>
   </section>
 
@@ -154,6 +168,20 @@
   <button class="btn danger block" id="btnEndShift">Tutup shift</button>
 </div></div>
 
+<!-- Tutup kasir (kas harian) -->
+<div class="modal" id="mClose"><div class="box stack" style="max-width:420px">
+  <h2 id="clTitle">Tutup kasir</h2>
+  <div id="clForm" class="stack">
+    <p class="muted" style="margin:0;font-size:14px">Hitung semua uang tunai di laci, lalu isi jumlahnya apa adanya. Pemilik yang akan mencocokkan.</p>
+    <div><label class="f" for="clCash">Kas akhir: uang tunai di laci sekarang (Rp)</label>
+      <input class="in num" id="clCash" inputmode="numeric" style="font-size:22px;font-weight:700"></div>
+    <div><label class="f" for="clNote">Catatan (opsional)</label><input class="in" id="clNote" maxlength="200" placeholder="Contoh: ambil Rp20.000 untuk beli es batu"></div>
+  </div>
+  <div id="clResult"></div>
+  <div class="err" id="clErr"></div>
+  <div class="row modal-actions" id="clActions"><div class="grow"></div><button class="btn ghost" data-close="mClose">Batal</button><button class="btn danger" id="clGo">Tutup kasir</button></div>
+</div></div>
+
 <!-- Tutup shift -->
 <div class="modal" id="mEnd"><div class="box stack" style="max-width:420px">
   <h2 id="enTitle">Tutup shift</h2>
@@ -169,12 +197,12 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="config.js?v=8"></script>
+<script src="config.js?v=9"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="assets/common.js?v=8"></script>
+<script src="assets/common.js?v=9"></script>
 <script>
 "use strict";
-const K = { store: "inikasir-kasir-store", cache: "inikasir-kasir-cache", queue: "inikasir-kasir-queue", shift: "inikasir-kasir-shift" };
+const K = { store: "inikasir-kasir-store", cache: "inikasir-kasir-cache", queue: "inikasir-kasir-queue", shift: "inikasir-kasir-shift", cash: "inikasir-kasir-cash" };
 let sb = null;
 let storeId = local.get(K.store, null);
 let shop = null, products = [];
@@ -184,10 +212,12 @@ let queueError = "";
 let lastTx = null;
 let employees = [];                    // karyawan aktif (kosong = toko tanpa sistem shift)
 let shift = local.get(K.shift, null);  // shift yang sedang berjalan di HP ini
+let cashOn = false;                    // fitur kas harian aktif (migrasi 005 sudah dipasang)
+let cashSession = local.get(K.cash, null);  // kasir yang sedang dibuka di HP ini {id, opened_at, opening_cash}
 
 /* ---------- Tampilan ---------- */
 function show(view) {
-  ["loading", "connect", "pick", "sell"].forEach((v) => {
+  ["loading", "connect", "open", "pick", "sell"].forEach((v) => {
     const el = $("#view-" + v);
     el.classList.toggle("active", v === view);
     if (v === "loading") el.style.display = v === view ? "" : "none";
@@ -198,12 +228,18 @@ function show(view) {
 function gate() {
   if (!shop) return;
   if (employees.length && !shift) { renderPick(); show("pick"); }
+  else if (!employees.length && cashOn && !cashSession) { show("open"); setTimeout(() => $("#opCash").focus(), 60); }
   else show("sell");
   renderShiftBar();
 }
 function renderShiftBar() {
-  $("#shiftBar").innerHTML = shift ? `<span>Shift <b>${esc(shift.employee_name)}</b> sejak ${fmtTime(shift.opened_at)}</span>
-    <button class="btn ghost small" id="btnShiftMenu" style="border-color:var(--leaf);color:var(--leaf)">Menu shift</button>` : "";
+  if (shift) {
+    $("#shiftBar").innerHTML = `<span>Shift <b>${esc(shift.employee_name)}</b> sejak ${fmtTime(shift.opened_at)}</span>
+      <button class="btn ghost small" id="btnShiftMenu" style="border-color:var(--leaf);color:var(--leaf)">Menu shift</button>`;
+  } else if (cashOn && cashSession && !employees.length) {
+    $("#shiftBar").innerHTML = `<span>Kasir buka sejak <b>${fmtTime(cashSession.opened_at)}</b></span>
+      <button class="btn ghost small" id="btnCloseCash" style="border-color:var(--leaf);color:var(--leaf)">Tutup kasir</button>`;
+  } else $("#shiftBar").innerHTML = "";
 }
 function renderHeader() {
   $("#hdrName").textContent = shop ? shop.name : "Kasir";
@@ -211,10 +247,11 @@ function renderHeader() {
   document.title = shop ? shop.name + " · Kasir" : "Kasir";
 }
 function updateBanner() {
-  const n = queue.length;
+  const n = queue.length, sales = queue.filter((t) => !t.op).length;
+  const what = sales === n ? `${n} penjualan` : sales ? `${sales} penjualan dan catatan kasir` : "Catatan buka/tutup kasir";
   $("#syncBanner").textContent = !n ? "" :
-    queueError ? `${n} penjualan belum terkirim: ${queueError}` :
-    `${n} penjualan tersimpan di HP dan akan terkirim otomatis saat ada internet.`;
+    queueError ? `${what} belum terkirim: ${queueError}` :
+    `${what} tersimpan di HP dan akan terkirim otomatis saat ada internet.`;
 }
 
 /* ---------- Sambungkan HP ---------- */
@@ -261,11 +298,12 @@ async function refreshData(force) {
   if (!force && Date.now() - lastRefresh < 60000) return;
   lastRefresh = Date.now();
   try {
-    const [s, p, e, cs] = await Promise.all([
+    const [s, p, e, cs, cc] = await Promise.all([
       sb.from("stores").select("*").eq("id", storeId).maybeSingle(),
       sb.from("products").select("*").eq("store_id", storeId).eq("active", true).order("cat").order("name"),
       sb.from("employees").select("id,name,perms").eq("store_id", storeId).eq("active", true).order("name"),
       sb.rpc("current_shift", { p_store: storeId }),
+      sb.rpc("current_cash", { p_store: storeId }),
     ]);
     if (s.error) throw s.error;
     if (p.error) throw p.error;
@@ -277,7 +315,10 @@ async function refreshData(force) {
     shop = s.data; products = p.data;
     employees = e.error ? employees : e.data;   // tabel karyawan belum ada = toko tanpa shift
     if (!cs.error) setShift(cs.data);           // null = shift sudah ditutup (misal oleh pemilik)
-    local.set(K.cache, { storeId, shop, products, employees });
+    // kas harian aktif kalau fungsi current_cash ada (migrasi 005)
+    if (cc.error) { if (/current_cash|PGRST202|does not exist|schema cache/i.test(cc.error.message || "")) cashOn = false; }
+    else { cashOn = true; reconcileCash(cc.data); }
+    local.set(K.cache, { storeId, shop, products, employees, cashOn });
     renderHeader(); renderCats(); renderCart();
     gate();
   } catch (e) {
@@ -297,6 +338,13 @@ async function flushQueue() {
   try {
     while (queue.length) {
       const tx = queue[0];
+      if (tx.op) {   // catatan buka / tutup kasir
+        const r = tx.op === "open"
+          ? await sb.rpc("open_cash", { p_id: tx.id, p_store: tx.store_id, p_opening: tx.opening, p_time: tx.time })
+          : await sb.rpc("close_cash", { p_id: tx.id, p_closing: tx.closing, p_note: tx.note, p_time: tx.time });
+        if (r.error) { queueError = isNetworkError(r.error) ? "" : errMsg(r.error); break; }
+        queueError = ""; queue.shift(); local.set(K.queue, queue); continue;
+      }
       const { data, error } = await sb.rpc("record_sale", {
         p_id: tx.id, p_store: tx.store_id,
         p_items: tx.items.map((i) => ({ product_id: i.product_id, name: i.name, price: i.price, qty: i.qty })),
@@ -404,6 +452,7 @@ function updateChange() {
 }
 function finishPay() {
   if (employees.length && !shift) { closeModal("mPay"); gate(); return toast("Buka shift dulu sebelum jualan"); }
+  if (!employees.length && cashOn && !cashSession) { closeModal("mPay"); gate(); return toast("Buka kasir dulu sebelum jualan"); }
   const total = cartTotal();
   let paid = total, change = 0;
   if (payMethod === "tunai") {
@@ -419,7 +468,7 @@ function finishPay() {
   queue.push(tx); local.set(K.queue, queue);
   // kurangi sisa stok di layar sekarang juga (server tetap jadi patokan saat sinkron)
   tx.items.forEach((i) => { const p = products.find((x) => x.id === i.product_id); if (p && p.track_stock) p.stock -= i.qty; });
-  local.set(K.cache, { storeId, shop, products, employees });
+  local.set(K.cache, { storeId, shop, products, employees, cashOn });
   lastTx = tx;
   cart = []; renderCart();
   closeModal("mPay");
@@ -433,6 +482,49 @@ function renderReceipt() {
   $("#rcTitle").textContent = "Transaksi tersimpan";
   $("#rcStatus").textContent = tx.synced ? "" : "Tersimpan di HP. Nomor transaksi muncul setelah terkirim ke server.";
   $("#printArea").innerHTML = receiptHTML(shop, tx);
+}
+
+/* ---------- Kas harian: buka & tutup kasir ---------- */
+function setCash(c) { cashSession = c || null; if (cashSession) local.set(K.cash, cashSession); else local.del(K.cash); }
+// Samakan dengan server. Sesi lokal yang belum terkirim tetap dipakai; yang ditutup pemilik dilepas.
+function reconcileCash(server) {
+  const pendingClose = queue.some((t) => t.op === "close");                                   // tutup kasir belum terkirim
+  const pendingOpen = cashSession && queue.some((t) => t.op === "open" && t.id === cashSession.id); // buka kasir belum terkirim
+  if (server) { if (!pendingClose) setCash(server); }   // mis. aplikasi dipasang ulang: pakai sesi dari server
+  else if (!pendingOpen) setCash(null);                 // ditutup pemilik dari admin
+}
+$("#openForm").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const v = $("#opCash").value.trim();
+  if (v === "") return ($("#opErr").textContent = "Isi jumlah uang di laci (isi 0 kalau kosong).");
+  const c = { id: uuid(), opened_at: new Date().toISOString(), opening_cash: parseNum(v) };
+  queue.push({ op: "open", id: c.id, store_id: storeId, opening: c.opening_cash, time: c.opened_at }); local.set(K.queue, queue);
+  setCash(c); $("#opCash").value = ""; $("#opErr").textContent = "";
+  gate(); toast("Kasir dibuka. Selamat jualan.");
+  flushQueue();
+});
+function openCloseCash() {
+  if (!cashSession) return;
+  if (cart.length && !confirm("Masih ada pesanan di keranjang yang belum dibayar. Tetap tutup kasir?")) return;
+  $("#clTitle").textContent = "Tutup kasir";
+  $("#clForm").hidden = false; $("#clResult").innerHTML = ""; $("#clErr").textContent = "";
+  $("#clActions").innerHTML = `<div class="grow"></div><button class="btn ghost" data-close="mClose">Batal</button><button class="btn danger" id="clGo">Tutup kasir</button>`;
+  openModal("mClose"); setTimeout(() => $("#clCash").focus(), 60);
+}
+function submitCloseCash() {
+  const v = $("#clCash").value.trim();
+  if (v === "") return ($("#clErr").textContent = "Isi jumlah uang di laci (isi 0 kalau kosong).");
+  const amount = parseNum(v);
+  if (!confirm(`Tutup kasir dengan uang di laci ${rp(amount)}?`)) return;
+  queue.push({ op: "close", id: cashSession.id, store_id: storeId, closing: amount, note: $("#clNote").value.trim(), time: new Date().toISOString() });
+  local.set(K.queue, queue);
+  const opened = cashSession.opened_at;
+  setCash(null); cart = []; renderCart();
+  $("#clCash").value = ""; $("#clNote").value = "";
+  $("#clForm").hidden = true; $("#clErr").textContent = "";
+  $("#clResult").innerHTML = `<div class="change ok">Kasir ditutup. Buka ${fmtTime(opened)}, tutup ${fmtTime(new Date())}.${navigator.onLine ? "" : " Tersimpan di HP, akan terkirim saat ada internet."}</div>`;
+  $("#clActions").innerHTML = `<div class="grow"></div><button class="btn primary" data-close="mClose">Selesai</button>`;
+  gate(); flushQueue();
 }
 
 /* ---------- Shift karyawan ---------- */
@@ -570,10 +662,12 @@ async function submitEndShift() {
 
 /* ---------- Event ---------- */
 document.addEventListener("click", (e) => {
-  const t = e.target.closest("[data-pid],[data-cat],[data-inc],[data-dec],[data-close],[data-method],[data-cash],[data-pick],[data-void],#btnShiftMenu,#enGo");
+  const t = e.target.closest("[data-pid],[data-cat],[data-inc],[data-dec],[data-close],[data-method],[data-cash],[data-pick],[data-void],#btnShiftMenu,#enGo,#btnCloseCash,#clGo");
   if (!t) return;
   const d = t.dataset;
-  if (t.id === "btnShiftMenu") openShiftMenu();
+  if (t.id === "btnCloseCash") openCloseCash();
+  else if (t.id === "clGo") submitCloseCash();
+  else if (t.id === "btnShiftMenu") openShiftMenu();
   else if (t.id === "enGo") submitEndShift();
   else if (d.pick) openStart(d.pick);
   else if (d.void) voidSale(d.void, d.no);
@@ -598,7 +692,7 @@ $("#btnFinish").onclick = finishPay;
 $("#stGo").onclick = submitStart;
 $("#stPin").addEventListener("keydown", (e) => { if (e.key === "Enter") submitStart(); });
 $("#stCash").addEventListener("keydown", (e) => { if (e.key === "Enter") submitStart(); });
-bindMoneyInput($("#stCash")); bindMoneyInput($("#enCash")); bindMoneyInput($("#coAmt"));
+bindMoneyInput($("#stCash")); bindMoneyInput($("#enCash")); bindMoneyInput($("#coAmt")); bindMoneyInput($("#opCash")); bindMoneyInput($("#clCash"));
 $("#coGo").onclick = submitCashOut;
 $("#btnEndShift").onclick = openEndShift;
 window.addEventListener("offline", () => { if ($("#view-pick").classList.contains("active")) renderPick(); });
@@ -624,7 +718,7 @@ $("#installHint").textContent = installHintText("Kasir");
   sb = makeClient("inikasir-kasir");
   const cache = local.get(K.cache, null);
   if (storeId && cache && cache.storeId === storeId) {
-    shop = cache.shop; products = cache.products; employees = cache.employees || [];
+    shop = cache.shop; products = cache.products; employees = cache.employees || []; cashOn = !!cache.cashOn;
     renderHeader(); renderCats(); renderCart(); gate();
   }
   const { data: { session }, error } = await sb.auth.getSession();
