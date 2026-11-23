@@ -12,7 +12,7 @@
 ## Tahap 1: siap dicoba pedagang lain (belum berbayar)
 - [ ] Kesepakatan tertulis dengan client pertama: kepemilikan kode/aplikasi vs data penjualan client.
 - [ ] Cek merek "Laciku" di PDKI (pdki-indonesia.dgip.go.id) dan Play Store; beli domain (`laciku.id` masih kosong per 24 Nov 2026).
-- [ ] Pindah hosting ke Cloudflare Pages (paket gratis boleh untuk komersial; GitHub Pages tidak).
+- [x] Pindah hosting ke Cloudflare Pages: https://inikasir.pages.dev (paket gratis boleh untuk komersial; GitHub Pages tidak). Sisa: pindahkan HP kasir, lalu matikan GitHub Pages.
 - [ ] Email lewat SMTP sendiri (Resend/Brevo) supaya konfirmasi daftar tidak tertahan batas email bawaan Supabase.
 - [ ] Halaman depan (landing page) + Syarat & Ketentuan + Kebijakan Privasi (UU PDP).
 - [ ] Ikon & logo Laciku (sekarang masih huruf K/A).
