@@ -1,7 +1,7 @@
 // Service worker: menyimpan file aplikasi di HP supaya halaman kasir tetap bisa dibuka
 // saat tidak ada sinyal. Data (Supabase) tidak pernah di-cache di sini; penjualan offline
 // disimpan oleh halaman kasir sendiri lalu dikirim saat online.
-const CACHE = "inikasir-v16";
+const CACHE = "inikasir-v17";
 const SHELL = [
   "./", "index.html", "config.js", "assets/app.css", "assets/common.js", "manifest.webmanifest",
   "assets/icons/kasir-192.png", "assets/icons/kasir-512.png",

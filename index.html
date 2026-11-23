@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="theme-color" content="#2c5a39">
-<title>Kasir</title>
+<title>Laciku Kasir</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/app.css?v=9">
+<link rel="stylesheet" href="assets/app.css?v=10">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/kasir-192.png">
 <link rel="apple-touch-icon" href="assets/icons/kasir-180.png">
@@ -34,7 +34,7 @@
 
   <!-- Sambungkan HP ke toko -->
   <section class="page" id="view-connect">
-    <div class="brand"><img src="assets/icons/kasir-192.png" alt="" width="60" height="60"><b>Kasir</b><span>Catat penjualan tunai dan QRIS</span></div>
+    <div class="brand"><img src="assets/icons/kasir-192.png" alt="" width="60" height="60"><b><span data-brand>Laciku</span> Kasir</b><span>Catat penjualan tunai dan QRIS</span></div>
     <form class="card auth stack" id="connectForm" autocomplete="off" data-lpignore="true">
       <div>
         <h2>Sambungkan HP kasir</h2>
@@ -197,9 +197,9 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="config.js?v=9"></script>
+<script src="config.js?v=10"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="assets/common.js?v=9"></script>
+<script src="assets/common.js?v=10"></script>
 <script>
 "use strict";
 const K = { store: "inikasir-kasir-store", cache: "inikasir-kasir-cache", queue: "inikasir-kasir-queue", shift: "inikasir-kasir-shift", cash: "inikasir-kasir-cash" };
@@ -244,7 +244,7 @@ function renderShiftBar() {
 function renderHeader() {
   $("#hdrName").textContent = shop ? shop.name : "Kasir";
   $("#hdrDate").textContent = fmtDate(new Date());
-  document.title = shop ? shop.name + " · Kasir" : "Kasir";
+  document.title = shop ? shop.name + " · Kasir" : BRAND.name + " Kasir";
 }
 function updateBanner() {
   const n = queue.length, sales = queue.filter((t) => !t.op).length;

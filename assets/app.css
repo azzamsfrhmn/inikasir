@@ -1,5 +1,5 @@
 /* =====================================================================
-   IniKasir · sistem desain
+   Laciku · sistem desain
    Arah visual: warung otak-otak. Flat & minimalis (cocok untuk aplikasi kasir/stok),
    kontras tinggi karena HP kasir dipakai di luar ruangan.
    - Hijau daun pisang (bungkus otak-otak) = warna utama & navigasi
@@ -378,3 +378,12 @@ body.can-install .install-only{display:inline-flex!important;align-items:center}
 
 /* Form produk: angka stok di barisnya sendiri, tombol stok di bawahnya */
 #pStockNow{flex:1 0 100%;white-space:nowrap}
+
+/* Pilihan jenis dagangan saat buat toko */
+.types{border:0;padding:0;margin:0;display:grid;gap:8px}
+.type{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--line-strong);border-radius:var(--r-md);padding:12px 14px;cursor:pointer;background:#fff;
+  transition:border-color var(--t-fast),background var(--t-fast)}
+.type input{margin-top:2px;accent-color:var(--leaf);width:20px;height:20px;flex:none}
+.type b{display:block;font-size:var(--fs-md)}
+.type small{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+.type:has(input:checked){border-color:var(--leaf);background:var(--leaf-soft);box-shadow:inset 0 0 0 1px var(--leaf)}

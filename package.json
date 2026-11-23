@@ -1,0 +1,12 @@
+{
+  "name": "laciku",
+  "private": true,
+  "description": "Laciku: aplikasi kasir simpel untuk pedagang jajanan & gerobak",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/run.mjs"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.2.17"
+  }
+}

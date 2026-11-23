@@ -1,6 +1,8 @@
-# IniKasir
+# Laciku
 
-Aplikasi kasir sederhana untuk usaha jajanan: jualan di HP penjaga, laporan dan keuangan di halaman pemilik.
+Kasir simpel untuk pedagang jajanan & gerobak: jualan di HP penjaga (bisa offline), laporan, stok, dan kas laci di halaman pemilik.
+
+Rencana menjadikannya produk untuk banyak pedagang ada di [ROADMAP.md](ROADMAP.md).
 
 - **Halaman kasir** (`/`): untuk penjaga. Hanya bisa mencatat penjualan, tunai atau QRIS (pembeli scan QRIS yang tercetak di toko). Tetap bisa jualan saat sinyal hilang; penjualan dikirim otomatis begitu online.
 - **Halaman admin** (`/admin/`): untuk pemilik. Daftar dan masuk pakai email. Berisi laporan, keuangan, riwayat, produk, dan pengaturan kasir. Bisa dibuka dari HP mana saja.
@@ -21,6 +23,7 @@ Data disimpan di [Supabase](https://supabase.com) (paket gratis cukup). Aturan a
    - `003_stok_hpp.sql`: stok barang jadi, harga beli (modal), HPP & laba. Tidak butuh 002.
    - `004_struk.sql`: pengaturan struk (teks atas/bawah, info yang tampil, logo, lebar kertas). Tidak butuh 002/003.
    - `005_kas_harian.sql`: buka & tutup kasir (kas awal/akhir) versi sederhana tanpa karyawan/PIN; selisih kas di menu Keuangan. Tidak butuh 002/003/004.
+   - `006_template_usaha.sql`: pilih jenis dagangan saat buat toko (otak-otak, gorengan, jajanan, minuman, kosong) untuk produk contoh. Tidak butuh yang lain.
 
 ### 3. Atur login
 Di **Authentication**:
@@ -55,5 +58,7 @@ Setiap kali `assets/common.js` atau `assets/app.css` berubah, naikkan angka `?v=
 - Pemilik bisa memutus HP kasir yang hilang dari **Setelan > Penjaga kasir**, dan mengganti kode toko kalau kodenya bocor.
 
 ## Pengembangan
+- **Uji otomatis:** `npm install` lalu `npm test`. Menjalankan semua uji aturan akses & fungsi database (PGlite) untuk setiap urutan migrasi. GitHub Actions menjalankannya otomatis setiap push.
+- Nama merek diatur di `assets/common.js` (`BRAND`) dan bisa ditimpa lewat `config.js` (`brand`). Kunci penyimpanan `inikasir-*` di HP sengaja tidak diganti supaya HP yang sudah tersambung tidak keluar.
 - `supabase/schema.sql`: tabel, aturan akses (RLS), dan fungsi `create_store`, `join_store`, `record_sale`, dll.
 - `index.html`: halaman kasir. `admin/index.html`: halaman admin. `assets/`: CSS dan kode bersama. `sw.js`: cache untuk mode offline.

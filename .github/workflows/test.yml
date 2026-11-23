@@ -1,0 +1,23 @@
+name: Uji database
+
+# Menjalankan semua uji aturan akses & fungsi database setiap ada perubahan,
+# supaya kesalahan ketahuan sebelum sampai ke HP pengguna.
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test

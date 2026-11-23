@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="theme-color" content="#2c5a39">
 <meta name="robots" content="noindex">
-<title>Admin</title>
+<title>Laciku Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=9">
+<link rel="stylesheet" href="../assets/app.css?v=10">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/admin-192.png">
 <link rel="apple-touch-icon" href="../assets/icons/admin-180.png">
@@ -38,7 +38,7 @@
 
   <!-- ========== MASUK / DAFTAR ========== -->
   <section class="page" id="view-auth">
-    <div class="brand"><img src="../assets/icons/admin-192.png" alt="" width="60" height="60"><b>Admin toko</b><span>Laporan, keuangan, dan pengaturan kasir</span></div>
+    <div class="brand"><img src="../assets/icons/admin-192.png" alt="" width="60" height="60"><b><span data-brand>Laciku</span> Admin</b><span>Laporan, keuangan, dan pengaturan kasir</span></div>
     <form class="card auth stack" id="fLogin" data-auth="masuk">
       <div><h2>Masuk</h2><p class="lede">Halaman pemilik toko: laporan, keuangan, produk, dan pengaturan kasir.</p></div>
       <div><label class="f" for="lEmail">Email</label><input class="in" id="lEmail" type="email" autocomplete="email" required></div>
@@ -90,6 +90,14 @@
     <form class="card auth stack" id="fCreate">
       <div><h2>Buat toko</h2><p class="lede">Nama ini muncul di layar kasir dan di struk. Bisa diganti kapan saja.</p></div>
       <div><label class="f" for="csName">Nama toko</label><input class="in" id="csName" maxlength="60" required placeholder="Contoh: Otak-otak Bu Ani"></div>
+      <fieldset class="types">
+        <legend class="f">Jualan apa? (dapat contoh produk, harganya bisa diubah nanti)</legend>
+        <label class="type"><input type="radio" name="csType" value="otakotak" checked><span><b>Otak-otak & siomay</b><small>Otak-otak ikan, isi telur, keju, paket, siomay</small></span></label>
+        <label class="type"><input type="radio" name="csType" value="gorengan"><span><b>Gorengan</b><small>Bakwan, tahu isi, mendoan, pisang goreng, cireng, risol</small></span></label>
+        <label class="type"><input type="radio" name="csType" value="jajanan"><span><b>Jajanan lain</b><small>Cilok, batagor, sosis bakar, telur gulung, seblak</small></span></label>
+        <label class="type"><input type="radio" name="csType" value="minuman"><span><b>Minuman</b><small>Es teh, teh tarik, es jeruk, es kopi susu, es cokelat</small></span></label>
+        <label class="type"><input type="radio" name="csType" value="kosong"><span><b>Mulai kosong</b><small>Tambah produk sendiri</small></span></label>
+      </fieldset>
       <div class="err" id="csErr"></div>
       <button class="btn primary block">Buat toko</button>
       <button type="button" class="linkbtn" data-logout>Keluar dari akun ini</button>
@@ -320,7 +328,7 @@
 <div class="backdrop" id="backdrop"></div>
 
 <nav class="bottom admin-only" aria-label="Menu admin">
-  <div class="nav-brand"><img src="../assets/icons/admin-192.png" alt="" width="32" height="32"><span><b>Admin toko</b><small>IniKasir</small></span></div>
+  <div class="nav-brand"><img src="../assets/icons/admin-192.png" alt="" width="32" height="32"><span><b>Admin toko</b><small data-brand>Laciku</small></span></div>
   <button data-page="laporan" data-ic="chart">Laporan</button>
   <button data-page="keuangan" data-ic="wallet">Keuangan</button>
   <button data-page="riwayat" data-ic="receipt">Riwayat</button>
@@ -459,9 +467,9 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="../config.js?v=9"></script>
+<script src="../config.js?v=10"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="../assets/common.js?v=9"></script>
+<script src="../assets/common.js?v=10"></script>
 <script>
 "use strict";
 let sb = null, user = null, shop = null;
@@ -497,7 +505,7 @@ function authRoute() {
 function renderHeader() {
   $("#hdrName").textContent = shop ? shop.name : "Admin";
   $("#hdrDate").textContent = (shop ? "Admin · " : "") + fmtDate(new Date());
-  document.title = shop ? "Admin · " + shop.name : "Admin";
+  document.title = shop ? "Admin · " + shop.name : BRAND.name + " Admin";
 }
 async function refreshToday() {
   if (!shop) return;
@@ -590,7 +598,10 @@ async function logout() {
 $("#fCreate").addEventListener("submit", async (e) => {
   e.preventDefault();
   const btn = e.submitter || $("#fCreate button"); setBusy(btn, "Membuat toko...");
-  const { data, error } = await sb.rpc("create_store", { p_name: $("#csName").value.trim() });
+  const p_name = $("#csName").value.trim(), p_type = (document.querySelector('input[name="csType"]:checked') || {}).value || "otakotak";
+  let { data, error } = await sb.rpc("create_store", { p_name, p_type });
+  // database belum dipasangi migrasi 006: pakai cara lama (template otak-otak)
+  if (error && /create_store|PGRST202|schema cache|does not exist/i.test(error.message || "")) ({ data, error } = await sb.rpc("create_store", { p_name }));
   setBusy(btn);
   if (error) return ($("#csErr").textContent = errMsg(error));
   shop = Array.isArray(data) ? data[0] : data;
