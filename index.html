@@ -8,9 +8,9 @@
 <title>IniKasir · Kasir simpel untuk gerobak & warung</title>
 <meta name="description" content="Catat penjualan tunai dan QRIS dari HP penjaga, tetap jalan tanpa sinyal. Pemilik melihat laporan, stok, dan selisih kas dari mana saja.">
 <script>
-  // HP yang sudah tersambung sebagai kasir (termasuk aplikasi lama yang dipasang di alamat ini)
-  // langsung masuk ke halaman kasir, tanpa lewat halaman depan.
-  try { if (localStorage.getItem("inikasir-kasir-store")) location.replace("masuk/"); } catch (e) {}
+  // Dibuka dari aplikasi yang terpasang (bukan browser): langsung ke pilih peran.
+  // Di browser biasa halaman depan selalu tampil.
+  try { if (matchMedia("(display-mode: standalone)").matches || navigator.standalone) location.replace("masuk/"); } catch (e) {}
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

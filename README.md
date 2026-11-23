@@ -4,7 +4,7 @@ Kasir simpel untuk pedagang jajanan & gerobak: jualan di HP penjaga (bisa offlin
 
 Rencana menjadikannya produk untuk banyak pedagang ada di [ROADMAP.md](ROADMAP.md).
 
-- **Halaman depan** (`/`): perkenalan singkat dan pilihan masuk sebagai penjaga kasir atau pemilik. HP yang sudah tersambung sebagai kasir langsung dialihkan ke `/masuk/`.
+- **Halaman depan** (`/`): perkenalan singkat dan pilihan masuk sebagai penjaga kasir atau pemilik. Kalau dibuka dari aplikasi yang terpasang, langsung dialihkan ke `/masuk/`; di browser halaman depan selalu tampil.
 - **Aplikasi IniKasir** (`/masuk/`, satu manifest `manifest.webmanifest` untuk semua halaman): satu aplikasi di layar utama. Saat dibuka, pilih masuk sebagai **Kasir** atau **Pemilik / Admin**; dari kasir dan admin ada tombol **Ganti peran** untuk kembali ke sini.
 - **Halaman kasir** (`/kasir/`): untuk penjaga. Hanya bisa mencatat penjualan, tunai atau QRIS (pembeli scan QRIS yang tercetak di toko). Tetap bisa jualan saat sinyal hilang; penjualan dikirim otomatis begitu online.
 - **Halaman admin** (`/admin/`): untuk pemilik. Daftar dan masuk pakai email. Berisi laporan, keuangan, riwayat, produk, dan pengaturan kasir. Bisa dibuka dari HP mana saja.
