@@ -246,3 +246,6 @@ body.can-install .install-only{display:inline-flex!important;align-items:center}
 /* Logo di struk */
 .receipt .rc-logo{display:block;margin:0 auto 6px;max-width:120px;max-height:80px;width:auto;height:auto}
 .receipt-preview{max-width:300px;margin:0 auto}
+
+/* Atribut hidden harus selalu menang atas display dari kelas (.row, .stack, dll) */
+[hidden]{display:none!important}
