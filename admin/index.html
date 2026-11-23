@@ -256,7 +256,7 @@
   <div><label class="f" for="pPrice">Harga (Rp)</label><input class="in num" id="pPrice" inputmode="numeric"></div>
   <div><label class="f" for="pCat">Kategori</label><input class="in" id="pCat" list="catList" maxlength="30"><datalist id="catList"></datalist></div>
   <label class="row" style="font-size:14px"><input type="checkbox" id="pActive" checked> Tampilkan di kasir</label>
-  <div class="row">
+  <div class="row modal-actions">
     <button class="btn danger" id="pDelete" hidden>Hapus</button>
     <div class="grow"></div>
     <button class="btn ghost" data-close="mProd">Batal</button>
@@ -273,7 +273,7 @@
   <div><label class="f" for="fVia">Dibayar atau diterima lewat</label>
     <select class="in" id="fVia"><option value="tunai">Tunai (uang laci)</option><option value="bank">Rekening, QRIS, atau transfer</option></select></div>
   <div><label class="f" for="fNote">Catatan (opsional)</label><input class="in" id="fNote" maxlength="120" placeholder="Contoh: beli ikan tenggiri 2 kg"></div>
-  <div class="row">
+  <div class="row modal-actions">
     <div class="grow"></div>
     <button class="btn ghost" data-close="mFin">Batal</button>
     <button class="btn primary" id="fSave">Simpan</button>
@@ -286,7 +286,7 @@
   <p class="muted" style="margin:0;font-size:14px">4 sampai 6 angka. Kasih tahu PIN ini ke penjaga saat menyambungkan HP. HP yang sudah tersambung tidak perlu memasukkan ulang.</p>
   <input class="in num pin-mask" id="pinIn" type="text" inputmode="numeric" autocomplete="off" maxlength="6" style="font-size:22px;letter-spacing:.2em;text-align:center">
   <div class="err" id="pinErr"></div>
-  <div class="row"><div class="grow"></div><button class="btn ghost" data-close="mPin">Batal</button><button class="btn primary" id="pinSave">Simpan</button></div>
+  <div class="row modal-actions"><div class="grow"></div><button class="btn ghost" data-close="mPin">Batal</button><button class="btn primary" id="pinSave">Simpan</button></div>
 </div></div>
 
 <!-- Ganti password -->
@@ -294,7 +294,7 @@
   <h2>Ganti password</h2>
   <div><label class="f" for="cpPass">Password baru (minimal 8 karakter)</label><input class="in" id="cpPass" type="password" autocomplete="new-password" minlength="8"></div>
   <div class="err" id="cpErr"></div>
-  <div class="row"><div class="grow"></div><button class="btn ghost" data-close="mPass">Batal</button><button class="btn primary" id="cpSave">Simpan</button></div>
+  <div class="row modal-actions"><div class="grow"></div><button class="btn ghost" data-close="mPass">Batal</button><button class="btn primary" id="cpSave">Simpan</button></div>
 </div></div>
 
 <div class="toast" id="toast"></div>
@@ -693,7 +693,9 @@ function openProd(pid) {
   $("#pName").value = p.name; $("#pPrice").value = p.price ? p.price.toLocaleString("id-ID") : "";
   $("#pCat").value = p.cat || ""; $("#pActive").checked = p.active !== false;
   $("#pDelete").hidden = !pid;
-  openModal("mProd"); setTimeout(() => $("#pName").focus(), 50);
+  openModal("mProd");
+  // keyboard langsung muncul hanya untuk produk baru; saat mengubah, biar pemilik lihat isinya dulu
+  if (!pid) setTimeout(() => $("#pName").focus(), 50);
 }
 async function saveProd() {
   const name = $("#pName").value.trim(), price = parseNum($("#pPrice").value);
