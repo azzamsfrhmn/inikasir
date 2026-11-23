@@ -1,5 +1,5 @@
 -- =====================================================================
--- Laciku migrasi 006: template produk sesuai jenis dagangan saat buat toko
+-- IniKasir migrasi 006: template produk sesuai jenis dagangan saat buat toko
 -- Jalankan SEKALI di Supabase SQL Editor, setelah schema.sql.
 -- Tidak bergantung pada migrasi lain. create_store(p_name) lama tetap ada
 -- (memakai template otak-otak) supaya aplikasi versi lama tidak rusak.

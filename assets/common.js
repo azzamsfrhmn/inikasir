@@ -3,7 +3,7 @@
 
 const CFG = window.INIKASIR_CONFIG || {};
 // Merek produk. Bisa ditimpa lewat config.js (INIKASIR_CONFIG.brand) tanpa mengubah kode.
-const BRAND = Object.assign({ name: "Laciku", tagline: "Kasir simpel untuk pedagang jajanan & gerobak" }, CFG.brand || {});
+const BRAND = Object.assign({ name: "IniKasir", tagline: "Kasir simpel untuk pedagang jajanan & gerobak" }, CFG.brand || {});
 // Isi elemen bertanda data-brand dengan nama merek
 document.querySelectorAll("[data-brand]").forEach((el) => { el.textContent = el.dataset.brand === "tagline" ? BRAND.tagline : BRAND.name; });
 const CONFIGURED = !!(CFG.supabaseUrl && CFG.supabaseAnonKey);

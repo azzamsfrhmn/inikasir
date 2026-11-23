@@ -1,7 +1,7 @@
 {
-  "name": "laciku",
+  "name": "inikasir",
   "private": true,
-  "description": "Laciku: aplikasi kasir simpel untuk pedagang jajanan & gerobak",
+  "description": "IniKasir: aplikasi kasir simpel untuk pedagang jajanan & gerobak",
   "type": "module",
   "scripts": {
     "test": "node tests/run.mjs",

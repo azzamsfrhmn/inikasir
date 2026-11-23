@@ -1,4 +1,4 @@
-# Laciku
+# IniKasir
 
 Kasir simpel untuk pedagang jajanan & gerobak: jualan di HP penjaga (bisa offline), laporan, stok, dan kas laci di halaman pemilik.
 
@@ -29,7 +29,7 @@ Data disimpan di [Supabase](https://supabase.com) (paket gratis cukup). Aturan a
 Di **Authentication**:
 1. **Sign In / Providers**: nyalakan **Allow anonymous sign-ins** (dipakai HP kasir, yang tidak punya email). Biarkan **Email** tetap menyala.
 2. **URL Configuration**:
-   - **Site URL**: `https://<alamat-situs>/admin/` (misalnya `https://laciku.pages.dev/admin/`)
+   - **Site URL**: `https://<alamat-situs>/admin/` (misalnya `https://inikasir.pages.dev/admin/`)
    - **Redirect URLs**: tambahkan `https://<alamat-situs>/admin/`
 
 ### Hosting (Cloudflare Pages, gratis)
