@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=6">
+<link rel="stylesheet" href="../assets/app.css?v=8">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/admin-192.png">
 <link rel="apple-touch-icon" href="../assets/icons/admin-180.png">
@@ -38,6 +38,7 @@
 
   <!-- ========== MASUK / DAFTAR ========== -->
   <section class="page" id="view-auth">
+    <div class="brand"><img src="../assets/icons/admin-192.png" alt="" width="60" height="60"><b>Admin toko</b><span>Laporan, keuangan, dan pengaturan kasir</span></div>
     <form class="card auth stack" id="fLogin" data-auth="masuk">
       <div><h2>Masuk</h2><p class="lede">Halaman pemilik toko: laporan, keuangan, produk, dan pengaturan kasir.</p></div>
       <div><label class="f" for="lEmail">Email</label><input class="in" id="lEmail" type="email" autocomplete="email" required></div>
@@ -97,18 +98,19 @@
 
   <!-- ========== LAPORAN ========== -->
   <section class="page" id="pg-laporan">
-    <div class="card" style="margin-bottom:12px">
-      <div class="row wrap">
-        <div class="grow"><label class="f" for="repFrom">Dari</label><input type="date" class="in" id="repFrom"></div>
-        <div class="grow"><label class="f" for="repTo">Sampai</label><input type="date" class="in" id="repTo"></div>
+    <div class="period">
+      <div class="chips" id="repRanges" role="group" aria-label="Pilih periode">
+        <button class="chip" data-range="today">Hari ini</button>
+        <button class="chip" data-range="yesterday">Kemarin</button>
+        <button class="chip" data-range="7">7 hari</button>
+        <button class="chip" data-range="month">Bulan ini</button>
+        <button class="chip" data-range="lastmonth">Bulan lalu</button>
+        <button class="chip" data-range="year">Tahun ini</button>
+        <button class="chip" data-custom="rep" data-ic="calendar" aria-expanded="false">Pilih tanggal</button>
       </div>
-      <div class="row wrap" style="margin-top:10px" id="repRanges">
-        <button class="btn ghost" data-range="today">Hari ini</button>
-        <button class="btn ghost" data-range="yesterday">Kemarin</button>
-        <button class="btn ghost" data-range="7">7 hari</button>
-        <button class="btn ghost" data-range="month">Bulan ini</button>
-        <button class="btn ghost" data-range="lastmonth">Bulan lalu</button>
-        <button class="btn ghost" data-range="year">Tahun ini</button>
+      <div class="period-custom" id="repCustom" hidden>
+        <div><label class="f" for="repFrom">Dari</label><input type="date" class="in" id="repFrom"></div>
+        <div><label class="f" for="repTo">Sampai</label><input type="date" class="in" id="repTo"></div>
       </div>
     </div>
     <div class="card" id="repStats" style="margin-bottom:12px"></div>
@@ -130,22 +132,24 @@
     <div class="card">
       <h3 style="margin-bottom:8px" id="repDaysTitle">Rekap per hari</h3>
       <div id="repDays" class="tscroll"></div>
-      <div class="row wrap" style="margin-top:12px"><button class="btn primary" id="btnCsv">Unduh CSV (bisa dibuka di Excel)</button></div>
+      <div class="row wrap" style="margin-top:12px"><button class="btn ghost" id="btnCsv" data-ic="download">Unduh CSV (bisa dibuka di Excel)</button></div>
     </div>
   </section>
 
   <!-- ========== KEUANGAN ========== -->
   <section class="page" id="pg-keuangan">
-    <div class="card" style="margin-bottom:12px">
-      <div class="row wrap">
-        <div class="grow"><label class="f">Dari</label><input type="date" class="in" id="finFrom"></div>
-        <div class="grow"><label class="f">Sampai</label><input type="date" class="in" id="finTo"></div>
+    <div class="period">
+      <div class="chips" id="finRanges" role="group" aria-label="Pilih periode">
+        <button class="chip" data-frange="today">Hari ini</button>
+        <button class="chip" data-frange="7">7 hari</button>
+        <button class="chip" data-frange="month">Bulan ini</button>
+        <button class="chip" data-frange="lastmonth">Bulan lalu</button>
+        <button class="chip" data-frange="year">Tahun ini</button>
+        <button class="chip" data-custom="fin" data-ic="calendar" aria-expanded="false">Pilih tanggal</button>
       </div>
-      <div class="row wrap" style="margin-top:10px">
-        <button class="btn ghost" data-frange="today">Hari ini</button>
-        <button class="btn ghost" data-frange="7">7 hari</button>
-        <button class="btn ghost" data-frange="month">Bulan ini</button>
-        <button class="btn ghost" data-frange="lastmonth">Bulan lalu</button>
+      <div class="period-custom" id="finCustom" hidden>
+        <div><label class="f" for="finFrom">Dari</label><input type="date" class="in" id="finFrom"></div>
+        <div><label class="f" for="finTo">Sampai</label><input type="date" class="in" id="finTo"></div>
       </div>
     </div>
     <div class="card" id="finStats" style="margin-bottom:12px"></div>
@@ -160,7 +164,7 @@
         <button class="btn ghost small" data-addfin="masuk">Catat pemasukan</button>
       </div>
       <div class="list" id="finList"></div>
-      <div class="row wrap" style="margin-top:12px"><button class="btn primary" id="btnFinCsv">Unduh CSV (bisa dibuka di Excel)</button></div>
+      <div class="row wrap" style="margin-top:12px"><button class="btn ghost" id="btnFinCsv" data-ic="download">Unduh CSV (bisa dibuka di Excel)</button></div>
     </div>
   </section>
 
@@ -177,7 +181,7 @@
   <section class="page" id="pg-produk">
     <div class="row" style="margin-bottom:12px">
       <h2 class="grow">Produk</h2>
-      <button class="btn primary" id="btnAddProd">Tambah produk</button>
+      <button class="btn primary" id="btnAddProd" data-ic="plus">Tambah produk</button>
     </div>
     <div class="card stock-only" id="prodSummary" style="margin-bottom:12px"></div>
     <div class="card"><div class="list" id="prodList"></div></div>
@@ -298,8 +302,8 @@
         <div class="muted" style="font-size:14px">Masuk sebagai <b id="accEmail"></b></div>
         <div class="row wrap">
           <button class="btn ghost" id="btnChangePass">Ganti password</button>
-          <button class="btn primary" id="btnExport">Unduh semua data</button>
-          <button class="btn danger" data-logout>Keluar</button>
+          <button class="btn ghost" id="btnExport" data-ic="download">Unduh semua data</button>
+          <button class="btn danger" data-logout data-ic="logout">Keluar</button>
         </div>
         <p class="muted" style="margin:0;font-size:13px">Kalau masuk di HP kasir, tekan Keluar setelah selesai. HP kasir tetap tersambung.</p>
       </div>
@@ -310,14 +314,15 @@
 <div class="backdrop" id="backdrop"></div>
 
 <nav class="bottom admin-only" aria-label="Menu admin">
-  <button data-page="laporan">Laporan</button>
-  <button data-page="keuangan">Keuangan</button>
-  <button data-page="riwayat">Riwayat</button>
-  <button data-page="produk">Produk</button>
+  <div class="nav-brand"><img src="../assets/icons/admin-192.png" alt="" width="32" height="32"><span><b>Admin toko</b><small>IniKasir</small></span></div>
+  <button data-page="laporan" data-ic="chart">Laporan</button>
+  <button data-page="keuangan" data-ic="wallet">Keuangan</button>
+  <button data-page="riwayat" data-ic="receipt">Riwayat</button>
+  <button data-page="produk" data-ic="box">Produk</button>
   <!-- Fitur karyawan/shift/absensi ditunda atas permintaan owner. Aktifkan lagi dengan menghapus "hidden"
        setelah supabase/migrations/002_karyawan_shift.sql dijalankan. -->
-  <button data-page="karyawan" hidden>Karyawan</button>
-  <button data-page="setelan">Setelan</button>
+  <button data-page="karyawan" data-ic="users" hidden>Karyawan</button>
+  <button data-page="setelan" data-ic="sliders">Setelan</button>
 </nav>
 
 <!-- Detail transaksi -->
@@ -325,8 +330,8 @@
   <div class="row" style="justify-content:space-between;margin-bottom:10px"><h2 style="margin:0">Detail transaksi</h2><button class="btn ghost small" data-close="mReceipt">Tutup</button></div>
   <div id="printArea"></div>
   <div class="row wrap" style="margin-top:12px">
-    <button class="btn ghost grow" id="btnPrint">Cetak</button>
-    <button class="btn ghost grow" id="btnShare">Kirim struk</button>
+    <button class="btn ghost grow" id="btnPrint" data-ic="printer">Cetak</button>
+    <button class="btn ghost grow" id="btnShare" data-ic="share">Kirim struk</button>
   </div>
   <button class="btn danger block" id="btnVoid" style="margin-top:8px">Batalkan transaksi ini</button>
 </div></div>
@@ -448,9 +453,9 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="../config.js?v=6"></script>
+<script src="../config.js?v=8"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="../assets/common.js?v=6"></script>
+<script src="../assets/common.js?v=8"></script>
 <script>
 "use strict";
 let sb = null, user = null, shop = null;
@@ -484,8 +489,8 @@ function authRoute() {
   showAuth(["daftar", "lupa", "cek-email"].includes(h) ? h : "masuk");
 }
 function renderHeader() {
-  $("#hdrName").textContent = shop ? shop.name + " · Admin" : "Admin";
-  $("#hdrDate").textContent = fmtDate(new Date());
+  $("#hdrName").textContent = shop ? shop.name : "Admin";
+  $("#hdrDate").textContent = (shop ? "Admin · " : "") + fmtDate(new Date());
   document.title = shop ? "Admin · " + shop.name : "Admin";
 }
 async function refreshToday() {
@@ -663,7 +668,7 @@ function setRange(r) {
   else if (r === "lastmonth") { from = new Date(now.getFullYear(), now.getMonth() - 1, 1); to = new Date(now.getFullYear(), now.getMonth(), 0); }
   else if (r === "year") from = new Date(now.getFullYear(), 0, 1);
   $("#repFrom").value = dayKey(from); $("#repTo").value = dayKey(to);
-  $$("#repRanges [data-range]").forEach((b) => b.classList.toggle("on", b.dataset.range === r));
+  markPeriod("rep", "data-range", r);
   if (shop) renderReport();
 }
 const sortedRange = (a, b) => (a > b ? [b, a] : [a, b]);
@@ -847,8 +852,22 @@ function setFinRange(r) {
   if (r === "7") from.setDate(now.getDate() - 6);
   else if (r === "month") from = new Date(now.getFullYear(), now.getMonth(), 1);
   else if (r === "lastmonth") { from = new Date(now.getFullYear(), now.getMonth() - 1, 1); to = new Date(now.getFullYear(), now.getMonth(), 0); }
+  else if (r === "year") from = new Date(now.getFullYear(), 0, 1);
   $("#finFrom").value = dayKey(from); $("#finTo").value = dayKey(to);
+  markPeriod("fin", "data-frange", r);
   if (shop) renderFinance();
+}
+// Tandai pilihan periode yang aktif; r = null berarti tanggal dipilih manual
+function markPeriod(prefix, attr, r) {
+  $$(`#${prefix}Ranges [${attr}]`).forEach((b) => { const on = b.getAttribute(attr) === r; b.classList.toggle("on", on); b.setAttribute("aria-pressed", on); });
+  const custom = $(`#${prefix}Ranges [data-custom]`);
+  if (r) { $(`#${prefix}Custom`).hidden = true; custom.classList.remove("on"); custom.setAttribute("aria-expanded", "false"); }
+  else custom.classList.add("on");
+}
+function toggleCustom(prefix) {
+  const box = $(`#${prefix}Custom`), btn = $(`#${prefix}Ranges [data-custom]`);
+  box.hidden = !box.hidden; btn.setAttribute("aria-expanded", String(!box.hidden));
+  if (!box.hidden) { btn.classList.add("on"); setTimeout(() => $(`#${prefix}From`).focus(), 50); }
 }
 async function renderFinance() {
   const [a, b] = sortedRange($("#finFrom").value, $("#finTo").value);
@@ -1403,10 +1422,11 @@ async function saveReceipt() {
 
 /* ================= Event ================= */
 document.addEventListener("click", async (e) => {
-  const t = e.target.closest("[data-page],[data-close],[data-tx],[data-edit],[data-range],[data-frange],[data-addfin],[data-delfin],[data-copy],[data-unlink],[data-logout],[data-emp],[data-shrange],[data-forceclose]");
+  const t = e.target.closest("[data-custom],[data-page],[data-close],[data-tx],[data-edit],[data-range],[data-frange],[data-addfin],[data-delfin],[data-copy],[data-unlink],[data-logout],[data-emp],[data-shrange],[data-forceclose]");
   if (!t) return;
   const d = t.dataset;
-  if (d.page) go(d.page);
+  if (d.custom) toggleCustom(d.custom);
+  else if (d.page) go(d.page);
   else if (d.emp) openEmp(d.emp);
   else if (d.shrange) setShiftRange(d.shrange);
   else if (d.forceclose) forceClose(d.forceclose);
@@ -1437,12 +1457,13 @@ document.addEventListener("click", async (e) => {
     toast("HP diputus"); renderSettings();
   }
 });
-const repManual = () => { $$("#repRanges [data-range]").forEach((b) => b.classList.remove("on")); renderReport(); };
+const repManual = () => { markPeriod("rep", "data-range", null); renderReport(); };
 $("#repFrom").addEventListener("change", repManual);
 $("#repTo").addEventListener("change", repManual);
 $("#btnCsv").onclick = exportCsv;
-$("#finFrom").addEventListener("change", renderFinance);
-$("#finTo").addEventListener("change", renderFinance);
+const finManual = () => { markPeriod("fin", "data-frange", null); renderFinance(); };
+$("#finFrom").addEventListener("change", finManual);
+$("#finTo").addEventListener("change", finManual);
 $("#fSave").onclick = saveFin;
 $("#btnFinCsv").onclick = exportFinCsv;
 bindMoneyInput($("#fAmt")); bindMoneyInput($("#pPrice"));

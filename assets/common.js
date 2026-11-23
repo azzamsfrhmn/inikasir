@@ -12,6 +12,34 @@ function makeClient(storageKey) {
   });
 }
 
+/* ---------- Ikon ----------
+   Satu keluarga ikon garis (24px, garis 2px, ujung bulat), digambar sendiri supaya ringan
+   dan konsisten. Ikon di samping teks disembunyikan dari pembaca layar (aria-hidden). */
+const ICONS = {
+  chart: '<path d="M3 3v18h18"/><path d="M8 16v-4M13 16V8M18 16v-7"/>',
+  wallet: '<rect x="3" y="5" width="18" height="15" rx="2"/><path d="M3 9h18M16 14h2"/>',
+  receipt: '<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/>',
+  box: '<path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8M12 13v8"/>',
+  users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a5.5 5.5 0 0 1 3.5 6"/>',
+  sliders: '<path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  x: '<path d="M6 6l12 12M18 6L6 18"/>',
+  printer: '<path d="M7 9V3h10v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M7 14h10v7H7z"/>',
+  share: '<path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/>',
+  download: '<path d="M12 3v12M7 10l5 5 5-5M5 21h14"/>',
+  logout: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
+  calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+};
+const ic = (name, cls = "") => `<svg class="ic ${cls}" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${ICONS[name] || ""}</svg>`;
+// Elemen dengan data-ic="nama" otomatis diberi ikon di depan teksnya
+function applyIcons(root = document) {
+  root.querySelectorAll("[data-ic]:not([data-ic-done])").forEach((el) => {
+    el.insertAdjacentHTML("afterbegin", ic(el.dataset.ic));
+    el.dataset.icDone = "1";
+  });
+}
+
 /* ---------- Utilitas ---------- */
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => Array.from(document.querySelectorAll(s));
@@ -68,7 +96,12 @@ function errMsg(e) {
     [/JWT|token/i, "Sesi habis. Muat ulang halaman lalu masuk lagi."],
   ];
   for (const [re, txt] of map) if (re.test(m)) return txt;
-  return m || "Terjadi kesalahan.";
+  // Pesan teknis database jangan sampai ke pengguna; catat di konsol untuk pemeriksaan
+  if (/violates|constraint|relation|column|syntax|function .* does not exist|PGRST|duplicate key/i.test(m)) {
+    console.warn("Detail error:", m);
+    return "Ada kendala di server. Coba lagi sebentar; kalau masih gagal, hubungi pemilik aplikasi.";
+  }
+  return m || "Terjadi kesalahan. Coba lagi.";
 }
 
 /* ---------- Pasang aplikasi (PWA) ---------- */
@@ -152,3 +185,6 @@ function renderNotConfigured(target) {
     <p class="muted" style="margin:0">Isi alamat proyek Supabase dan anon key di file <b>config.js</b>, lalu muat ulang halaman ini. Langkah lengkapnya ada di README.</p>
   </div>`;
 }
+
+// Pasang ikon pada elemen statis (skrip dimuat di akhir <body>, jadi DOM sudah ada)
+applyIcons();
