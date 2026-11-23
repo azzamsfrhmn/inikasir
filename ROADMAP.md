@@ -15,7 +15,7 @@
 - [x] Pindah hosting ke Cloudflare Pages: https://inikasir.pages.dev (paket gratis boleh untuk komersial; GitHub Pages tidak). Sisa: pindahkan HP kasir, lalu matikan GitHub Pages.
 - [ ] Email lewat SMTP sendiri (Resend/Brevo) supaya konfirmasi daftar tidak tertahan batas email bawaan Supabase.
 - [ ] Halaman depan (landing page) + Syarat & Ketentuan + Kebijakan Privasi (UU PDP).
-- [ ] Ikon & logo IniKasir (sekarang masih huruf K/A).
+- [x] Ikon & logo IniKasir (logo "K panah", dibuat oleh `scripts/icons.mjs`).
 - [ ] Laporan dihitung di server (fungsi SQL) supaya tetap cepat saat data setahun.
 - [ ] Uji coba gratis dengan 5–10 pedagang selama 1–2 bulan; catat pemakaian harian dan kesediaan membayar.
 
