@@ -475,3 +475,7 @@ main:has(>#view-connect.active),main:has(>#view-auth.active){max-width:none;padd
 .dot.tunai{background:var(--cash)} .dot.qris{background:var(--qris)}
 .seg.seg3{grid-template-columns:repeat(3,1fr)}
 .seg button .ic{width:16px;height:16px;margin-right:4px;vertical-align:-3px}
+
+.devline{margin:-4px 0 0;font-size:var(--fs-sm);color:var(--muted);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.devline b{color:var(--ink);font-weight:600}
+.devline .linkbtn{padding:0 4px;min-height:32px}
