@@ -1216,7 +1216,7 @@ let hasPin = false, devices = [];
 async function renderSettings() {
   $("#setName").value = shop.name; $("#setAddr").value = shop.address; $("#setPhone").value = shop.phone;
   $("#joinCode").textContent = shop.join_code;
-  $("#linkKasir").value = BASE;
+  $("#linkKasir").value = BASE + "kasir/";
   $("#accEmail").textContent = user.email || "";
   renderOnboarding();
   renderReceiptSettings();

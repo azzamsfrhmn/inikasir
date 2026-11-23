@@ -8,11 +8,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/app.css?v=13">
+<link rel="stylesheet" href="../assets/app.css?v=13">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" type="image/svg+xml" href="assets/icons/kasir.svg">
-<link rel="icon" type="image/png" sizes="192x192" href="assets/icons/kasir-192.png">
-<link rel="apple-touch-icon" href="assets/icons/kasir-180.png">
+<link rel="icon" type="image/svg+xml" href="../assets/icons/kasir.svg">
+<link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/kasir-192.png">
+<link rel="apple-touch-icon" href="../assets/icons/kasir-180.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Kasir">
@@ -22,7 +22,7 @@
 
 <header class="top">
   <div class="hdr-id">
-    <img class="hdr-logo" src="assets/icons/kasir.svg" alt="" width="36" height="36">
+    <img class="hdr-logo" src="../assets/icons/kasir.svg" alt="" width="36" height="36">
     <div>
       <h1 id="hdrName">Kasir</h1>
       <div class="sub" id="hdrDate"></div>
@@ -38,7 +38,7 @@
 
   <!-- Sambungkan HP ke toko -->
   <section class="page" id="view-connect">
-    <div class="brand"><img src="assets/icons/kasir-192.png" alt="" width="60" height="60"><b><span data-brand>IniKasir</span> Kasir</b><span>Catat penjualan tunai dan QRIS</span></div>
+    <div class="brand"><img src="../assets/icons/kasir-192.png" alt="" width="60" height="60"><b><span data-brand>IniKasir</span> Kasir</b><span>Catat penjualan tunai dan QRIS</span></div>
     <form class="card auth stack" id="connectForm" autocomplete="off" data-lpignore="true">
       <div>
         <h2>Sambungkan HP kasir</h2>
@@ -50,6 +50,7 @@
       <div class="err" id="cErr"></div>
       <button class="btn primary block" id="cSubmit">Sambungkan</button>
       <p class="muted" style="margin:0;font-size:13px" id="installHint"></p>
+      <a class="linkbtn" href="../admin/">Pemilik toko? Masuk ke admin</a>
     </form>
   </section>
 
@@ -201,9 +202,9 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="config.js?v=13"></script>
+<script src="../config.js?v=13"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="assets/common.js?v=13"></script>
+<script src="../assets/common.js?v=13"></script>
 <script>
 "use strict";
 const K = { store: "inikasir-kasir-store", cache: "inikasir-kasir-cache", queue: "inikasir-kasir-queue", shift: "inikasir-kasir-shift", cash: "inikasir-kasir-cash" };
@@ -710,7 +711,7 @@ setInterval(flushQueue, 20000);
 setInterval(renderHeader, 60000);
 
 /* ---------- Mulai ---------- */
-if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
+if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("../sw.js").catch(() => {});
 $("#installHint").textContent = installHintText("Kasir");
 (async function init() {
   renderHeader();

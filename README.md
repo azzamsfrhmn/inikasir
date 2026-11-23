@@ -4,7 +4,8 @@ Kasir simpel untuk pedagang jajanan & gerobak: jualan di HP penjaga (bisa offlin
 
 Rencana menjadikannya produk untuk banyak pedagang ada di [ROADMAP.md](ROADMAP.md).
 
-- **Halaman kasir** (`/`): untuk penjaga. Hanya bisa mencatat penjualan, tunai atau QRIS (pembeli scan QRIS yang tercetak di toko). Tetap bisa jualan saat sinyal hilang; penjualan dikirim otomatis begitu online.
+- **Halaman depan** (`/`): perkenalan singkat dan pilihan masuk sebagai penjaga kasir atau pemilik. HP yang sudah tersambung sebagai kasir langsung dialihkan ke `/kasir/`.
+- **Halaman kasir** (`/kasir/`): untuk penjaga. Hanya bisa mencatat penjualan, tunai atau QRIS (pembeli scan QRIS yang tercetak di toko). Tetap bisa jualan saat sinyal hilang; penjualan dikirim otomatis begitu online.
 - **Halaman admin** (`/admin/`): untuk pemilik. Daftar dan masuk pakai email. Berisi laporan, keuangan, riwayat, produk, dan pengaturan kasir. Bisa dibuka dari HP mana saja.
 
 Data disimpan di [Supabase](https://supabase.com) (paket gratis cukup). Aturan akses ada di database, jadi penjaga benar-benar tidak bisa membaca transaksi atau keuangan, bukan sekadar disembunyikan di tampilan.
@@ -54,10 +55,10 @@ Anon key aman ditaruh di sini karena semua akses dijaga aturan di database. **Ja
 ### 5. Mulai pakai
 1. Pemilik buka `/admin/`, **Daftar**, klik link konfirmasi di email, lalu **Buat toko**.
 2. Di **Setelan**: atur **PIN kasir**, lalu cek nama dan harga di **Produk**.
-3. Di HP penjaga buka `/` (halaman kasir), masukkan **kode toko** dan **PIN kasir**. Tambahkan ke layar utama lewat menu Chrome.
+3. Di HP penjaga buka `/kasir/` (atau `/` lalu **Penjaga kasir**), masukkan **kode toko** dan **PIN kasir**. Tambahkan ke layar utama lewat menu Chrome.
 4. Opsional, di menu **Karyawan**: buat karyawan (nama + PIN + hak akses). Setelah ada karyawan aktif, penjaga harus pilih nama dan ketik PIN untuk **buka shift** (jam masuk + kas awal) dan **tutup shift** (jam pulang + kas akhir). Rekap absensi dan selisih kas ada di halaman yang sama.
 
-Setiap kali `assets/common.js` atau `assets/app.css` berubah, naikkan angka `?v=` di kedua `index.html` dan `CACHE` di `sw.js` supaya HP tidak memakai file lama.
+Setiap kali `assets/common.js` atau `assets/app.css` berubah, naikkan angka `?v=` di `index.html`, `kasir/index.html`, dan `admin/index.html` dan `CACHE` di `sw.js` supaya HP tidak memakai file lama.
 
 ## Catatan
 - Proyek Supabase gratis dijeda otomatis kalau tidak ada aktivitas sekitar seminggu. Kalau toko tutup lama, buka dashboard Supabase dan tekan **Restore**.

@@ -1,9 +1,10 @@
 // Service worker: menyimpan file aplikasi di HP supaya halaman kasir tetap bisa dibuka
 // saat tidak ada sinyal. Data (Supabase) tidak pernah di-cache di sini; penjualan offline
 // disimpan oleh halaman kasir sendiri lalu dikirim saat online.
-const CACHE = "inikasir-v20";
+// Letaknya di akar situs supaya HP yang dulu memasang kasir di "/" tetap mendapat pembaruan.
+const CACHE = "inikasir-v21";
 const SHELL = [
-  "./", "index.html", "config.js", "assets/app.css", "assets/common.js", "manifest.webmanifest",
+  "./", "kasir/", "kasir/index.html", "kasir/manifest.webmanifest", "config.js", "assets/app.css", "assets/common.js",
   "assets/icons/kasir.svg", "assets/icons/kasir-192.png", "assets/icons/kasir-512.png",
   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js",
 ];
@@ -24,7 +25,12 @@ self.addEventListener("fetch", (e) => {
     e.respondWith(fetch(req, { cache: "no-cache" }).then((res) => {
       if (res.ok) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(req, copy)); }
       return res;
-    }).catch(() => caches.match(req, { ignoreSearch: true }).then((r) => r || (url.pathname.includes("/admin/") ? Response.error() : caches.match("index.html")))));
+    }).catch(() => caches.match(req, { ignoreSearch: true }).then((r) => {
+      if (r) return r;
+      if (url.pathname.includes("/admin/")) return Response.error();
+      // halaman yang belum tersimpan: HP kasir tetap bisa jualan
+      return caches.match(new URL("kasir/index.html", self.registration.scope).href);
+    })));
   } else {
     // pustaka & font dari CDN (versinya dikunci): pakai simpanan dulu
     e.respondWith(caches.match(req).then((hit) => hit || fetch(req).then((res) => {
