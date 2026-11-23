@@ -3,151 +3,176 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#c2410c">
+<meta name="theme-color" content="#2c5a39">
 <title>IniKasir</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
+/* Arah visual: warung otak-otak.
+   Hijau daun pisang (bungkus otak-otak) = warna utama/navigasi.
+   Kertas hangat = latar. Oranye bara panggangan = aksen, HANYA untuk aksi bayar.
+   Font Plus Jakarta Sans: dibuat untuk identitas kota Jakarta, cocok untuk usaha lokal, angka mudah dibaca. */
 :root{
-  --bg:#fafaf9; --card:#fff; --text:#1c1917; --muted:#78716c; --line:#e7e5e4;
-  --brand:#c2410c; --brand-2:#ea580c; --brand-soft:#ffedd5;
-  --ok:#15803d; --ok-soft:#dcfce7; --bad:#b91c1c; --bad-soft:#fee2e2;
-  --radius:14px; --nav-h:64px;
+  --paper:#f4f0e6; --card:#fffdf8; --ink:#22201b; --muted:#6a6457; --line:#ded7c7;
+  --leaf:#2c5a39; --leaf-soft:#e2ebdf;
+  --ember:#c4441b;
+  --bad:#a3301c; --bad-soft:#f5e0d8;
+  --r-sm:6px; --r-md:10px;
+  --nav-h:56px;
 }
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
-body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);font-size:15px;-webkit-tap-highlight-color:transparent}
-button,input,select{font:inherit;color:inherit}
+body{font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--paper);color:var(--ink);font-size:15px;line-height:1.4;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
-h1,h2,h3{margin:0}
+h1,h2,h3{margin:0;font-weight:700}
+h2{font-size:18px} h3{font-size:16px}
 .muted{color:var(--muted)}
 .right{text-align:right}
 .num{font-variant-numeric:tabular-nums}
 
-header.top{position:sticky;top:0;z-index:20;background:var(--brand);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px}
-header.top h1{font-size:18px}
-header.top .sub{font-size:12px;opacity:.85}
+header.top{position:sticky;top:0;z-index:20;background:var(--leaf);color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+header.top h1{font-size:17px}
+header.top .sub{font-size:12px;opacity:.8}
+.lockbtn{border:1px solid rgba(255,255,255,.45);background:transparent;color:#fff;border-radius:var(--r-sm);padding:0 12px;min-height:40px;font-size:14px;font-weight:600;white-space:nowrap}
 
-main{padding:12px 16px calc(var(--nav-h) + 90px);max-width:1200px;margin:0 auto}
+main{padding:16px 16px 140px;max-width:1180px;margin:0 auto}
+body.is-admin main{padding-bottom:calc(var(--nav-h) + 110px)}
 section.page{display:none}
 section.page.active{display:block}
 
-nav.bottom{position:fixed;left:0;right:0;bottom:0;height:var(--nav-h);background:var(--card);border-top:1px solid var(--line);display:flex;z-index:30;padding-bottom:env(safe-area-inset-bottom)}
-nav.bottom button{flex:1;border:0;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:11px;color:var(--muted)}
-nav.bottom button .ic{font-size:20px;line-height:1}
-nav.bottom button.active{color:var(--brand);font-weight:600}
+/* Navigasi admin: teks saja, penanda halaman aktif = garis atas + tebal */
+nav.bottom{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;z-index:30;padding-bottom:env(safe-area-inset-bottom)}
+nav.bottom button{flex:1;min-height:var(--nav-h);border:0;border-top:3px solid transparent;background:none;font-size:13px;color:var(--muted);padding:0 2px}
+nav.bottom button.active{color:var(--leaf);font-weight:700;border-top-color:var(--leaf)}
 
-.btn{border:0;border-radius:10px;padding:10px 14px;background:var(--line);font-weight:600}
-.btn.primary{background:var(--brand);color:#fff}
-.btn.ok{background:var(--ok);color:#fff}
+.btn{border:1px solid transparent;border-radius:var(--r-sm);padding:0 14px;min-height:44px;background:#ebe5d8;font-weight:600}
+.btn.primary{background:var(--leaf);color:#fff}
+.btn.pay{background:var(--ember);color:#fff}
 .btn.danger{background:var(--bad-soft);color:var(--bad)}
-.btn.ghost{background:transparent;border:1px solid var(--line)}
-.btn.block{width:100%;padding:14px;font-size:16px}
+.btn.ghost{background:transparent;border-color:var(--line)}
+.btn.small{min-height:36px;padding:0 10px;font-size:14px}
+.btn.block{width:100%;min-height:52px;font-size:16px}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 
-.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-md);padding:16px}
 .stack>*+*{margin-top:12px}
 .row{display:flex;gap:8px;align-items:center}
 .row.wrap{flex-wrap:wrap}
-.grow{flex:1}
+.grow{flex:1;min-width:0}
 label.f{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
-input.in,select.in{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff}
-input.in:focus,select.in:focus{outline:2px solid var(--brand-2);border-color:transparent}
+.in{width:100%;min-height:44px;padding:8px 12px;border:1px solid var(--line);border-radius:var(--r-sm);background:#fff}
+.in:focus{outline:2px solid var(--leaf);outline-offset:-1px}
+section.page>h2,.sec-title{margin:4px 0 12px}
 
 /* Kasir */
-.kasir{display:grid;grid-template-columns:1fr;gap:16px}
-.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px}
-.chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 14px;white-space:nowrap;font-size:14px}
-.chip.active{background:var(--brand);border-color:var(--brand);color:#fff}
-.grid-prod{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
-.prod{position:relative;border:1px solid var(--line);background:var(--card);border-radius:var(--radius);padding:12px;text-align:left;min-height:96px;display:flex;flex-direction:column;justify-content:space-between;transition:transform .05s}
-.prod:active{transform:scale(.97)}
-.prod .em{font-size:26px;line-height:1}
-.prod .nm{font-weight:600;margin-top:6px;line-height:1.2}
-.prod .pr{color:var(--brand);font-weight:700;margin-top:4px}
-.prod .badge{position:absolute;top:8px;right:8px;background:var(--brand);color:#fff;border-radius:999px;min-width:24px;height:24px;padding:0 6px;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.kasir{display:grid;grid-template-columns:1fr;gap:20px}
+.cats{display:flex;gap:6px;overflow-x:auto;margin:10px 0 12px;padding-bottom:2px}
+.cat{border:1px solid var(--line);background:var(--card);border-radius:var(--r-sm);padding:0 14px;min-height:40px;white-space:nowrap;font-size:14px}
+.cat.active{background:var(--ink);border-color:var(--ink);color:#fff}
+.grid-prod{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.prod{position:relative;border:1px solid var(--line);background:var(--card);border-radius:var(--r-md);padding:12px;text-align:left;min-height:84px;display:flex;flex-direction:column;justify-content:space-between;gap:8px}
+.prod:active{background:var(--leaf-soft)}
+.prod.on{border-color:var(--leaf);box-shadow:inset 0 0 0 1px var(--leaf)}
+.prod .nm{font-weight:600;line-height:1.25;padding-right:28px}
+.prod .pr{color:var(--muted);font-size:14px}
+.prod .badge{position:absolute;top:8px;right:8px;background:var(--leaf);color:#fff;border-radius:var(--r-sm);min-width:26px;height:26px;padding:0 6px;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center}
 
-.cart{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);display:flex;flex-direction:column}
-.cart-head{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
-.cart-items{padding:4px 14px;overflow:auto;flex:1}
-.ci{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px dashed var(--line)}
+.cart{background:var(--card);border:1px solid var(--line);border-radius:var(--r-md);display:flex;flex-direction:column}
+.cart-head{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.cart-items{padding:0 16px;overflow:auto;flex:1}
+.ci{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}
 .ci:last-child{border-bottom:0}
 .ci .nm{font-weight:600}
-.qty{display:flex;align-items:center;gap:6px}
-.qty button{width:32px;height:32px;border-radius:8px;border:1px solid var(--line);background:#fff;font-size:18px;font-weight:700;line-height:1}
-.qty span{min-width:22px;text-align:center;font-weight:700}
-.cart-foot{padding:12px 14px;border-top:1px solid var(--line)}
-.total-line{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
-.total-line b{font-size:22px;color:var(--brand)}
-.empty{padding:28px 10px;text-align:center;color:var(--muted)}
+.qty{display:flex;align-items:center;gap:4px}
+.qty button{width:44px;height:44px;border-radius:var(--r-sm);border:1px solid var(--line);background:#fff;font-size:20px;font-weight:600;line-height:1}
+.qty span{min-width:26px;text-align:center;font-weight:700}
+.cart-foot{padding:12px 16px;border-top:1px solid var(--line)}
+.total-line{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
+.total-line b{font-size:24px}
+.empty{padding:24px 8px;text-align:center;color:var(--muted);font-size:14px}
 
-/* Mobile cart bar + sheet */
 .cartbar{display:none}
 @media (max-width:859px){
-  .cart{position:fixed;left:0;right:0;bottom:0;z-index:40;border-radius:18px 18px 0 0;max-height:85vh;transform:translateY(110%);transition:transform .2s ease;box-shadow:0 -10px 30px rgba(0,0,0,.15)}
+  .cart{position:fixed;left:0;right:0;bottom:0;z-index:40;border-radius:14px 14px 0 0;max-height:85vh;transform:translateY(110%);transition:transform .18s ease-out;box-shadow:0 -8px 24px rgba(34,32,27,.18)}
   .cart.open{transform:none}
   .cart-foot{padding-bottom:calc(12px + env(safe-area-inset-bottom))}
-  .cartbar{position:fixed;left:12px;right:12px;bottom:calc(var(--nav-h) + 10px);z-index:25;background:var(--brand);color:#fff;border:0;border-radius:14px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;font-weight:700;box-shadow:0 6px 20px rgba(194,65,12,.35)}
+  .cartbar{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:25;background:var(--ember);color:#fff;border:0;border-radius:var(--r-md);padding:0 16px;min-height:56px;display:flex;justify-content:space-between;align-items:center;font-size:16px}
+  body.is-admin .cartbar{bottom:calc(var(--nav-h) + 10px + env(safe-area-inset-bottom))}
   .cartbar.hide{display:none}
 }
 @media (min-width:860px){
-  .kasir{grid-template-columns:1fr 360px;align-items:start}
-  .cart{position:sticky;top:76px;max-height:calc(100vh - 160px)}
+  .kasir{grid-template-columns:1fr 340px;align-items:start}
+  .cart{position:sticky;top:76px;max-height:calc(100vh - 170px)}
   #cartClose{display:none}
 }
-.backdrop{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:35;display:none}
+.backdrop{position:fixed;inset:0;background:rgba(34,32,27,.4);z-index:35;display:none}
 .backdrop.show{display:block}
 
-/* Modal */
-.modal{position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.45)}
+/* Modal: satu-satunya elemen yang "terangkat" (shadow) selain lembar pesanan */
+.modal{position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(34,32,27,.45)}
 .modal.show{display:flex}
-.modal .box{background:var(--card);border-radius:18px;width:100%;max-width:460px;max-height:92vh;overflow:auto;padding:18px}
-.modal .box h2{font-size:18px;margin-bottom:12px}
-.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
-.seg button{border:2px solid var(--line);background:#fff;border-radius:12px;padding:12px;font-weight:700}
-.seg button.active{border-color:var(--brand);background:var(--brand-soft);color:var(--brand)}
-.quick{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
-.quick button{border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 4px;font-weight:600}
-.change{border-radius:12px;padding:12px;text-align:center;font-weight:700;margin-top:6px}
-.change.ok{background:var(--ok-soft);color:var(--ok)}
+.modal .box{background:var(--card);border-radius:14px;width:100%;max-width:440px;max-height:92vh;overflow:auto;padding:20px;box-shadow:0 12px 32px rgba(0,0,0,.2)}
+.modal .box h2{margin-bottom:12px}
+.seg{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden;margin-bottom:16px}
+.seg button{border:0;background:#fff;min-height:48px;font-weight:600;color:var(--muted)}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button.active{background:var(--leaf);color:#fff}
+.quick{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:10px 0}
+.quick button{border:1px solid var(--line);background:#fff;border-radius:var(--r-sm);min-height:44px;font-weight:600;font-size:14px}
+.change{border-radius:var(--r-sm);padding:12px;text-align:center;font-weight:700}
+.change:empty{display:none}
+.change.ok{background:var(--leaf-soft);color:var(--leaf)}
 .change.bad{background:var(--bad-soft);color:var(--bad)}
-.qrwrap{display:flex;flex-direction:column;align-items:center;gap:8px;padding:8px 0}
-#qrBox{background:#fff;padding:12px;border-radius:12px;border:1px solid var(--line)}
+.qrwrap{display:flex;flex-direction:column;align-items:center;gap:8px;padding:4px 0 8px}
+#qrBox{background:#fff;padding:12px;border:1px solid var(--line);border-radius:var(--r-sm)}
 #qrBox img,#qrBox canvas{display:block;width:240px;height:240px;object-fit:contain;image-rendering:pixelated}
-.note{font-size:13px;background:#fef9c3;color:#713f12;border-radius:10px;padding:10px 12px}
+.note{font-size:13px;background:#f6ecd0;color:#5c4612;border-radius:var(--r-sm);padding:10px 12px}
 
-/* Receipt */
-.receipt{font-family:ui-monospace,"Courier New",monospace;font-size:13px;background:#fff;border:1px dashed var(--line);border-radius:10px;padding:14px;line-height:1.45}
+/* Struk: monospace karena memang meniru kertas printer thermal */
+.receipt{font-family:ui-monospace,"Courier New",monospace;font-size:13px;background:#fff;border:1px solid var(--line);padding:14px;line-height:1.45}
 .receipt .c{text-align:center}
 .receipt hr{border:0;border-top:1px dashed #999;margin:8px 0}
 .receipt .l{display:flex;justify-content:space-between;gap:8px}
 
-/* Lists */
-.list .it{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}
+.list .it{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
 .list .it:last-child{border-bottom:0}
-.tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px}
-.tag.tunai{background:var(--ok-soft);color:var(--ok)}
-.tag.qris{background:#dbeafe;color:#1d4ed8}
+.tag{display:inline-block;font-size:12px;font-weight:600;padding:1px 6px;border-radius:4px}
+.tag.tunai{background:var(--leaf-soft);color:var(--leaf)}
+.tag.qris{background:#e4e7ef;color:#33415c}
 .tag.void{background:var(--bad-soft);color:var(--bad)}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
-.stat{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:12px}
-.stat .k{font-size:12px;color:var(--muted)}
-.stat .v{font-size:20px;font-weight:800;margin-top:4px}
+
+/* Angka utama laporan: satu angka besar, sisanya rincian */
+.lead{margin-bottom:16px}
+.lead .k{font-size:14px;color:var(--muted)}
+.lead .v{font-size:34px;font-weight:800;letter-spacing:-.01em;line-height:1.15}
+.lead .s{font-size:14px;color:var(--muted);margin-top:4px}
+.ledger{width:100%;border-collapse:collapse;font-size:15px}
+.ledger td{padding:8px 0;border-bottom:1px solid var(--line)}
+.ledger td:last-child{text-align:right;font-variant-numeric:tabular-nums}
+.ledger tr.sum td{border-bottom:0;border-top:2px solid var(--ink);font-weight:700}
+.ledger tr:last-child td{border-bottom:0}
+.split{display:grid;grid-template-columns:1fr;gap:16px}
+@media (min-width:700px){.split{grid-template-columns:1fr 1fr}}
 table.t{width:100%;border-collapse:collapse;font-size:14px}
 table.t th,table.t td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:left}
 table.t th{font-size:12px;color:var(--muted);font-weight:600}
-.bar{height:6px;background:var(--brand-soft);border-radius:4px;overflow:hidden;margin-top:4px}
-.bar i{display:block;height:100%;background:var(--brand-2)}
+.tscroll{overflow-x:auto}
+.bar{height:5px;background:#ece6d9;border-radius:2px;overflow:hidden;margin-top:4px}
+.bar i{display:block;height:100%;background:var(--leaf)}
+.amt-in{color:var(--leaf);font-weight:700}
+.amt-out{color:var(--bad);font-weight:700}
 
 body:not(.is-admin) .admin-only{display:none!important}
 body.is-admin .kasir-only{display:none!important}
-.lockbtn{border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.15);color:#fff;border-radius:10px;padding:6px 10px;font-size:13px;font-weight:600}
-.pin-dots{display:flex;justify-content:center;gap:12px;margin:10px 0 16px}
-.pin-dots i{width:14px;height:14px;border-radius:50%;border:2px solid var(--brand)}
-.pin-dots i.on{background:var(--brand)}
-.pinpad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.pinpad button{border:1px solid var(--line);background:#fff;border-radius:12px;padding:16px 0;font-size:22px;font-weight:700}
-.amt-in{color:var(--ok);font-weight:700}
-.amt-out{color:var(--bad);font-weight:700}
-.toast{position:fixed;left:50%;bottom:calc(var(--nav-h) + 80px);transform:translateX(-50%);background:#1c1917;color:#fff;padding:10px 16px;border-radius:10px;z-index:100;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw;text-align:center}
+.pin-dots{display:flex;justify-content:center;gap:12px;margin:12px 0 18px}
+.pin-dots i{width:14px;height:14px;border-radius:50%;border:2px solid var(--leaf)}
+.pin-dots i.on{background:var(--leaf)}
+.pinpad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.pinpad button{border:1px solid var(--line);background:#fff;border-radius:var(--r-sm);min-height:56px;font-size:22px;font-weight:600}
+
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:var(--r-sm);z-index:100;font-size:14px;opacity:0;transition:opacity .15s;pointer-events:none;max-width:90vw;text-align:center}
 .toast.show{opacity:1}
 
 @media print{
@@ -170,8 +195,8 @@ body.is-admin .kasir-only{display:none!important}
       <div class="sub">Omzet hari ini</div>
       <div style="font-weight:800" id="hdrToday">Rp0</div>
     </div>
-    <button class="lockbtn kasir-only" id="btnUnlock">🔒 Admin</button>
-    <button class="lockbtn admin-only" id="btnLock">🔓 Kunci</button>
+    <button class="lockbtn kasir-only" id="btnUnlock">Masuk admin</button>
+    <button class="lockbtn admin-only" id="btnLock">Kunci</button>
   </div>
 </header>
 
@@ -180,26 +205,26 @@ body.is-admin .kasir-only{display:none!important}
   <section class="page active" id="pg-kasir">
     <div class="kasir">
       <div>
-        <input class="in" id="search" placeholder="Cari produk..." style="margin-bottom:10px">
-        <div class="chips" id="cats"></div>
+        <input class="in" id="search" type="search" placeholder="Cari produk">
+        <div class="cats" id="cats"></div>
         <div class="grid-prod" id="prodGrid"></div>
       </div>
       <div class="cart" id="cart">
         <div class="cart-head">
           <h3>Pesanan</h3>
           <div class="row">
-            <button class="btn ghost" id="cartClear" style="padding:6px 10px">Kosongkan</button>
-            <button class="btn ghost" id="cartClose" style="padding:6px 10px">Tutup</button>
+            <button class="btn ghost small" id="cartClear">Kosongkan</button>
+            <button class="btn ghost small" id="cartClose">Tutup</button>
           </div>
         </div>
         <div class="cart-items" id="cartItems"></div>
         <div class="cart-foot">
           <div class="total-line"><span>Total</span><b class="num" id="cartTotal">Rp0</b></div>
-          <button class="btn primary block" id="btnPay" disabled>Bayar</button>
+          <button class="btn pay block" id="btnPay" disabled>Bayar</button>
         </div>
       </div>
     </div>
-    <button class="cartbar hide" id="cartBar"><span id="cartBarCount">0 item</span><span id="cartBarTotal">Rp0 ›</span></button>
+    <button class="cartbar hide" id="cartBar"><span><span id="cartBarCount">0 item</span> · <b id="cartBarTotal">Rp0</b></span><b>Bayar</b></button>
   </section>
 
   <!-- RIWAYAT -->
@@ -225,16 +250,16 @@ body.is-admin .kasir-only{display:none!important}
         <button class="btn ghost" data-range="month">Bulan ini</button>
       </div>
     </div>
-    <div class="stats" id="repStats" style="margin-bottom:12px"></div>
+    <div class="card" id="repStats" style="margin-bottom:12px"></div>
     <div class="card" style="margin-bottom:12px">
-      <h3 style="margin-bottom:8px">Produk terjual</h3>
+      <h3 style="margin-bottom:8px">Yang paling laku</h3>
       <div id="repItems"></div>
     </div>
     <div class="card">
-      <h3 style="margin-bottom:8px">Per hari</h3>
-      <div id="repDays"></div>
+      <h3 style="margin-bottom:8px">Rekap per hari</h3>
+      <div id="repDays" class="tscroll"></div>
       <div class="row wrap" style="margin-top:12px">
-        <button class="btn primary" id="btnCsv">Unduh Excel (CSV)</button>
+        <button class="btn primary" id="btnCsv">Unduh CSV (bisa dibuka di Excel)</button>
       </div>
     </div>
   </section>
@@ -253,27 +278,27 @@ body.is-admin .kasir-only{display:none!important}
         <button class="btn ghost" data-frange="lastmonth">Bulan lalu</button>
       </div>
     </div>
-    <div class="stats" id="finStats" style="margin-bottom:12px"></div>
+    <div class="card" id="finStats" style="margin-bottom:12px"></div>
     <div class="card" style="margin-bottom:12px">
-      <h3 style="margin-bottom:8px">Pengeluaran per kategori</h3>
+      <h3 style="margin-bottom:8px">Uang keluar untuk apa saja</h3>
       <div id="finCats"></div>
     </div>
     <div class="card">
       <div class="row" style="margin-bottom:6px">
-        <h3 class="grow">Catatan kas</h3>
-        <button class="btn danger" data-addfin="keluar" style="padding:8px 10px">− Pengeluaran</button>
-        <button class="btn ok" data-addfin="masuk" style="padding:8px 10px">+ Pemasukan</button>
+        <h3 class="grow" style="min-width:120px">Catatan kas</h3>
+        <button class="btn danger small" data-addfin="keluar">Catat pengeluaran</button>
+        <button class="btn ghost small" data-addfin="masuk">Catat pemasukan</button>
       </div>
       <div class="list" id="finList"></div>
-      <div class="row wrap" style="margin-top:12px"><button class="btn primary" id="btnFinCsv">Unduh Excel (CSV)</button></div>
+      <div class="row wrap" style="margin-top:12px"><button class="btn primary" id="btnFinCsv">Unduh CSV (bisa dibuka di Excel)</button></div>
     </div>
   </section>
 
   <!-- PRODUK -->
   <section class="page" id="pg-produk">
     <div class="row" style="margin-bottom:12px">
-      <h2 class="grow" style="font-size:18px">Daftar Produk</h2>
-      <button class="btn primary" id="btnAddProd">+ Tambah</button>
+      <h2 class="grow">Produk</h2>
+      <button class="btn primary" id="btnAddProd">Tambah produk</button>
     </div>
     <div class="card"><div class="list" id="prodList"></div></div>
   </section>
@@ -282,7 +307,7 @@ body.is-admin .kasir-only{display:none!important}
   <section class="page" id="pg-setelan">
     <div class="stack">
       <div class="card stack">
-        <h3>Info Toko</h3>
+        <h3>Info toko</h3>
         <div><label class="f">Nama toko</label><input class="in" id="setName"></div>
         <div><label class="f">Alamat / keterangan (muncul di struk)</label><input class="in" id="setAddr"></div>
         <div><label class="f">No. WhatsApp (opsional, muncul di struk)</label><input class="in" id="setPhone" inputmode="tel"></div>
@@ -291,7 +316,7 @@ body.is-admin .kasir-only{display:none!important}
 
       <div class="card stack">
         <h3>QRIS</h3>
-        <p class="muted" style="margin:0;font-size:14px">Upload foto/screenshot QRIS statis BCA. Kalau kodenya bisa dibaca, aplikasi bakal bikin QR yang <b>nominalnya sudah terisi otomatis</b> tiap transaksi, jadi pembeli nggak perlu ngetik jumlah. Kalau gagal dibaca, QR asli yang ditampilkan.</p>
+        <p class="muted" style="margin:0;font-size:14px">Upload foto atau screenshot QRIS statis BCA. Kalau kodenya terbaca, tiap transaksi muncul QR dengan nominal yang sudah terisi, jadi pembeli tidak perlu mengetik jumlah. Kalau tidak terbaca, yang ditampilkan foto QRIS aslinya.</p>
         <input type="file" accept="image/*" id="qrisFile" class="in">
         <div id="qrisStatus"></div>
         <details>
@@ -304,38 +329,38 @@ body.is-admin .kasir-only{display:none!important}
       </div>
 
       <div class="card stack">
-        <h3>PIN Admin</h3>
+        <h3>PIN admin</h3>
         <p class="muted" style="margin:0;font-size:14px">Penjaga kasir cuma bisa input penjualan. Riwayat, laporan, keuangan, produk & setelan butuh PIN ini.</p>
-        <button class="btn primary" id="btnChangePin">Ganti PIN Admin</button>
+        <button class="btn primary" id="btnChangePin">Ganti PIN</button>
       </div>
 
       <div class="card stack">
-        <h3>Backup Data</h3>
-        <p class="muted" style="margin:0;font-size:14px">Data disimpan di HP/browser ini saja. Rutin backup ya (misal seminggu sekali), apalagi sebelum ganti HP atau hapus data browser.</p>
+        <h3>Backup data</h3>
+        <p class="muted" style="margin:0;font-size:14px">Data hanya tersimpan di HP dan browser ini. Unduh backup seminggu sekali, dan selalu sebelum ganti HP atau menghapus data browser.</p>
         <div class="row wrap">
-          <button class="btn primary" id="btnBackup">Unduh Backup</button>
-          <label class="btn ghost" style="display:inline-block">Pulihkan dari Backup<input type="file" accept=".json,application/json" id="restoreFile" hidden></label>
+          <button class="btn primary" id="btnBackup">Unduh backup</button>
+          <label class="btn ghost" style="display:inline-flex;align-items:center">Pulihkan dari backup<input type="file" accept=".json,application/json" id="restoreFile" hidden></label>
         </div>
       </div>
 
       <div class="card stack">
-        <h3>Zona Bahaya</h3>
+        <h3>Hapus data</h3>
         <button class="btn danger" id="btnWipeTx">Hapus semua transaksi</button>
       </div>
-      <p class="muted" style="font-size:12px;text-align:center">IniKasir · data tersimpan lokal di perangkat</p>
+      
     </div>
   </section>
 </main>
 
 <div class="backdrop" id="backdrop"></div>
 
-<nav class="bottom">
-  <button data-page="kasir" class="active"><span class="ic">🧾</span>Kasir</button>
-  <button data-page="riwayat" class="admin-only"><span class="ic">🕘</span>Riwayat</button>
-  <button data-page="laporan" class="admin-only"><span class="ic">📊</span>Laporan</button>
-  <button data-page="keuangan" class="admin-only"><span class="ic">💰</span>Keuangan</button>
-  <button data-page="produk" class="admin-only"><span class="ic">🍢</span>Produk</button>
-  <button data-page="setelan" class="admin-only"><span class="ic">⚙️</span>Setelan</button>
+<nav class="bottom admin-only" aria-label="Menu admin">
+  <button data-page="kasir" class="active">Kasir</button>
+  <button data-page="riwayat" class="admin-only">Riwayat</button>
+  <button data-page="laporan" class="admin-only">Laporan</button>
+  <button data-page="keuangan" class="admin-only">Keuangan</button>
+  <button data-page="produk" class="admin-only">Produk</button>
+  <button data-page="setelan" class="admin-only">Setelan</button>
 </nav>
 
 <!-- Modal PIN -->
@@ -349,7 +374,7 @@ body.is-admin .kasir-only{display:none!important}
 
 <!-- Modal catatan kas -->
 <div class="modal" id="mFin"><div class="box stack">
-  <h2 id="finTitle">Catat Pengeluaran</h2>
+  <h2 id="finTitle">Catat pengeluaran</h2>
   <div><label class="f">Tanggal</label><input type="date" class="in" id="fDate"></div>
   <div><label class="f">Nominal (Rp)</label><input class="in num" id="fAmt" inputmode="numeric" style="font-size:18px;font-weight:700"></div>
   <div><label class="f">Kategori</label><input class="in" id="fCat" list="finCatList"><datalist id="finCatList"></datalist></div>
@@ -365,15 +390,15 @@ body.is-admin .kasir-only{display:none!important}
 
 <!-- Modal bayar -->
 <div class="modal" id="mPay"><div class="box">
-  <div class="row" style="justify-content:space-between;margin-bottom:6px"><h2 style="margin:0">Pembayaran</h2><button class="btn ghost" data-close="mPay" style="padding:6px 10px">✕</button></div>
+  <div class="row" style="justify-content:space-between;margin-bottom:6px"><h2 style="margin:0">Pembayaran</h2><button class="btn ghost small" data-close="mPay">Tutup</button></div>
   <div class="total-line"><span class="muted">Total tagihan</span><b class="num" id="payTotal">Rp0</b></div>
   <div class="seg">
-    <button data-method="tunai" class="active">💵 Tunai</button>
-    <button data-method="qris">📱 QRIS</button>
+    <button data-method="tunai" class="active">Tunai</button>
+    <button data-method="qris">QRIS</button>
   </div>
   <div id="payTunai">
     <label class="f">Uang diterima</label>
-    <input class="in num" id="cashIn" inputmode="numeric" placeholder="0" style="font-size:20px;font-weight:700">
+    <input class="in num" id="cashIn" inputmode="numeric" placeholder="Kosongkan kalau uang pas" style="font-size:20px;font-weight:700">
     <div class="quick" id="quickCash"></div>
     <div class="change" id="changeBox"></div>
   </div>
@@ -382,30 +407,27 @@ body.is-admin .kasir-only{display:none!important}
       <div id="qrBox"></div>
       <div class="muted" id="qrCaption" style="font-size:13px;text-align:center"></div>
     </div>
-    <div class="note">Pastikan uang sudah masuk (cek notifikasi / mutasi BCA) sebelum tekan <b>Sudah Dibayar</b>.</div>
+    <div class="note">Cek dulu notifikasi atau mutasi BCA. Tekan "Sudah dibayar" setelah uangnya benar-benar masuk.</div>
   </div>
-  <button class="btn ok block" id="btnFinish" style="margin-top:14px">Selesaikan</button>
+  <button class="btn primary block" id="btnFinish" style="margin-top:16px">Selesaikan</button>
 </div></div>
 
 <!-- Modal struk -->
 <div class="modal" id="mReceipt"><div class="box">
-  <div class="row" style="justify-content:space-between;margin-bottom:10px"><h2 style="margin:0" id="rcTitle">Struk</h2><button class="btn ghost" data-close="mReceipt" style="padding:6px 10px">✕</button></div>
+  <div class="row" style="justify-content:space-between;margin-bottom:10px"><h2 style="margin:0" id="rcTitle">Struk</h2><button class="btn ghost small" data-close="mReceipt">Tutup</button></div>
   <div id="printArea"></div>
   <div class="row wrap" style="margin-top:12px">
-    <button class="btn ghost grow" id="btnPrint">🖨️ Cetak</button>
-    <button class="btn ghost grow" id="btnShare">📤 Kirim / Bagikan</button>
+    <button class="btn ghost grow" id="btnPrint">Cetak</button>
+    <button class="btn ghost grow" id="btnShare">Kirim struk</button>
   </div>
   <button class="btn danger block" id="btnVoid" style="margin-top:8px" hidden>Batalkan transaksi ini</button>
-  <button class="btn primary block" id="btnNewTx" style="margin-top:8px">Transaksi Baru</button>
+  <button class="btn primary block" id="btnNewTx" style="margin-top:8px">Transaksi berikutnya</button>
 </div></div>
 
 <!-- Modal produk -->
 <div class="modal" id="mProd"><div class="box stack">
-  <h2 id="prodTitle">Tambah Produk</h2>
-  <div class="row">
-    <div style="width:80px"><label class="f">Ikon</label><input class="in" id="pEmoji" maxlength="4" style="text-align:center;font-size:20px"></div>
-    <div class="grow"><label class="f">Nama produk</label><input class="in" id="pName"></div>
-  </div>
+  <h2 id="prodTitle">Tambah produk</h2>
+  <div><label class="f">Nama produk</label><input class="in" id="pName"></div>
   <div><label class="f">Harga (Rp)</label><input class="in num" id="pPrice" inputmode="numeric"></div>
   <div><label class="f">Kategori</label><input class="in" id="pCat" list="catList"><datalist id="catList"></datalist></div>
   <label class="row" style="font-size:14px"><input type="checkbox" id="pActive" checked> Tampilkan di kasir</label>
@@ -426,17 +448,18 @@ body.is-admin .kasir-only{display:none!important}
 /* ================= Storage ================= */
 const KEY = "inikasir_v1";
 const DEFAULT = () => ({
-  settings: { storeName: "Otak-Otak Kita", address: "", phone: "", qrisString: "", qrisImage: "", dynamicQris: true, pinHash: "" },
+  settings: { storeName: "Nama Toko", address: "", phone: "", qrisString: "", qrisImage: "", dynamicQris: true, pinHash: "" },
   cashflow: [], // {id, date(YYYY-MM-DD), type:'masuk'|'keluar', amount, cat, via:'tunai'|'bank', note, created}
   products: [
-    { id: uid(), name: "Otak-Otak Ikan", price: 2000, cat: "Otak-Otak", emoji: "🍢", active: true },
-    { id: uid(), name: "Otak-Otak Isi Telur", price: 3000, cat: "Otak-Otak", emoji: "🥚", active: true },
-    { id: uid(), name: "Otak-Otak Keju", price: 3000, cat: "Otak-Otak", emoji: "🧀", active: true },
-    { id: uid(), name: "Paket 10 Otak-Otak", price: 18000, cat: "Paket", emoji: "📦", active: true },
-    { id: uid(), name: "Cilok", price: 1000, cat: "Jajanan", emoji: "🍡", active: true },
-    { id: uid(), name: "Tahu Bakso", price: 3000, cat: "Jajanan", emoji: "🧆", active: true },
-    { id: uid(), name: "Sosis Bakar", price: 5000, cat: "Jajanan", emoji: "🌭", active: true },
-    { id: uid(), name: "Es Teh", price: 3000, cat: "Minuman", emoji: "🧋", active: true },
+    // Contoh awal: nama & harga diganti sendiri lewat menu Produk
+    { id: uid(), name: "Otak-otak ikan", price: 2000, cat: "Otak-otak", active: true },
+    { id: uid(), name: "Otak-otak isi telur", price: 3000, cat: "Otak-otak", active: true },
+    { id: uid(), name: "Otak-otak keju", price: 3000, cat: "Otak-otak", active: true },
+    { id: uid(), name: "Paket 10 otak-otak", price: 18000, cat: "Paket", active: true },
+    { id: uid(), name: "Cilok", price: 1000, cat: "Jajanan", active: true },
+    { id: uid(), name: "Tahu bakso", price: 3000, cat: "Jajanan", active: true },
+    { id: uid(), name: "Sosis bakar", price: 5000, cat: "Jajanan", active: true },
+    { id: uid(), name: "Es teh", price: 3000, cat: "Minuman", active: true },
   ],
   transactions: [],
 });
@@ -547,7 +570,7 @@ function categories() {
 function renderCats() {
   const cats = ["Semua", ...categories()];
   if (!cats.includes(activeCat)) activeCat = "Semua";
-  $("#cats").innerHTML = cats.map((c) => `<button class="chip ${c === activeCat ? "active" : ""}" data-cat="${esc(c)}">${esc(c)}</button>`).join("");
+  $("#cats").innerHTML = cats.map((c) => `<button class="cat ${c === activeCat ? "active" : ""}" data-cat="${esc(c)}">${esc(c)}</button>`).join("");
   $("#catList").innerHTML = categories().map((c) => `<option value="${esc(c)}">`).join("");
 }
 function renderProducts() {
@@ -555,26 +578,25 @@ function renderProducts() {
   const list = db.products.filter((p) => p.active && (activeCat === "Semua" || p.cat === activeCat) && (!q || p.name.toLowerCase().includes(q)));
   $("#prodGrid").innerHTML = list.length ? list.map((p) => {
     const inCart = cart.find((c) => c.pid === p.id);
-    return `<button class="prod" data-pid="${p.id}">
+    return `<button class="prod ${inCart ? "on" : ""}" data-pid="${p.id}">
       ${inCart ? `<span class="badge">${inCart.qty}</span>` : ""}
-      <div class="em">${esc(p.emoji || "🛒")}</div>
-      <div><div class="nm">${esc(p.name)}</div><div class="pr num">${rp(p.price)}</div></div>
+      <div class="nm">${esc(p.name)}</div><div class="pr num">${rp(p.price)}</div>
     </button>`;
-  }).join("") : `<div class="empty" style="grid-column:1/-1">Produk tidak ditemukan. Tambah di menu <b>Produk</b>.</div>`;
+  }).join("") : (q ? `<div class="empty" style="grid-column:1/-1">Tidak ada produk bernama "${esc(q)}".</div>` : `<div class="empty" style="grid-column:1/-1">Belum ada produk di kategori ini. Admin bisa menambahkannya di menu Produk.</div>`);
 }
 const cartTotal = () => cart.reduce((s, c) => s + c.price * c.qty, 0);
 const cartCount = () => cart.reduce((s, c) => s + c.qty, 0);
 function renderCart() {
   $("#cartItems").innerHTML = cart.length ? cart.map((c, i) => `
     <div class="ci">
-      <div class="grow"><div class="nm">${esc(c.name)}</div><div class="muted num" style="font-size:13px">${rp(c.price)} × ${c.qty} = <b style="color:var(--text)">${rp(c.price * c.qty)}</b></div></div>
-      <div class="qty"><button data-dec="${i}">−</button><span class="num">${c.qty}</span><button data-inc="${i}">+</button></div>
-    </div>`).join("") : `<div class="empty">Belum ada pesanan.<br>Ketuk produk untuk menambahkan.</div>`;
+      <div class="grow"><div class="nm">${esc(c.name)}</div><div class="muted num" style="font-size:13px">${rp(c.price)} × ${c.qty} = <b style="color:var(--ink)">${rp(c.price * c.qty)}</b></div></div>
+      <div class="qty"><button data-dec="${i}" aria-label="Kurangi">−</button><span class="num">${c.qty}</span><button data-inc="${i}" aria-label="Tambah">+</button></div>
+    </div>`).join("") : `<div class="empty">Belum ada pesanan. Ketuk produk untuk menambahkan.</div>`;
   const total = cartTotal();
   $("#cartTotal").textContent = rp(total);
   $("#btnPay").disabled = !cart.length;
   $("#cartBarCount").textContent = cartCount() + " item";
-  $("#cartBarTotal").textContent = rp(total) + " ›";
+  $("#cartBarTotal").textContent = rp(total);
   $("#cartBar").classList.toggle("hide", !cart.length || $("#cart").classList.contains("open"));
   renderProducts();
 }
@@ -611,7 +633,7 @@ function setMethod(m) {
   $$("#mPay .seg button").forEach((b) => b.classList.toggle("active", b.dataset.method === m));
   $("#payTunai").hidden = m !== "tunai";
   $("#payQris").hidden = m !== "qris";
-  $("#btnFinish").textContent = m === "qris" ? "✅ Sudah Dibayar" : "Selesaikan";
+  $("#btnFinish").textContent = m === "qris" ? "Sudah dibayar" : "Selesaikan";
   if (m === "qris") renderQr(); else updateChange();
 }
 function updateChange() {
@@ -627,7 +649,7 @@ function renderQr() {
     try {
       const str = qrisWithAmount(s.qrisString, total);
       new QRCode(box, { text: str, width: 480, height: 480, correctLevel: QRCode.CorrectLevel.M });
-      cap.innerHTML = `<b>${esc(qrisMerchantName(s.qrisString))}</b><br>Nominal <b>${rp(total)}</b> sudah terisi otomatis`;
+      cap.innerHTML = `${esc(qrisMerchantName(s.qrisString))}<br>Nominal ${rp(total)} sudah terisi`;
       return;
     } catch (e) { console.warn(e); }
   }
@@ -638,7 +660,7 @@ function renderQr() {
     new QRCode(box, { text: s.qrisString, width: 480, height: 480, correctLevel: QRCode.CorrectLevel.M });
     cap.innerHTML = `Minta pembeli scan & ketik nominal <b style="font-size:16px">${rp(total)}</b>`;
   } else {
-    box.innerHTML = `<div class="empty" style="width:240px">QRIS belum diatur.<br>Buka menu <b>Setelan</b>.</div>`;
+    box.innerHTML = `<div class="empty" style="width:240px">QRIS belum dipasang. Minta admin upload QRIS di menu Setelan, atau terima tunai dulu.</div>`;
     cap.textContent = ""; $("#btnFinish").disabled = true;
   }
 }
@@ -675,7 +697,7 @@ function receiptHTML(tx) {
     <div class="l"><span>${tx.method === "qris" ? "QRIS" : "Tunai"}</span><span>${rp(tx.paid)}</span></div>
     ${tx.method === "tunai" ? `<div class="l"><span>Kembali</span><span>${rp(tx.change)}</span></div>` : ""}
     ${tx.voided ? `<hr><div class="c"><b>*** DIBATALKAN ***</b></div>` : ""}
-    <hr><div class="c">Terima kasih 🙏</div>
+    <hr><div class="c">Terima kasih</div>
   </div>`;
 }
 function receiptText(tx) {
@@ -686,13 +708,13 @@ function receiptText(tx) {
   L.push("------------------", `*TOTAL ${rp(tx.total)}*`, `Bayar (${tx.method === "qris" ? "QRIS" : "Tunai"}): ${rp(tx.paid)}`);
   if (tx.method === "tunai") L.push(`Kembali: ${rp(tx.change)}`);
   if (tx.voided) L.push("*** DIBATALKAN ***");
-  L.push("", "Terima kasih 🙏");
+  L.push("", "Terima kasih");
   return L.join("\n");
 }
 function showReceipt(id, fresh) {
   const tx = db.transactions.find((t) => t.id === id); if (!tx) return;
   currentReceiptId = id;
-  $("#rcTitle").textContent = fresh ? "✅ Transaksi Berhasil" : "Detail Transaksi";
+  $("#rcTitle").textContent = fresh ? "Transaksi tersimpan" : "Detail transaksi";
   $("#printArea").innerHTML = receiptHTML(tx);
   $("#btnVoid").hidden = fresh || tx.voided;
   $("#btnNewTx").hidden = !fresh;
@@ -705,7 +727,7 @@ function renderHistory() {
   const list = db.transactions.filter((t) => dayKey(t.time) === k).slice().reverse();
   const valid = list.filter((t) => !t.voided);
   const sum = valid.reduce((s, t) => s + t.total, 0);
-  $("#histList").innerHTML = (list.length ? `<div class="muted" style="font-size:13px;padding-bottom:6px">${valid.length} transaksi · total <b style="color:var(--text)">${rp(sum)}</b></div>` : "") +
+  $("#histList").innerHTML = (list.length ? `<div class="muted" style="font-size:14px;padding-bottom:6px">${valid.length} transaksi, total ${rp(sum)}</div>` : "") +
     (list.length ? list.map((t) => `
     <div class="it" data-tx="${t.id}" style="cursor:pointer">
       <div class="grow">
@@ -716,7 +738,7 @@ function renderHistory() {
         <div class="num" style="font-weight:700;${t.voided ? "text-decoration:line-through;color:var(--muted)" : ""}">${rp(t.total)}</div>
         <span class="tag ${t.voided ? "void" : t.method}">${t.voided ? "BATAL" : t.method.toUpperCase()}</span>
       </div>
-    </div>`).join("") : `<div class="empty">Belum ada transaksi di tanggal ini.</div>`);
+    </div>`).join("") : `<div class="empty">Tidak ada transaksi pada ${fmtDateShort(k)}. Pilih tanggal lain di atas.</div>`);
 }
 
 /* ================= Laporan ================= */
@@ -741,21 +763,23 @@ function renderReport() {
   const items = {};
   list.forEach((t) => t.items.forEach((i) => { const e = (items[i.name] ||= { qty: 0, sum: 0 }); e.qty += i.qty; e.sum += i.qty * i.price; }));
   const totalQty = Object.values(items).reduce((s, e) => s + e.qty, 0);
-  $("#repStats").innerHTML = [
-    ["Omzet", rp(omzet)], ["Transaksi", list.length], ["Rata-rata", rp(list.length ? omzet / list.length : 0)],
-    ["Item terjual", totalQty], ["Tunai", rp(tunai)], ["QRIS", rp(qris)],
-  ].map(([k, v]) => `<div class="stat"><div class="k">${k}</div><div class="v num">${v}</div></div>`).join("");
+  const [ra, rb] = [$("#repFrom").value, $("#repTo").value].sort();
+  const period = ra === rb ? fmtDateShort(ra) : `${fmtDateShort(ra)} sampai ${fmtDateShort(rb)}`;
+  $("#repStats").innerHTML = `
+    <div class="lead"><div class="k">Omzet ${period}</div><div class="v num">${rp(omzet)}</div>
+      <div class="s">${list.length} transaksi, ${totalQty} item terjual${list.length ? `, rata-rata ${rp(omzet / list.length)} per transaksi` : ""}</div></div>
+    <table class="ledger"><tr><td>Tunai</td><td>${rp(tunai)}</td></tr><tr><td>QRIS</td><td>${rp(qris)}</td></tr></table>`;
   const rows = Object.entries(items).sort((a, b) => b[1].qty - a[1].qty);
   const maxQ = rows.length ? rows[0][1].qty : 1;
   $("#repItems").innerHTML = rows.length ? `<table class="t"><tr><th>Produk</th><th class="right">Qty</th><th class="right">Nilai</th></tr>${rows.map(([n, e]) =>
     `<tr><td>${esc(n)}<div class="bar"><i style="width:${(e.qty / maxQ) * 100}%"></i></div></td><td class="right num">${e.qty}</td><td class="right num">${rp(e.sum)}</td></tr>`).join("")}</table>`
-    : `<div class="empty">Belum ada penjualan di periode ini.</div>`;
+    : `<div class="empty">Tidak ada penjualan di periode ini. Coba ubah tanggalnya.</div>`;
   const days = {};
   list.forEach((t) => { const k = dayKey(t.time); const d = (days[k] ||= { n: 0, tunai: 0, qris: 0 }); d.n++; d[t.method] += t.total; });
   const dRows = Object.entries(days).sort((a, b) => b[0].localeCompare(a[0]));
   $("#repDays").innerHTML = dRows.length ? `<table class="t"><tr><th>Tanggal</th><th class="right">Trx</th><th class="right">Tunai</th><th class="right">QRIS</th><th class="right">Total</th></tr>${dRows.map(([k, d]) =>
     `<tr><td>${fmtDateShort(k)}</td><td class="right num">${d.n}</td><td class="right num">${rp(d.tunai)}</td><td class="right num">${rp(d.qris)}</td><td class="right num"><b>${rp(d.tunai + d.qris)}</b></td></tr>`).join("")}</table>`
-    : `<div class="empty">—</div>`;
+    : `<div class="empty">Tidak ada penjualan di periode ini.</div>`;
 }
 function exportCsv() {
   const list = rangeTx();
@@ -772,17 +796,16 @@ function renderProdList() {
   const sorted = db.products.slice().sort((a, b) => (a.cat || "").localeCompare(b.cat || "") || a.name.localeCompare(b.name));
   $("#prodList").innerHTML = sorted.length ? sorted.map((p) => `
     <div class="it" data-edit="${p.id}" style="cursor:pointer;${p.active ? "" : "opacity:.5"}">
-      <div style="font-size:24px;width:32px;text-align:center">${esc(p.emoji || "🛒")}</div>
       <div class="grow"><div style="font-weight:600">${esc(p.name)}</div><div class="muted" style="font-size:13px">${esc(p.cat || "Tanpa kategori")}${p.active ? "" : " · disembunyikan"}</div></div>
-      <div class="num" style="font-weight:700;color:var(--brand)">${rp(p.price)}</div>
-    </div>`).join("") : `<div class="empty">Belum ada produk.</div>`;
+      <div class="num" style="font-weight:700">${rp(p.price)}</div>
+    </div>`).join("") : `<div class="empty">Belum ada produk. Tekan "Tambah produk" untuk mulai.</div>`;
 }
 function openProd(pid) {
   editingPid = pid || null;
-  const p = db.products.find((x) => x.id === pid) || { name: "", price: "", cat: "", emoji: "🍢", active: true };
-  $("#prodTitle").textContent = pid ? "Ubah Produk" : "Tambah Produk";
+  const p = db.products.find((x) => x.id === pid) || { name: "", price: "", cat: "", active: true };
+  $("#prodTitle").textContent = pid ? "Ubah produk" : "Tambah produk";
   $("#pName").value = p.name; $("#pPrice").value = p.price ? p.price.toLocaleString("id-ID") : "";
-  $("#pCat").value = p.cat || ""; $("#pEmoji").value = p.emoji || ""; $("#pActive").checked = p.active !== false;
+  $("#pCat").value = p.cat || ""; $("#pActive").checked = p.active !== false;
   $("#pDelete").hidden = !pid;
   openModal("mProd"); setTimeout(() => $("#pName").focus(), 50);
 }
@@ -790,7 +813,7 @@ function saveProd() {
   const name = $("#pName").value.trim(), price = parseNum($("#pPrice").value);
   if (!name) return toast("Nama produk wajib diisi");
   if (!price) return toast("Harga wajib diisi");
-  const data = { name, price, cat: $("#pCat").value.trim(), emoji: $("#pEmoji").value.trim(), active: $("#pActive").checked };
+  const data = { name, price, cat: $("#pCat").value.trim(), active: $("#pActive").checked };
   if (editingPid) Object.assign(db.products.find((x) => x.id === editingPid), data);
   else db.products.push({ id: uid(), ...data });
   save(); closeModal("mProd"); refreshAll(); toast("Produk disimpan");
@@ -808,9 +831,9 @@ function renderSettings() {
   $("#setName").value = s.storeName; $("#setAddr").value = s.address; $("#setPhone").value = s.phone;
   $("#setDynamic").checked = !!s.dynamicQris;
   let html = "";
-  if (s.qrisString) html += `<div class="change ok" style="text-align:left">✅ Kode QRIS terbaca: <b>${esc(qrisMerchantName(s.qrisString) || "Merchant")}</b></div>`;
+  if (s.qrisString) html += `<div class="change ok" style="text-align:left">Kode QRIS terbaca: ${esc(qrisMerchantName(s.qrisString) || "nama merchant tidak tercantum")}</div>`;
   else if (s.qrisImage) html += `<div class="note">QRIS tersimpan sebagai gambar saja (kode tidak terbaca). Pembeli harus ketik nominal sendiri.</div>`;
-  else html += `<div class="muted" style="font-size:14px">Belum ada QRIS.</div>`;
+  else html += `<div class="muted" style="font-size:14px">Belum ada QRIS. Pilih foto QRIS di atas.</div>`;
   if (s.qrisImage) html += `<img src="${s.qrisImage}" style="max-width:180px;border:1px solid var(--line);border-radius:10px;margin-top:8px;display:block">`;
   $("#qrisStatus").innerHTML = html;
 }
@@ -837,7 +860,7 @@ function handleQrisFile(file) {
       }
     }
     if (code && !validateQris(code.data)) {
-      db.settings.qrisString = code.data.trim(); toast("QRIS berhasil dibaca ✅");
+      db.settings.qrisString = code.data.trim(); toast("QRIS terbaca");
     } else {
       db.settings.qrisString = "";
       toast(code ? "QR terbaca tapi: " + validateQris(code.data) : "Kode QR tidak terbaca, gambar tetap disimpan");
@@ -861,7 +884,7 @@ function setAdmin(on) {
 }
 function openPin(mode, after) {
   pinMode = mode; pinBuf = ""; pinFirst = ""; pinAfter = after || null;
-  const t = { login: ["Masuk Admin", "Masukkan PIN admin"], set: ["Buat PIN Admin", "Buat PIN 4–6 angka. Jangan kasih tahu penjaga kasir."], change: ["Ganti PIN", "Masukkan PIN baru (4–6 angka)"] }[mode];
+  const t = { login: ["Masuk admin", "Masukkan PIN admin"], set: ["Buat PIN admin", "Pilih 4 sampai 6 angka. Jangan beri tahu penjaga kasir."], change: ["Ganti PIN", "Masukkan PIN baru, 4 sampai 6 angka"] }[mode];
   $("#pinTitle").textContent = t[0]; $("#pinSub").textContent = t[1];
   renderPinPad(); openModal("mPin");
 }
@@ -870,7 +893,7 @@ function renderPinPad() {
   $("#pinDots").innerHTML = Array.from({ length: Math.max(4, pinBuf.length) }, (_, i) => `<i class="${i < pinBuf.length ? "on" : ""}"></i>`).slice(0, max).join("");
   const needOk = pinMode !== "login";
   $("#pinPad").innerHTML = ["1","2","3","4","5","6","7","8","9", "⌫", "0", needOk ? "OK" : (pinBuf.length >= 4 ? "OK" : "")]
-    .map((k) => `<button data-pin="${k}" ${k === "" ? "style='visibility:hidden'" : ""}>${k}</button>`).join("");
+    .map((k) => `<button data-pin="${k}" ${k === "⌫" ? 'aria-label="Hapus angka"' : ""} ${k === "" ? "style='visibility:hidden'" : ""}>${k}</button>`).join("");
 }
 function pinKey(k) {
   if (k === "⌫") pinBuf = pinBuf.slice(0, -1);
@@ -888,9 +911,9 @@ function pinSubmit() {
   }
   if (pinBuf.length < 4) return toast("PIN minimal 4 angka");
   if (!pinFirst) { pinFirst = pinBuf; pinBuf = ""; $("#pinSub").textContent = "Ulangi PIN untuk konfirmasi"; return renderPinPad(); }
-  if (pinFirst !== pinBuf) { toast("PIN tidak sama, ulangi"); pinFirst = ""; pinBuf = ""; $("#pinSub").textContent = "Masukkan PIN baru (4–6 angka)"; return renderPinPad(); }
+  if (pinFirst !== pinBuf) { toast("PIN tidak sama, ulangi"); pinFirst = ""; pinBuf = ""; $("#pinSub").textContent = "Masukkan PIN baru, 4 sampai 6 angka"; return renderPinPad(); }
   db.settings.pinHash = hashPin(pinBuf); save(); closeModal("mPin");
-  toast("PIN admin disimpan ✅");
+  toast("PIN admin disimpan");
   if (pinMode === "set") { setAdmin(true); if (pinAfter) pinAfter(); }
 }
 function requestAdmin(after) {
@@ -924,19 +947,31 @@ function renderFinance() {
   const kasBank = sQris + sum("masuk", "bank") - sum("keluar", "bank");
   const opCost = cf.filter((c) => c.type === "keluar" && !c.cat.startsWith("Prive")).reduce((s, c) => s + c.amount, 0);
   const laba = labaKotor - opCost;
-  $("#finStats").innerHTML = [
-    ["Penjualan", rp(labaKotor), ""], ["Pengeluaran usaha", rp(opCost), "amt-out"],
-    ["Laba bersih", rp(laba), laba >= 0 ? "amt-in" : "amt-out"], ["Pemasukan lain", rp(masuk), ""],
-    ["Uang tunai (laci)", rp(kasTunai), ""], ["Uang di rekening", rp(kasBank), ""],
-  ].map(([k, v, c]) => `<div class="stat"><div class="k">${k}</div><div class="v num ${c}">${v}</div></div>`).join("") +
-    `<div class="muted" style="grid-column:1/-1;font-size:12px">Laba bersih = penjualan − pengeluaran usaha (prive/ambil pribadi tidak dihitung sebagai biaya). Uang laci & rekening = arus masuk − keluar di periode ini.</div>`;
+  const prive = keluar - opCost;
+  $("#finStats").innerHTML = `
+    <div class="lead"><div class="k">${laba >= 0 ? "Untung bersih" : "Rugi"} ${a === b ? fmtDateShort(a) : `${fmtDateShort(a)} sampai ${fmtDateShort(b)}`}</div>
+      <div class="v num ${laba >= 0 ? "" : "amt-out"}">${rp(Math.abs(laba))}</div></div>
+    <div class="split">
+      <table class="ledger">
+        <tr><td>Penjualan</td><td>${rp(labaKotor)}</td></tr>
+        <tr><td>Pengeluaran usaha</td><td>− ${rp(opCost)}</td></tr>
+        <tr class="sum"><td>${laba >= 0 ? "Untung bersih" : "Rugi"}</td><td>${rp(laba)}</td></tr>
+      </table>
+      <div>
+        <table class="ledger">
+          <tr><td>Seharusnya ada di laci</td><td>${rp(kasTunai)}</td></tr>
+          <tr><td>Seharusnya masuk rekening</td><td>${rp(kasBank)}</td></tr>
+        </table>
+        <p class="muted" style="font-size:13px;margin:8px 0 0">Bandingkan dengan uang di laci saat tutup toko. Angka ini menghitung penjualan, pemasukan lain${masuk ? ` (${rp(masuk)})` : ""}, dan semua pengeluaran${prive ? `, termasuk ambil pribadi ${rp(prive)}` : ""} di periode ini.</p>
+      </div>
+    </div>`;
   const cats = {};
   cf.filter((c) => c.type === "keluar").forEach((c) => { cats[c.cat] = (cats[c.cat] || 0) + c.amount; });
   const rows = Object.entries(cats).sort((x, y) => y[1] - x[1]);
   const max = rows.length ? rows[0][1] : 1;
   $("#finCats").innerHTML = rows.length ? `<table class="t">${rows.map(([n, v]) =>
     `<tr><td>${esc(n)}<div class="bar"><i style="width:${(v / max) * 100}%"></i></div></td><td class="right num">${rp(v)}</td></tr>`).join("")}<tr><td><b>Total</b></td><td class="right num"><b>${rp(keluar)}</b></td></tr></table>`
-    : `<div class="empty">Belum ada pengeluaran di periode ini.</div>`;
+    : `<div class="empty">Belum ada pengeluaran tercatat di periode ini.</div>`;
   const list = cf.slice().sort((x, y) => (y.date + y.created).localeCompare(x.date + x.created));
   $("#finList").innerHTML = list.length ? list.map((c) => `
     <div class="it">
@@ -945,17 +980,17 @@ function renderFinance() {
         <div class="muted" style="font-size:13px">${fmtDateShort(c.date)} · ${c.via === "tunai" ? "Tunai" : "Rekening"}${c.note ? " · " + esc(c.note) : ""}</div>
       </div>
       <div class="num ${c.type === "masuk" ? "amt-in" : "amt-out"}">${c.type === "masuk" ? "+" : "−"}${rp(c.amount)}</div>
-      <button class="btn ghost" data-delfin="${c.id}" style="padding:6px 9px">🗑</button>
-    </div>`).join("") : `<div class="empty">Belum ada catatan. Catat belanja bahan, gas, gaji, dll di sini.</div>`;
+      <button class="btn ghost small" data-delfin="${c.id}">Hapus</button>
+    </div>`).join("") : `<div class="empty">Belum ada catatan di periode ini. Setiap belanja bahan, gas, atau bayar gaji, catat lewat tombol "Catat pengeluaran".</div>`;
 }
 function openFin(type) {
   finType = type;
-  $("#finTitle").textContent = type === "keluar" ? "Catat Pengeluaran" : "Catat Pemasukan Lain";
+  $("#finTitle").textContent = type === "keluar" ? "Catat pengeluaran" : "Catat pemasukan lain";
   $("#fDate").value = dayKey(new Date()); $("#fAmt").value = ""; $("#fNote").value = ""; $("#fVia").value = "tunai";
   const cats = type === "keluar" ? EXP_CATS : INC_CATS;
   $("#fCat").value = cats[0];
   $("#finCatList").innerHTML = [...new Set([...cats, ...db.cashflow.filter((c) => c.type === type).map((c) => c.cat)])].map((c) => `<option value="${esc(c)}">`).join("");
-  $("#fSave").className = "btn " + (type === "keluar" ? "danger" : "ok");
+  $("#fSave").className = "btn primary";
   openModal("mFin"); setTimeout(() => $("#fAmt").focus(), 50);
 }
 function saveFin() {
@@ -1075,7 +1110,7 @@ $("#qrisFile").addEventListener("change", (e) => { handleQrisFile(e.target.files
 $("#btnQrisText").onclick = () => {
   const s = $("#qrisText").value.replace(/\s+/g, ""), err = validateQris(s);
   if (err) return toast(err);
-  db.settings.qrisString = s; save(); renderSettings(); $("#qrisText").value = ""; toast("Kode QRIS disimpan ✅");
+  db.settings.qrisString = s; save(); renderSettings(); $("#qrisText").value = ""; toast("Kode QRIS disimpan");
 };
 $("#setDynamic").addEventListener("change", (e) => { db.settings.dynamicQris = e.target.checked; save(); });
 $("#btnQrisDel").onclick = () => { if (confirm("Hapus QRIS yang tersimpan?")) { db.settings.qrisString = ""; db.settings.qrisImage = ""; save(); renderSettings(); } };
@@ -1088,7 +1123,7 @@ $("#restoreFile").addEventListener("change", (e) => {
       const data = JSON.parse(r.result);
       if (!Array.isArray(data.products) || !Array.isArray(data.transactions)) throw 0;
       if (!confirm(`Pulihkan backup? Data sekarang akan DIGANTI.\n(${data.products.length} produk, ${data.transactions.length} transaksi)`)) return;
-      localStorage.setItem(KEY, JSON.stringify(data)); load(); cart = []; refreshAll(); renderSettings(); toast("Backup dipulihkan ✅");
+      localStorage.setItem(KEY, JSON.stringify(data)); load(); cart = []; refreshAll(); renderSettings(); toast("Backup dipulihkan");
     } catch (err) { toast("File backup tidak valid"); }
   };
   r.readAsText(f);
