@@ -9,6 +9,13 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/app.css">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/icons/kasir-192.png">
+<link rel="apple-touch-icon" href="assets/icons/kasir-180.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Kasir">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 </head>
 <body>
 
@@ -17,6 +24,7 @@
     <h1 id="hdrName">Kasir</h1>
     <div class="sub" id="hdrDate"></div>
   </div>
+  <button class="lockbtn install-only" data-install>Instal aplikasi</button>
 </header>
 <div class="banner" id="syncBanner"></div>
 
@@ -35,6 +43,7 @@
       <div><label class="f" for="cDevice">Nama HP ini (biar pemilik tahu HP yang mana)</label><input class="in" id="cDevice" maxlength="40" placeholder="Contoh: HP gerobak depan"></div>
       <div class="err" id="cErr"></div>
       <button class="btn primary block" id="cSubmit">Sambungkan</button>
+      <p class="muted" style="margin:0;font-size:13px" id="installHint"></p>
     </form>
   </section>
 
@@ -370,6 +379,7 @@ setInterval(renderHeader, 60000);
 
 /* ---------- Mulai ---------- */
 if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
+$("#installHint").textContent = installHintText("Kasir");
 (async function init() {
   renderHeader();
   if (!CONFIGURED || !window.supabase) {

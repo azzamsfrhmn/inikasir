@@ -1,9 +1,10 @@
 // Service worker: menyimpan file aplikasi di HP supaya halaman kasir tetap bisa dibuka
 // saat tidak ada sinyal. Data (Supabase) tidak pernah di-cache di sini; penjualan offline
 // disimpan oleh halaman kasir sendiri lalu dikirim saat online.
-const CACHE = "inikasir-v3";
+const CACHE = "inikasir-v4";
 const SHELL = [
-  "./", "index.html", "config.js", "assets/app.css", "assets/common.js",
+  "./", "index.html", "config.js", "assets/app.css", "assets/common.js", "manifest.webmanifest",
+  "assets/icons/kasir-192.png", "assets/icons/kasir-512.png",
   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js",
 ];
 
@@ -23,7 +24,7 @@ self.addEventListener("fetch", (e) => {
     e.respondWith(fetch(req).then((res) => {
       if (res.ok) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(req, copy)); }
       return res;
-    }).catch(() => caches.match(req, { ignoreSearch: true }).then((r) => r || caches.match("index.html"))));
+    }).catch(() => caches.match(req, { ignoreSearch: true }).then((r) => r || (url.pathname.includes("/admin/") ? Response.error() : caches.match("index.html")))));
   } else {
     // pustaka & font dari CDN (versinya dikunci): pakai simpanan dulu
     e.respondWith(caches.match(req).then((hit) => hit || fetch(req).then((res) => {

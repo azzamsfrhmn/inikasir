@@ -10,6 +10,13 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/app.css">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/admin-192.png">
+<link rel="apple-touch-icon" href="../assets/icons/admin-180.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Admin">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 </head>
 <body>
 
@@ -198,6 +205,13 @@
         <div><label class="f" for="setAddr">Alamat atau keterangan (muncul di struk)</label><input class="in" id="setAddr" maxlength="120"></div>
         <div><label class="f" for="setPhone">No. WhatsApp (opsional, muncul di struk)</label><input class="in" id="setPhone" inputmode="tel" maxlength="20"></div>
         <button class="btn primary" id="btnSaveInfo">Simpan</button>
+      </div>
+
+      <div class="card stack">
+        <h3>Pasang aplikasi</h3>
+        <p class="muted" style="margin:0;font-size:14px">Pasang dua aplikasi supaya bisa dibuka dari layar utama tanpa mengetik link: <b>Admin</b> di HP kamu, <b>Kasir</b> di HP penjaga.</p>
+        <p style="margin:0;font-size:14px" id="installHint"></p>
+        <div class="row wrap"><button class="btn primary install-only" data-install>Instal aplikasi Admin di HP ini</button></div>
       </div>
 
       <div class="card stack">
@@ -837,6 +851,8 @@ document.addEventListener("visibilitychange", () => { if (!document.hidden && sh
 setInterval(renderHeader, 60000);
 
 /* ================= Init ================= */
+if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("../sw.js").catch(() => {});
+$("#installHint").textContent = installHintText("Admin");
 (async function init() {
   renderHeader();
   $("#histDate").value = dayKey(new Date());

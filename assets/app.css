@@ -183,3 +183,7 @@ body.is-admin .kasir-only{display:none!important}
 .banner:empty{display:none}
 .loading{padding:48px 16px;text-align:center;color:var(--muted)}
 
+
+/* Tombol pasang aplikasi hanya muncul kalau browser menawarkan pemasangan */
+.install-only{display:none!important}
+body.can-install .install-only{display:inline-flex!important;align-items:center}

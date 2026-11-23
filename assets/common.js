@@ -69,6 +69,28 @@ function errMsg(e) {
   return m || "Terjadi kesalahan.";
 }
 
+/* ---------- Pasang aplikasi (PWA) ---------- */
+let installEvent = null;
+const isStandalone = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+const isIOS = () => /iPhone|iPad|iPod/i.test(navigator.userAgent);
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault(); installEvent = e; document.body.classList.add("can-install");
+});
+window.addEventListener("appinstalled", () => {
+  installEvent = null; document.body.classList.remove("can-install"); toast("Aplikasi terpasang. Buka dari layar utama.");
+});
+document.addEventListener("click", async (e) => {
+  if (!e.target.closest("[data-install]") || !installEvent) return;
+  installEvent.prompt();
+  await installEvent.userChoice.catch(() => {});
+  installEvent = null; document.body.classList.remove("can-install");
+});
+function installHintText(appName) {
+  if (isStandalone()) return "";
+  if (isIOS()) return `Pasang di iPhone: buka di Safari, tekan tombol Bagikan, lalu pilih "Tambahkan ke Layar Utama".`;
+  return `Pasang di Android: tekan "Instal aplikasi" kalau tombolnya muncul, atau menu Chrome (titik tiga) lalu "Instal aplikasi" / "Tambahkan ke layar utama". Ikon ${appName} akan muncul di layar utama.`;
+}
+
 /* ---------- Struk ---------- */
 // shop: {name, address, phone}; tx: {no, time, items:[{name,price,qty}], total, method, paid, change, voided}
 function receiptHTML(shop, tx) {
