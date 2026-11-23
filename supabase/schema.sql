@@ -105,6 +105,15 @@ language sql immutable as $$
   select encode(sha256(convert_to(s::text || ':inikasir:' || pin, 'UTF8')), 'hex');
 $$;
 
+-- ---------- Izin dasar tabel ----------
+-- Ditulis eksplisit supaya skema jalan walaupun opsi "Grant API access to new tables
+-- automatically" di Supabase dimatikan. Baris mana yang boleh disentuh tetap diatur RLS di bawah.
+grant usage on schema public to authenticated;
+grant select on public.stores, public.store_members, public.products, public.transactions, public.cashflow to authenticated;
+grant insert, update, delete on public.products to authenticated;
+grant insert, update, delete on public.cashflow to authenticated;
+grant delete on public.store_members to authenticated;
+
 -- ---------- Row Level Security ----------
 alter table public.stores        enable row level security;
 alter table public.store_secrets enable row level security;
