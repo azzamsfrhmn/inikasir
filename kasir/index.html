@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=16">
+<link rel="stylesheet" href="../assets/app.css?v=17">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="../assets/icons/kasir.svg">
 <link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/kasir-192.png">
@@ -46,7 +46,7 @@
         <h1>Sambungkan HP ini, <em>langsung jualan.</em></h1>
         <p>Cukup sekali. Setelah tersambung, HP ini jadi kasir toko dan tetap bisa mencatat penjualan walau sinyal hilang.</p>
       </div>
-      <ol class="authx-steps"><li><div><b>Minta kode toko &amp; PIN</b><span>Pemilik melihatnya di Admin, menu Setelan.</span></div></li><li><div><b>Isi di form ini</b><span>Cukup kode toko dan PIN. Nama HP dibuat otomatis.</span></div></li><li><div><b>Pasang di layar utama</b><span>Ikon Kasir muncul seperti aplikasi biasa.</span></div></li></ol>
+      <ol class="authx-steps"><li><div><b>Minta kode toko &amp; PIN</b><span>Pemilik melihatnya di Admin, menu Setelan.</span></div></li><li><div><b>Isi di form ini</b><span>Cukup kode toko dan PIN. HP diberi nama Kasir 1, Kasir 2, dst.</span></div></li><li><div><b>Pasang di layar utama</b><span>Ikon Kasir muncul seperti aplikasi biasa.</span></div></li></ol>
       <small class="authx-foot">© 2026 IniKasir · Kasir simpel untuk gerobak &amp; warung</small>
     </aside>
     <div class="authx-main">
@@ -57,8 +57,6 @@
       </div>
       <div><label class="f" for="cCode">Kode toko</label><input class="in" id="cCode" maxlength="6" autocomplete="off" autocapitalize="characters" style="text-transform:uppercase;font-size:20px;font-weight:700;letter-spacing:.1em" required></div>
       <div><label class="f" for="cPin">PIN kasir</label><input class="in pin-mask" id="cPin" type="text" inputmode="numeric" autocomplete="off" maxlength="6" required></div>
-      <div id="cDevBox" hidden><label class="f" for="cDevice">Nama HP ini</label><input class="in" id="cDevice" maxlength="40" placeholder="Contoh: HP gerobak depan"></div>
-      <p class="devline" id="cDevLine">Nama HP: <b id="cDevName"></b> <button type="button" class="linkbtn" id="cDevEdit">Ganti</button></p>
       <div class="err" id="cErr"></div>
       <button class="btn primary block" id="cSubmit">Sambungkan</button>
     </form>
@@ -216,13 +214,13 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="../config.js?v=16"></script>
+<script src="../config.js?v=17"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="../assets/common.js?v=16"></script>
+<script src="../assets/common.js?v=17"></script>
 <script>
 "use strict";
 const K = { store: "inikasir-kasir-store", cache: "inikasir-kasir-cache", queue: "inikasir-kasir-queue", shift: "inikasir-kasir-shift", cash: "inikasir-kasir-cash",
-  device: "inikasir-kasir-device", code: "inikasir-kasir-code" };
+  code: "inikasir-kasir-code" };
 let sb = null;
 let storeId = local.get(K.store, null);
 let shop = null, products = [];
@@ -230,6 +228,7 @@ let cart = [], activeCat = "Semua", payMethod = "tunai";
 let queue = local.get(K.queue, []);   // penjualan yang belum terkirim ke server
 let queueError = "";
 let lastTx = null;
+let devName = "";                      // nama HP ini di toko (Kasir 1, Gerobak depan, ...), diatur pemilik
 let employees = [];                    // karyawan aktif (kosong = toko tanpa sistem shift)
 let shift = local.get(K.shift, null);  // shift yang sedang berjalan di HP ini
 let cashOn = false;                    // fitur kas harian aktif (migrasi 005 sudah dipasang)
@@ -263,7 +262,9 @@ function renderShiftBar() {
 }
 function renderHeader() {
   $("#hdrName").textContent = shop ? shop.name : "Kasir";
-  $("#hdrDate").textContent = fmtDate(new Date());
+  $("#hdrDate").textContent = shop && devName
+    ? devName + " · " + new Date().toLocaleDateString("id-ID", { weekday: "short", day: "numeric", month: "short" })
+    : fmtDate(new Date());
   document.title = shop ? shop.name + " · Kasir" : BRAND.name + " Kasir";
 }
 function updateBanner() {
@@ -275,26 +276,15 @@ function updateBanner() {
 }
 
 /* ---------- Sambungkan HP ---------- */
-// Nama HP diingat di HP ini (tetap ada walau HP diputus), jadi penjaga tidak perlu mengisinya lagi.
-// Kalau belum pernah diisi, dibuat otomatis dari merek/tipe HP.
-async function autoDeviceName() {
-  let model = "";
-  try { if (navigator.userAgentData?.getHighEntropyValues) model = (await navigator.userAgentData.getHighEntropyValues(["model"])).model || ""; } catch (e) {}
-  if (!model) { const m = navigator.userAgent.match(/Android[^;)]*;\s*([^;)]+?)(?:\s+Build|\))/); if (m && !/^K$|wv/i.test(m[1].trim())) model = m[1].trim(); }
-  if (!model && /iPhone/.test(navigator.userAgent)) model = "iPhone";
-  if (!model && /iPad/.test(navigator.userAgent)) model = "iPad";
-  return (model ? "HP " + model : "HP kasir").slice(0, 40);
-}
-async function showConnect(msg) {
+// Kode toko diingat di HP ini (tetap ada walau HP diputus), jadi sambung ulang cukup isi PIN.
+// Nama HP tidak diisi penjaga: server memberi "Kasir 1", "Kasir 2", ... dan pemilik bisa menggantinya di admin.
+function showConnect(msg) {
   show("connect");
   $("#cErr").textContent = msg || "";
   const code = local.get(K.code, "");
   if (code && !$("#cCode").value) $("#cCode").value = code;
-  if (!$("#cDevice").value) $("#cDevice").value = local.get(K.device, "") || await autoDeviceName();
-  $("#cDevName").textContent = $("#cDevice").value;
   setTimeout(() => (code ? $("#cPin") : $("#cCode")).focus(), 60);
 }
-$("#cDevEdit").onclick = () => { $("#cDevLine").hidden = true; $("#cDevBox").hidden = false; $("#cDevice").select(); };
 $("#connectForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const btn = $("#cSubmit"); btn.disabled = true; btn.textContent = "Menyambungkan...";
@@ -305,7 +295,7 @@ $("#connectForm").addEventListener("submit", async (e) => {
       const r = await sb.auth.signInAnonymously();
       if (r.error) throw r.error;
     }
-    const args = { p_code: $("#cCode").value.trim(), p_pin: $("#cPin").value.trim(), p_device: $("#cDevice").value.trim() || await autoDeviceName() };
+    const args = { p_code: $("#cCode").value.trim(), p_pin: $("#cPin").value.trim(), p_device: "" };
     let { data, error } = await sb.rpc("join_store", args);
     // Sesi HP basi (akun anonimnya sudah tidak ada di server): buat sesi baru lalu coba sekali lagi
     if (error && /foreign key|JWT|token|not found|invalid claim/i.test(error.message || "")) {
@@ -317,7 +307,8 @@ $("#connectForm").addEventListener("submit", async (e) => {
     if (error) throw error;
     if (!data.ok) { $("#cErr").textContent = data.error; return; }
     storeId = data.store_id; local.set(K.store, storeId);
-    local.set(K.code, args.p_code.toUpperCase()); local.set(K.device, args.p_device);
+    local.set(K.code, args.p_code.toUpperCase());
+    if (data.device_name) devName = data.device_name;
     $("#cPin").value = "";
     show("loading");
     await refreshData(true);
@@ -335,12 +326,13 @@ async function refreshData(force) {
   if (!force && Date.now() - lastRefresh < 60000) return;
   lastRefresh = Date.now();
   try {
-    const [s, p, e, cs, cc] = await Promise.all([
+    const [s, p, e, cs, cc, me] = await Promise.all([
       sb.from("stores").select("*").eq("id", storeId).maybeSingle(),
       sb.from("products").select("*").eq("store_id", storeId).eq("active", true).order("cat").order("name"),
       sb.from("employees").select("id,name,perms").eq("store_id", storeId).eq("active", true).order("name"),
       sb.rpc("current_shift", { p_store: storeId }),
       sb.rpc("current_cash", { p_store: storeId }),
+      sb.from("store_members").select("device_name").eq("store_id", storeId).eq("role", "kasir").maybeSingle(),
     ]);
     if (s.error) throw s.error;
     if (p.error) throw p.error;
@@ -355,7 +347,8 @@ async function refreshData(force) {
     // kas harian aktif kalau fungsi current_cash ada (migrasi 005)
     if (cc.error) { if (/current_cash|PGRST202|does not exist|schema cache/i.test(cc.error.message || "")) cashOn = false; }
     else { cashOn = true; reconcileCash(cc.data); }
-    local.set(K.cache, { storeId, shop, products, employees, cashOn });
+    if (!me.error && me.data) devName = me.data.device_name || "";
+    local.set(K.cache, { storeId, shop, products, employees, cashOn, devName });
     renderHeader(); renderCats(); renderCart();
     gate();
   } catch (e) {
@@ -505,7 +498,7 @@ function finishPay() {
   queue.push(tx); local.set(K.queue, queue);
   // kurangi sisa stok di layar sekarang juga (server tetap jadi patokan saat sinkron)
   tx.items.forEach((i) => { const p = products.find((x) => x.id === i.product_id); if (p && p.track_stock) p.stock -= i.qty; });
-  local.set(K.cache, { storeId, shop, products, employees, cashOn });
+  local.set(K.cache, { storeId, shop, products, employees, cashOn, devName });
   lastTx = tx;
   cart = []; renderCart();
   closeModal("mPay");
@@ -756,7 +749,7 @@ $("#installHint").textContent = installHintText("Kasir");
   sb = makeClient("inikasir-kasir");
   const cache = local.get(K.cache, null);
   if (storeId && cache && cache.storeId === storeId) {
-    shop = cache.shop; products = cache.products; employees = cache.employees || []; cashOn = !!cache.cashOn;
+    shop = cache.shop; products = cache.products; employees = cache.employees || []; cashOn = !!cache.cashOn; devName = cache.devName || "";
     renderHeader(); renderCats(); renderCart(); gate();
   }
   const { data: { session }, error } = await sb.auth.getSession();

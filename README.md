@@ -25,6 +25,7 @@ Data disimpan di [Supabase](https://supabase.com) (paket gratis cukup). Aturan a
    - `004_struk.sql`: pengaturan struk (teks atas/bawah, info yang tampil, logo, lebar kertas). Tidak butuh 002/003.
    - `005_kas_harian.sql`: buka & tutup kasir (kas awal/akhir) versi sederhana tanpa karyawan/PIN; selisih kas di menu Keuangan. Tidak butuh 002/003/004.
    - `006_template_usaha.sql`: pilih jenis dagangan saat buat toko (otak-otak, gorengan, jajanan, minuman, kosong) untuk produk contoh. Tidak butuh yang lain.
+   - `007_nama_hp.sql`: HP kasir otomatis diberi nama "Kasir 1", "Kasir 2", dst., dan pemilik bisa ganti nama HP di Setelan. Tidak butuh yang lain.
 
 ### 3. Atur login
 Di **Authentication**:

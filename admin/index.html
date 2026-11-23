@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=16">
+<link rel="stylesheet" href="../assets/app.css?v=17">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="../assets/icons/admin.svg">
 <link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/admin-192.png">
@@ -448,6 +448,15 @@
   <div class="row modal-actions"><div class="grow"></div><button class="btn ghost" data-close="mStockFix">Batal</button><button class="btn primary" id="sfSave">Simpan</button></div>
 </div></div>
 
+<!-- Ganti nama HP kasir -->
+<div class="modal" id="mDev"><div class="box stack" style="max-width:400px">
+  <h2>Ganti nama HP</h2>
+  <p class="muted" style="margin:0;font-size:14px">Nama ini muncul di bagian atas layar HP kasir, jadi penjaga bisa menyebut HP yang mana.</p>
+  <div><label class="f" for="dvName">Nama HP</label><input class="in" id="dvName" maxlength="40" placeholder="Contoh: Gerobak depan, HP Budi"></div>
+  <div class="err" id="dvErr"></div>
+  <div class="row modal-actions"><div class="grow"></div><button class="btn ghost" data-close="mDev">Batal</button><button class="btn primary" id="dvSave">Simpan</button></div>
+</div></div>
+
 <!-- Riwayat stok -->
 <div class="modal" id="mStockLog"><div class="box stack">
   <div class="row" style="justify-content:space-between"><h2 style="margin:0" id="slTitle">Riwayat stok</h2><button class="btn ghost small" data-close="mStockLog">Tutup</button></div>
@@ -489,9 +498,9 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="../config.js?v=16"></script>
+<script src="../config.js?v=17"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="../assets/common.js?v=16"></script>
+<script src="../assets/common.js?v=17"></script>
 <script>
 "use strict";
 let sb = null, user = null, shop = null;
@@ -1254,6 +1263,7 @@ async function renderSettings() {
     <div class="it">
       <div class="grow"><div style="font-weight:600">${esc(d.device_name || "HP kasir")}</div>
         <div class="muted" style="font-size:13px">${d.last_seen ? "Terakhir aktif " + new Date(d.last_seen).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "Belum pernah mencatat penjualan"}</div></div>
+      <button class="btn ghost small" data-rename="${d.user_id}">Ganti nama</button>
       <button class="btn ghost small" data-unlink="${d.user_id}">Putuskan</button>
     </div>`).join("") : `<div class="muted" style="font-size:14px">Belum ada. Buka link kasir di HP penjaga lalu masukkan kode toko dan PIN kasir.</div>`;
   renderOnboarding();
@@ -1508,7 +1518,7 @@ async function saveReceipt() {
 
 /* ================= Event ================= */
 document.addEventListener("click", async (e) => {
-  const t = e.target.closest("[data-custom],[data-page],[data-close],[data-tx],[data-edit],[data-range],[data-frange],[data-addfin],[data-delfin],[data-copy],[data-unlink],[data-logout],[data-emp],[data-shrange],[data-forceclose],[data-forcecash]");
+  const t = e.target.closest("[data-custom],[data-page],[data-close],[data-tx],[data-edit],[data-range],[data-frange],[data-addfin],[data-delfin],[data-copy],[data-unlink],[data-rename],[data-logout],[data-emp],[data-shrange],[data-forceclose],[data-forcecash]");
   if (!t) return;
   const d = t.dataset;
   if (d.custom) toggleCustom(d.custom);
@@ -1536,6 +1546,11 @@ document.addEventListener("click", async (e) => {
     try { await navigator.clipboard.writeText(el.value); } catch (err) { el.select(); document.execCommand("copy"); }
     toast("Link disalin");
   }
+  else if (d.rename) {
+    const dev = devices.find((x) => x.user_id === d.rename);
+    renaming = d.rename; $("#dvName").value = dev ? dev.device_name : ""; $("#dvErr").textContent = "";
+    openModal("mDev"); setTimeout(() => $("#dvName").select(), 60);
+  }
   else if (d.unlink) {
     const dev = devices.find((x) => x.user_id === d.unlink);
     if (!confirm(`Putuskan ${dev ? dev.device_name : "HP ini"}? HP itu tidak bisa jualan sampai disambungkan lagi pakai kode toko dan PIN kasir.`)) return;
@@ -1544,6 +1559,23 @@ document.addEventListener("click", async (e) => {
     toast("HP diputus"); renderSettings();
   }
 });
+let renaming = null;
+async function saveDeviceName() {
+  const name = $("#dvName").value.trim();
+  if (!name) return ($("#dvErr").textContent = "Isi nama HP dulu.");
+  const btn = $("#dvSave"); setBusy(btn, "Menyimpan...");
+  const { error } = await sb.rpc("rename_device", { p_store: shop.id, p_user: renaming, p_name: name });
+  setBusy(btn);
+  if (error) {
+    $("#dvErr").textContent = /rename_device|PGRST202|schema cache|does not exist/i.test(error.message || "")
+      ? "Fitur ini butuh migrasi 007_nama_hp.sql. Jalankan sekali di Supabase SQL Editor, lalu coba lagi."
+      : errMsg(error);
+    return;
+  }
+  closeModal("mDev"); toast("Nama HP diganti"); renderSettings();
+}
+$("#dvSave").onclick = saveDeviceName;
+$("#dvName").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); saveDeviceName(); } });
 const repManual = () => { markPeriod("rep", "data-range", null); renderReport(); };
 $("#repFrom").addEventListener("change", repManual);
 $("#repTo").addEventListener("change", repManual);
