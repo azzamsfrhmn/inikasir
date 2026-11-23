@@ -16,6 +16,8 @@ Data disimpan di [Supabase](https://supabase.com) (paket gratis cukup). Aturan a
 ### 2. Pasang database
 1. Buka **SQL Editor** > **New query**.
 2. Tempel seluruh isi [`supabase/schema.sql`](supabase/schema.sql), lalu **Run**. Harus muncul "Success. No rows returned".
+3. Jalankan juga file di [`supabase/migrations/`](supabase/migrations/) **berurutan**, masing-masing sekali, dengan cara yang sama:
+   - `002_karyawan_shift.sql`: akun karyawan, hak akses, shift (kas awal/akhir), absensi.
 
 ### 3. Atur login
 Di **Authentication**:
@@ -40,6 +42,9 @@ Anon key aman ditaruh di sini karena semua akses dijaga aturan di database. **Ja
 1. Pemilik buka `/admin/`, **Daftar**, klik link konfirmasi di email, lalu **Buat toko**.
 2. Di **Setelan**: atur **PIN kasir**, lalu cek nama dan harga di **Produk**.
 3. Di HP penjaga buka `/` (halaman kasir), masukkan **kode toko** dan **PIN kasir**. Tambahkan ke layar utama lewat menu Chrome.
+4. Opsional, di menu **Karyawan**: buat karyawan (nama + PIN + hak akses). Setelah ada karyawan aktif, penjaga harus pilih nama dan ketik PIN untuk **buka shift** (jam masuk + kas awal) dan **tutup shift** (jam pulang + kas akhir). Rekap absensi dan selisih kas ada di halaman yang sama.
+
+Setiap kali `assets/common.js` atau `assets/app.css` berubah, naikkan angka `?v=` di kedua `index.html` dan `CACHE` di `sw.js` supaya HP tidak memakai file lama.
 
 ## Catatan
 - Proyek Supabase gratis dijeda otomatis kalau tidak ada aktivitas sekitar seminggu. Kalau toko tutup lama, buka dashboard Supabase dan tekan **Restore**.

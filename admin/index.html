@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css">
+<link rel="stylesheet" href="../assets/app.css?v=2">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/admin-192.png">
 <link rel="apple-touch-icon" href="../assets/icons/admin-180.png">
@@ -169,6 +169,38 @@
     <div class="card"><div class="list" id="prodList"></div></div>
   </section>
 
+  <!-- ========== KARYAWAN ========== -->
+  <section class="page" id="pg-karyawan">
+    <div class="row" style="margin-bottom:12px">
+      <h2 class="grow">Karyawan</h2>
+      <button class="btn primary" id="btnAddEmp">Tambah karyawan</button>
+    </div>
+    <div class="card" style="margin-bottom:20px">
+      <div class="list" id="empList"></div>
+      <p class="muted" style="font-size:13px;margin:10px 0 0">Selama belum ada karyawan aktif, HP kasir langsung bisa jualan tanpa login. Begitu ada karyawan aktif, penjaga harus pilih nama dan ketik PIN untuk buka shift.</p>
+    </div>
+
+    <h2 style="margin-bottom:12px">Shift &amp; absensi</h2>
+    <div class="card" style="margin-bottom:12px">
+      <div class="row wrap">
+        <div class="grow"><label class="f" for="shFrom">Dari</label><input type="date" class="in" id="shFrom"></div>
+        <div class="grow"><label class="f" for="shTo">Sampai</label><input type="date" class="in" id="shTo"></div>
+      </div>
+      <div class="row wrap" style="margin-top:10px">
+        <button class="btn ghost" data-shrange="today">Hari ini</button>
+        <button class="btn ghost" data-shrange="7">7 hari</button>
+        <button class="btn ghost" data-shrange="month">Bulan ini</button>
+      </div>
+    </div>
+    <div class="card" id="absenRekap" style="margin-bottom:12px"></div>
+    <div class="card">
+      <h3 style="margin-bottom:4px">Rincian shift</h3>
+      <p class="muted" style="font-size:13px;margin:0 0 6px">Seharusnya = kas awal + penjualan tunai − uang keluar. Selisih = uang yang dihitung karyawan − seharusnya.</p>
+      <div class="list" id="shiftList"></div>
+      <div class="row wrap" style="margin-top:12px"><button class="btn primary" id="btnShiftCsv">Unduh CSV (bisa dibuka di Excel)</button></div>
+    </div>
+  </section>
+
   <!-- ========== SETELAN ========== -->
   <section class="page" id="pg-setelan">
     <div class="stack">
@@ -235,6 +267,7 @@
   <button data-page="keuangan">Keuangan</button>
   <button data-page="riwayat">Riwayat</button>
   <button data-page="produk">Produk</button>
+  <button data-page="karyawan">Karyawan</button>
   <button data-page="setelan">Setelan</button>
 </nav>
 
@@ -247,6 +280,27 @@
     <button class="btn ghost grow" id="btnShare">Kirim struk</button>
   </div>
   <button class="btn danger block" id="btnVoid" style="margin-top:8px">Batalkan transaksi ini</button>
+</div></div>
+
+<!-- Karyawan -->
+<div class="modal" id="mEmp"><div class="box stack">
+  <h2 id="empTitle">Tambah karyawan</h2>
+  <div><label class="f" for="eName">Nama (muncul di HP kasir dan struk)</label><input class="in" id="eName" maxlength="40" autocomplete="off"></div>
+  <div><label class="f" for="ePin" id="ePinLabel">PIN 4 sampai 6 angka</label><input class="in num pin-mask" id="ePin" type="text" inputmode="numeric" autocomplete="off" maxlength="6"></div>
+  <fieldset style="border:1px solid var(--line);border-radius:var(--r-sm);padding:8px 12px 4px;margin:0">
+    <legend class="f" style="padding:0 4px">Hak akses di HP kasir (selain jualan)</legend>
+    <label class="perm"><input type="checkbox" id="pView"><span><b>Lihat ringkasan shift sendiri</b><br><span class="muted">Daftar penjualan, total tunai/QRIS, dan selisih kas saat tutup shift</span></span></label>
+    <label class="perm"><input type="checkbox" id="pVoid"><span><b>Batalkan transaksi di shift sendiri</b><br><span class="muted">Untuk salah input. Butuh hak lihat ringkasan supaya daftarnya kelihatan</span></span></label>
+    <label class="perm"><input type="checkbox" id="pCash"><span><b>Catat uang keluar dari laci</b><br><span class="muted">Misalnya beli es batu atau plastik selama jaga</span></span></label>
+  </fieldset>
+  <label class="row" style="font-size:14px;min-height:44px"><input type="checkbox" id="eActive" checked> Aktif (bisa buka shift)</label>
+  <div class="err" id="eErr"></div>
+  <div class="row modal-actions">
+    <button class="btn danger" id="eDelete" hidden>Hapus</button>
+    <div class="grow"></div>
+    <button class="btn ghost" data-close="mEmp">Batal</button>
+    <button class="btn primary" id="eSave">Simpan</button>
+  </div>
 </div></div>
 
 <!-- Produk -->
@@ -299,9 +353,9 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="../config.js"></script>
+<script src="../config.js?v=2"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="../assets/common.js"></script>
+<script src="../assets/common.js?v=2"></script>
 <script>
 "use strict";
 let sb = null, user = null, shop = null;
@@ -356,9 +410,9 @@ function go(page) {
   if (page === "keuangan") renderFinance();
   if (page === "produk") loadProducts();
   if (page === "setelan") renderSettings();
+  if (page === "karyawan") renderKaryawan();
   window.scrollTo(0, 0);
 }
-function setBusy(el, text) { el.dataset.label = el.dataset.label || el.textContent; el.disabled = !!text; el.textContent = text || el.dataset.label; }
 
 /* ================= Login, daftar, lupa password ================= */
 window.addEventListener("hashchange", () => { if (!user) authRoute(); });
@@ -479,7 +533,7 @@ async function fetchAll(build) {
 async function fetchTx(fromKey, toKey) {
   const from = startOfDay(fromKey).toISOString();
   const to = new Date(startOfDay(toKey).getTime() + 864e5).toISOString();
-  const rows = await fetchAll(() => sb.from("transactions").select("id,no,created_at,items,total,method,paid,change,voided")
+  const rows = await fetchAll(() => sb.from("transactions").select("id,no,created_at,items,total,method,paid,change,voided,employee_name")
     .eq("store_id", shop.id).gte("created_at", from).lt("created_at", to).order("created_at"));
   return rows.map((r) => ({ ...r, time: r.created_at }));
 }
@@ -649,7 +703,7 @@ async function renderHistory() {
   $("#histList").innerHTML = histData.length ? `<div class="muted" style="font-size:14px;padding-bottom:6px">${valid.length} transaksi, total ${rp(sum)}</div>` + histData.map((t) => `
     <div class="it" data-tx="${t.id}" style="cursor:pointer">
       <div class="grow">
-        <div><b class="num">${fmtTime(t.time)}</b> <span class="muted" style="font-size:12px">${esc(t.no)}</span></div>
+        <div><b class="num">${fmtTime(t.time)}</b> <span class="muted" style="font-size:12px">${esc(t.no)}${t.employee_name ? " · " + esc(t.employee_name) : ""}</span></div>
         <div class="muted" style="font-size:13px">${esc(t.items.map((i) => i.qty + "× " + i.name).join(", "))}</div>
       </div>
       <div class="right">
@@ -780,12 +834,172 @@ async function exportAll() {
   } catch (e) { toast(errMsg(e)); }
 }
 
+/* ================= Karyawan ================= */
+let employees = [], empPin = {}, editingEmp = null;
+const PERM_LABELS = { view_shift: "lihat ringkasan shift", void_own: "batalkan transaksi", cash_out: "catat uang keluar" };
+async function renderKaryawan() {
+  loadEmployees();
+  renderShifts();
+}
+async function loadEmployees() {
+  loadingInto("empList");
+  const [e, p] = await Promise.all([
+    sb.from("employees").select("id,name,active,perms,created_at").eq("store_id", shop.id).order("name"),
+    sb.rpc("employee_has_pin", { p_store: shop.id }),
+  ]);
+  if (e.error) return errorInto(e.error, "empList");
+  employees = e.data;
+  empPin = Object.fromEntries((p.data || []).map((r) => [r.employee_id, r.has_pin]));
+  $("#empList").innerHTML = employees.length ? employees.map((m) => {
+    const perms = Object.keys(PERM_LABELS).filter((k) => m.perms && m.perms[k]).map((k) => PERM_LABELS[k]);
+    return `<div class="it" data-emp="${m.id}" style="cursor:pointer;${m.active ? "" : "opacity:.55"}">
+      <div class="grow">
+        <div style="font-weight:600">${esc(m.name)}${m.active ? "" : ` <span class="tag void">Nonaktif</span>`}${empPin[m.id] === false ? ` <span class="tag void">PIN belum diatur</span>` : ""}</div>
+        <div class="muted" style="font-size:13px">${perms.length ? "Jualan, " + perms.join(", ") : "Hanya jualan"}</div>
+      </div>
+      <span class="muted" style="font-size:13px">Ubah</span>
+    </div>`;
+  }).join("") : `<div class="empty">Belum ada karyawan. Tekan "Tambah karyawan" untuk membuat akun penjaga dengan PIN.</div>`;
+}
+function openEmp(id) {
+  editingEmp = id || null;
+  const m = employees.find((x) => x.id === id) || { name: "", active: true, perms: {} };
+  $("#empTitle").textContent = id ? "Ubah karyawan" : "Tambah karyawan";
+  $("#eName").value = m.name; $("#ePin").value = "";
+  $("#ePinLabel").textContent = id ? "PIN baru (kosongkan kalau tidak diganti)" : "PIN 4 sampai 6 angka";
+  $("#pView").checked = !!m.perms.view_shift; $("#pVoid").checked = !!m.perms.void_own; $("#pCash").checked = !!m.perms.cash_out;
+  $("#eActive").checked = m.active !== false;
+  $("#eDelete").hidden = !id; $("#eErr").textContent = "";
+  openModal("mEmp");
+  if (!id) setTimeout(() => $("#eName").focus(), 50);
+}
+async function saveEmp() {
+  const name = $("#eName").value.trim(), pin = $("#ePin").value.trim();
+  if (!name) return ($("#eErr").textContent = "Nama wajib diisi.");
+  if (!editingEmp && !pin) return ($("#eErr").textContent = "PIN wajib diisi untuk karyawan baru.");
+  if (pin && !/^\d{4,6}$/.test(pin)) return ($("#eErr").textContent = "PIN harus 4 sampai 6 angka.");
+  const row = { name, active: $("#eActive").checked, perms: { view_shift: $("#pView").checked, void_own: $("#pVoid").checked, cash_out: $("#pCash").checked } };
+  const btn = $("#eSave"); setBusy(btn, "Menyimpan...");
+  let id = editingEmp, error;
+  if (id) ({ error } = await sb.from("employees").update(row).eq("id", id));
+  else { const r = await sb.from("employees").insert({ ...row, store_id: shop.id }).select("id").single(); error = r.error; id = r.data && r.data.id; }
+  if (!error && pin) ({ error } = await sb.rpc("set_employee_pin", { p_employee: id, p_pin: pin }));
+  setBusy(btn);
+  if (error) {
+    $("#eErr").textContent = /duplicate|unique/i.test(error.message) ? "Sudah ada karyawan dengan nama ini." : errMsg(error);
+    if (!editingEmp && id) editingEmp = id; // karyawan sudah tersimpan, tinggal PIN yang gagal
+    return;
+  }
+  closeModal("mEmp"); loadEmployees(); toast(editingEmp ? "Karyawan diperbarui" : "Karyawan ditambahkan");
+}
+async function deleteEmp() {
+  const m = employees.find((x) => x.id === editingEmp); if (!m) return;
+  if (!confirm(`Hapus ${m.name}? Riwayat shift dan penjualannya tetap tersimpan. Kalau hanya berhenti sementara, lebih baik hilangkan centang "Aktif".`)) return;
+  const { error } = await sb.from("employees").delete().eq("id", m.id);
+  if (error) return ($("#eErr").textContent = errMsg(error));
+  closeModal("mEmp"); loadEmployees(); toast("Karyawan dihapus");
+}
+
+/* ================= Shift & absensi ================= */
+let shiftData = [];
+function setShiftRange(r, silent) {
+  const now = new Date(); let from = new Date(now);
+  if (r === "7") from.setDate(now.getDate() - 6);
+  else if (r === "month") from = new Date(now.getFullYear(), now.getMonth(), 1);
+  $("#shFrom").value = dayKey(from); $("#shTo").value = dayKey(now);
+  if (!silent && shop) renderShifts();
+}
+const fmtDur = (ms) => { const m = Math.max(0, Math.round(ms / 60000)); return `${Math.floor(m / 60)} j ${m % 60} m`; };
+async function renderShifts() {
+  const [a, b] = sortedRange($("#shFrom").value, $("#shTo").value);
+  loadingInto("absenRekap", "shiftList");
+  try {
+    const from = startOfDay(a).toISOString(), to = new Date(startOfDay(b).getTime() + 864e5).toISOString();
+    const shifts = await fetchAll(() => sb.from("shifts").select("*").eq("store_id", shop.id).gte("opened_at", from).lt("opened_at", to).order("opened_at", { ascending: false }));
+    const ids = shifts.map((s) => s.id), tx = [], cf = [];
+    for (let i = 0; i < ids.length; i += 100) {
+      const part = ids.slice(i, i + 100);
+      const [t, c] = await Promise.all([
+        fetchAll(() => sb.from("transactions").select("shift_id,total,method,voided").in("shift_id", part)),
+        fetchAll(() => sb.from("cashflow").select("shift_id,amount,type,via").in("shift_id", part)),
+      ]);
+      tx.push(...t); cf.push(...c);
+    }
+    shiftData = shifts.map((s) => {
+      const mine = tx.filter((t) => t.shift_id === s.id && !t.voided);
+      const cash = mine.filter((t) => t.method === "tunai").reduce((x, t) => x + t.total, 0);
+      const qris = mine.filter((t) => t.method === "qris").reduce((x, t) => x + t.total, 0);
+      const out = cf.filter((c) => c.shift_id === s.id && c.type === "keluar" && c.via === "tunai").reduce((x, c) => x + c.amount, 0);
+      const expected = s.opening_cash + cash - out;
+      const diff = s.closing_cash == null ? null : s.closing_cash - expected;
+      return { ...s, cash, qris, out, expected, diff, count: mine.length };
+    });
+  } catch (e) { return errorInto(e, "absenRekap", "shiftList"); }
+
+  // Rekap absensi per karyawan
+  const per = {};
+  shiftData.forEach((s) => {
+    const r = (per[s.employee_name] ||= { days: new Set(), ms: 0, shifts: 0, diff: 0, open: 0 });
+    r.shifts++; r.days.add(dayKey(s.opened_at));
+    if (s.closed_at) r.ms += new Date(s.closed_at) - new Date(s.opened_at); else r.open++;
+    if (s.diff != null) r.diff += s.diff;
+  });
+  const rows = Object.entries(per).sort((x, y) => x[0].localeCompare(y[0]));
+  $("#absenRekap").innerHTML = rows.length ? `<h3 style="margin-bottom:8px">Rekap absensi</h3><div class="tscroll"><table class="t">
+    <tr><th>Karyawan</th><th class="right">Hari hadir</th><th class="right">Total jam</th><th class="right">Selisih kas</th></tr>
+    ${rows.map(([n, r]) => `<tr><td>${esc(n)}${r.open ? ` <span class="tag qris">sedang jaga</span>` : ""}</td><td class="right num">${r.days.size}</td><td class="right num">${fmtDur(r.ms)}</td>
+      <td class="right num ${r.diff < 0 ? "amt-out" : ""}">${r.diff > 0 ? "+" : ""}${rp(r.diff)}</td></tr>`).join("")}</table></div>`
+    : `<div class="empty">Belum ada shift di periode ini. Shift tercatat saat karyawan membuka shift di HP kasir.</div>`;
+
+  $("#shiftList").innerHTML = shiftData.length ? shiftData.map((s) => {
+    const open = !s.closed_at;
+    const jam = `${fmtTime(s.opened_at)} – ${open ? "sekarang" : fmtTime(s.closed_at)}`;
+    const dur = fmtDur((open ? Date.now() : new Date(s.closed_at)) - new Date(s.opened_at));
+    const diffTxt = s.diff == null ? (open ? "" : "Kas akhir tidak dihitung")
+      : s.diff === 0 ? "Pas" : `${s.diff > 0 ? "Lebih" : "Kurang"} ${rp(Math.abs(s.diff))}`;
+    return `<div class="it" style="align-items:flex-start;flex-direction:column;gap:6px">
+      <div class="row" style="width:100%">
+        <div class="grow"><b>${esc(s.employee_name)}</b> <span class="muted" style="font-size:13px">${new Date(s.opened_at).toLocaleDateString("id-ID", { weekday: "short", day: "numeric", month: "short" })}, ${jam} (${dur})</span></div>
+        ${open ? `<span class="tag qris">Masih buka</span>` : ""}
+      </div>
+      <table class="ledger" style="font-size:14px">
+        <tr><td>Kas awal</td><td>${rp(s.opening_cash)}</td></tr>
+        <tr><td>Penjualan tunai (${s.count} transaksi, QRIS ${rp(s.qris)})</td><td>${rp(s.cash)}</td></tr>
+        ${s.out ? `<tr><td>Uang keluar dari laci</td><td>− ${rp(s.out)}</td></tr>` : ""}
+        <tr class="sum"><td>Seharusnya di laci</td><td>${rp(s.expected)}</td></tr>
+        ${open ? "" : `<tr><td>Dihitung karyawan</td><td>${s.closing_cash == null ? "–" : rp(s.closing_cash)}</td></tr>`}
+      </table>
+      ${diffTxt ? `<div class="change ${s.diff == null ? "" : s.diff < 0 ? "bad" : "ok"}" style="width:100%;text-align:left;${s.diff == null ? "background:#ebe5d8;color:var(--muted)" : ""}">${diffTxt}${s.close_note ? ` · ${esc(s.close_note)}` : ""}</div>` : ""}
+      ${open ? `<button class="btn ghost small" data-forceclose="${s.id}">Tutup paksa</button>` : ""}
+    </div>`;
+  }).join("") : `<div class="empty">Tidak ada shift di periode ini.</div>`;
+}
+async function forceClose(id) {
+  const s = shiftData.find((x) => x.id === id); if (!s) return;
+  if (!confirm(`Tutup paksa shift ${s.employee_name}? Pakai ini kalau karyawan lupa menutup shift. Kas akhir tidak tercatat.`)) return;
+  const { error } = await sb.rpc("force_close_shift", { p_shift: id });
+  if (error) return toast(errMsg(error));
+  toast("Shift ditutup"); renderShifts();
+}
+function exportShiftCsv() {
+  if (!shiftData.length) return toast("Tidak ada data di periode ini");
+  const q = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const lines = [["Karyawan", "Tanggal", "Masuk", "Pulang", "Durasi (menit)", "Kas awal", "Penjualan tunai", "Penjualan QRIS", "Uang keluar", "Seharusnya", "Kas akhir", "Selisih", "Catatan"].map(q).join(";")];
+  shiftData.slice().reverse().forEach((s) => lines.push([s.employee_name, dayKey(s.opened_at), fmtTime(s.opened_at), s.closed_at ? fmtTime(s.closed_at) : "",
+    s.closed_at ? Math.round((new Date(s.closed_at) - new Date(s.opened_at)) / 60000) : "", s.opening_cash, s.cash, s.qris, s.out, s.expected,
+    s.closing_cash ?? "", s.diff ?? "", s.close_note].map(q).join(";")));
+  download(`shift_${$("#shFrom").value}_${$("#shTo").value}.csv`, "﻿sep=;\n" + lines.join("\n"), "text/csv;charset=utf-8");
+}
+
 /* ================= Event ================= */
 document.addEventListener("click", async (e) => {
-  const t = e.target.closest("[data-page],[data-close],[data-tx],[data-edit],[data-range],[data-frange],[data-addfin],[data-delfin],[data-copy],[data-unlink],[data-logout]");
+  const t = e.target.closest("[data-page],[data-close],[data-tx],[data-edit],[data-range],[data-frange],[data-addfin],[data-delfin],[data-copy],[data-unlink],[data-logout],[data-emp],[data-shrange],[data-forceclose]");
   if (!t) return;
   const d = t.dataset;
   if (d.page) go(d.page);
+  else if (d.emp) openEmp(d.emp);
+  else if (d.shrange) setShiftRange(d.shrange);
+  else if (d.forceclose) forceClose(d.forceclose);
   else if (d.close) closeModal(d.close);
   else if (d.tx) showDetail(d.tx);
   else if (d.edit) openProd(d.edit);
@@ -848,6 +1062,12 @@ $("#cpSave").onclick = async () => {
   closeModal("mPass"); toast("Password diganti");
 };
 $("#btnExport").onclick = exportAll;
+$("#btnAddEmp").onclick = () => openEmp(null);
+$("#eSave").onclick = saveEmp;
+$("#eDelete").onclick = deleteEmp;
+$("#shFrom").addEventListener("change", renderShifts);
+$("#shTo").addEventListener("change", renderShifts);
+$("#btnShiftCsv").onclick = exportShiftCsv;
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") $$(".modal.show").forEach((m) => m.classList.remove("show")); });
 document.addEventListener("visibilitychange", () => { if (!document.hidden && shop) refreshToday(); });
 setInterval(renderHeader, 60000);
@@ -858,7 +1078,7 @@ $("#installHint").textContent = installHintText("Admin");
 (async function init() {
   renderHeader();
   $("#histDate").value = dayKey(new Date());
-  setRange("today"); setFinRange("month");
+  setRange("today"); setFinRange("month"); setShiftRange("7", true);
   if (!CONFIGURED) return renderNotConfigured($("main"));
   if (!window.supabase) return showLoading("Gagal memuat aplikasi. Periksa koneksi internet.", true);
   // Error dari link email (misal link kedaluwarsa)

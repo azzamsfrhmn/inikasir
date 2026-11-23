@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/app.css">
+<link rel="stylesheet" href="assets/app.css?v=2">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/kasir-192.png">
 <link rel="apple-touch-icon" href="assets/icons/kasir-180.png">
@@ -26,6 +26,7 @@
   </div>
   <button class="lockbtn install-only" data-install>Instal aplikasi</button>
 </header>
+<div class="shiftbar" id="shiftBar"></div>
 <div class="banner" id="syncBanner"></div>
 
 <main>
@@ -45,6 +46,16 @@
       <button class="btn primary block" id="cSubmit">Sambungkan</button>
       <p class="muted" style="margin:0;font-size:13px" id="installHint"></p>
     </form>
+  </section>
+
+  <!-- Pilih karyawan -->
+  <section class="page" id="view-pick">
+    <div class="auth" style="max-width:560px">
+      <h2>Siapa yang jaga?</h2>
+      <p class="lede">Pilih nama kamu, lalu masukkan PIN untuk mulai shift.</p>
+      <div class="emp-grid" id="empGrid"></div>
+      <p class="muted" style="font-size:13px;margin-top:12px" id="pickNote"></p>
+    </div>
   </section>
 
   <!-- Jualan -->
@@ -110,14 +121,59 @@
   <button class="btn primary block" id="btnNewTx" style="margin-top:8px">Transaksi berikutnya</button>
 </div></div>
 
+<!-- Mulai shift -->
+<div class="modal" id="mStart"><div class="box stack" style="max-width:380px">
+  <h2 id="stTitle">Mulai shift</h2>
+  <div id="stPinStep"><label class="f" for="stPin">PIN</label>
+    <input class="in num pin-mask" id="stPin" type="text" inputmode="numeric" autocomplete="off" maxlength="6" style="font-size:22px;letter-spacing:.2em;text-align:center"></div>
+  <div id="stCashStep" hidden>
+    <label class="f" for="stCash">Kas awal: uang tunai di laci sekarang</label>
+    <input class="in num" id="stCash" inputmode="numeric" placeholder="0" style="font-size:20px;font-weight:700">
+    <p class="muted" style="font-size:13px;margin:6px 0 0">Hitung uang di laci sebelum mulai jualan. Isi 0 kalau laci kosong.</p>
+  </div>
+  <div class="err" id="stErr"></div>
+  <div class="row modal-actions"><div class="grow"></div><button class="btn ghost" data-close="mStart">Batal</button><button class="btn primary" id="stGo">Lanjut</button></div>
+</div></div>
+
+<!-- Menu shift -->
+<div class="modal" id="mShift"><div class="box stack">
+  <div class="row" style="justify-content:space-between"><h2 style="margin:0" id="msTitle">Shift</h2><button class="btn ghost small" data-close="mShift">Tutup</button></div>
+  <div class="muted" id="msSince" style="font-size:14px"></div>
+  <div id="msSummary"></div>
+  <div id="msCashOut" hidden>
+    <h3 style="margin-bottom:8px">Uang keluar dari laci</h3>
+    <div class="stack">
+      <div><label class="f" for="coAmt">Nominal (Rp)</label><input class="in num" id="coAmt" inputmode="numeric"></div>
+      <div><label class="f" for="coCat">Untuk apa</label><input class="in" id="coCat" list="coCats" maxlength="40" placeholder="Contoh: Es batu"><datalist id="coCats"><option value="Es batu"><option value="Kemasan / plastik"><option value="Gas / bahan bakar"><option value="Bahan baku"><option value="Lainnya"></datalist></div>
+      <div><label class="f" for="coNote">Catatan (opsional)</label><input class="in" id="coNote" maxlength="80"></div>
+      <div class="err" id="coErr"></div>
+      <button class="btn ghost" id="coGo">Catat uang keluar</button>
+    </div>
+  </div>
+  <button class="btn danger block" id="btnEndShift">Tutup shift</button>
+</div></div>
+
+<!-- Tutup shift -->
+<div class="modal" id="mEnd"><div class="box stack" style="max-width:420px">
+  <h2 id="enTitle">Tutup shift</h2>
+  <div id="enForm" class="stack">
+    <p class="muted" style="margin:0;font-size:14px">Hitung semua uang tunai di laci, lalu isi jumlahnya. Setelah ditutup, shift tidak bisa dibuka lagi.</p>
+    <div><label class="f" for="enCash">Kas akhir: uang tunai di laci sekarang</label><input class="in num" id="enCash" inputmode="numeric" style="font-size:20px;font-weight:700"></div>
+    <div><label class="f" for="enNote">Catatan (opsional)</label><input class="in" id="enNote" maxlength="200" placeholder="Contoh: uang receh dipakai kembalian"></div>
+  </div>
+  <div id="enResult"></div>
+  <div class="err" id="enErr"></div>
+  <div class="row modal-actions" id="enActions"><div class="grow"></div><button class="btn ghost" data-close="mEnd">Batal</button><button class="btn danger" id="enGo">Tutup shift</button></div>
+</div></div>
+
 <div class="toast" id="toast"></div>
 
-<script src="config.js"></script>
+<script src="config.js?v=2"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="assets/common.js"></script>
+<script src="assets/common.js?v=2"></script>
 <script>
 "use strict";
-const K = { store: "inikasir-kasir-store", cache: "inikasir-kasir-cache", queue: "inikasir-kasir-queue" };
+const K = { store: "inikasir-kasir-store", cache: "inikasir-kasir-cache", queue: "inikasir-kasir-queue", shift: "inikasir-kasir-shift" };
 let sb = null;
 let storeId = local.get(K.store, null);
 let shop = null, products = [];
@@ -125,15 +181,28 @@ let cart = [], activeCat = "Semua", payMethod = "tunai";
 let queue = local.get(K.queue, []);   // penjualan yang belum terkirim ke server
 let queueError = "";
 let lastTx = null;
+let employees = [];                    // karyawan aktif (kosong = toko tanpa sistem shift)
+let shift = local.get(K.shift, null);  // shift yang sedang berjalan di HP ini
 
 /* ---------- Tampilan ---------- */
 function show(view) {
-  ["loading", "connect", "sell"].forEach((v) => {
+  ["loading", "connect", "pick", "sell"].forEach((v) => {
     const el = $("#view-" + v);
     el.classList.toggle("active", v === view);
     if (v === "loading") el.style.display = v === view ? "" : "none";
   });
   $("#cartBar").classList.toggle("hide", view !== "sell" || !cart.length);
+}
+// Toko yang punya karyawan aktif wajib buka shift dulu sebelum jualan
+function gate() {
+  if (!shop) return;
+  if (employees.length && !shift) { renderPick(); show("pick"); }
+  else show("sell");
+  renderShiftBar();
+}
+function renderShiftBar() {
+  $("#shiftBar").innerHTML = shift ? `<span>Shift <b>${esc(shift.employee_name)}</b> sejak ${fmtTime(shift.opened_at)}</span>
+    <button class="btn ghost small" id="btnShiftMenu" style="border-color:var(--leaf);color:var(--leaf)">Menu shift</button>` : "";
 }
 function renderHeader() {
   $("#hdrName").textContent = shop ? shop.name : "Kasir";
@@ -185,9 +254,11 @@ async function refreshData(force) {
   if (!force && Date.now() - lastRefresh < 60000) return;
   lastRefresh = Date.now();
   try {
-    const [s, p] = await Promise.all([
+    const [s, p, e, cs] = await Promise.all([
       sb.from("stores").select("id,name,address,phone").eq("id", storeId).maybeSingle(),
       sb.from("products").select("id,name,price,cat,active").eq("store_id", storeId).eq("active", true).order("cat").order("name"),
+      sb.from("employees").select("id,name,perms").eq("store_id", storeId).eq("active", true).order("name"),
+      sb.rpc("current_shift", { p_store: storeId }),
     ]);
     if (s.error) throw s.error;
     if (p.error) throw p.error;
@@ -197,9 +268,11 @@ async function refreshData(force) {
       return;
     }
     shop = s.data; products = p.data;
-    local.set(K.cache, { storeId, shop, products });
+    employees = e.error ? employees : e.data;   // tabel karyawan belum ada = toko tanpa shift
+    if (!cs.error) setShift(cs.data);           // null = shift sudah ditutup (misal oleh pemilik)
+    local.set(K.cache, { storeId, shop, products, employees });
     renderHeader(); renderCats(); renderCart();
-    if (!$("#view-sell").classList.contains("active")) show("sell");
+    gate();
   } catch (e) {
     if (!shop) {
       $("#view-loading").innerHTML = `${esc(errMsg(e))}<br><br><button class="btn primary" onclick="location.reload()">Coba lagi</button>`;
@@ -220,8 +293,12 @@ async function flushQueue() {
       const { data, error } = await sb.rpc("record_sale", {
         p_id: tx.id, p_store: tx.store_id,
         p_items: tx.items.map((i) => ({ product_id: i.product_id, name: i.name, price: i.price, qty: i.qty })),
-        p_method: tx.method, p_paid: tx.paid, p_time: tx.time,
+        p_method: tx.method, p_paid: tx.paid, p_time: tx.time, ...(tx.shift_id ? { p_shift: tx.shift_id } : {}),
       });
+      if (error && tx.shift_id && /Shift sudah ditutup|Shift tidak valid/.test(error.message)) {
+        // shift ditutup pemilik sebelum penjualan ini terkirim: tetap simpan penjualannya tanpa shift
+        tx.shift_id = null; local.set(K.queue, queue); continue;
+      }
       if (error) { queueError = isNetworkError(error) ? "" : errMsg(error); break; }
       queueError = "";
       queue.shift(); local.set(K.queue, queue);
@@ -318,6 +395,7 @@ function updateChange() {
   else { box.className = "change ok"; box.textContent = "Kembalian " + rp(paid - total); $("#btnFinish").disabled = false; }
 }
 function finishPay() {
+  if (employees.length && !shift) { closeModal("mPay"); gate(); return toast("Buka shift dulu sebelum jualan"); }
   const total = cartTotal();
   let paid = total, change = 0;
   if (payMethod === "tunai") {
@@ -328,6 +406,7 @@ function finishPay() {
     id: uuid(), store_id: storeId, time: new Date().toISOString(), no: null, synced: false,
     items: cart.map((c) => ({ product_id: c.pid, name: c.name, price: c.price, qty: c.qty })),
     total, method: payMethod, paid, change,
+    shift_id: shift ? shift.id : null, employee_name: shift ? shift.employee_name : "",
   };
   queue.push(tx); local.set(K.queue, queue);
   lastTx = tx;
@@ -345,12 +424,149 @@ function renderReceipt() {
   $("#printArea").innerHTML = receiptHTML(shop, tx);
 }
 
+/* ---------- Shift karyawan ---------- */
+let startEmp = null, startPin = "";
+function setShift(sh) {
+  shift = sh || null;
+  if (shift) local.set(K.shift, shift); else local.del(K.shift);
+}
+const can = (perm) => !!(shift && shift.perms && shift.perms[perm]);
+function renderPick() {
+  $("#empGrid").innerHTML = employees.map((m) => `<button class="emp-btn" data-pick="${m.id}">${esc(m.name)}</button>`).join("");
+  $("#pickNote").textContent = navigator.onLine ? "" : "Tidak ada internet. Buka shift butuh internet; setelah shift terbuka, jualan tetap bisa walau sinyal hilang.";
+}
+function openStart(id) {
+  startEmp = employees.find((m) => m.id === id); if (!startEmp) return;
+  startPin = "";
+  $("#stTitle").textContent = "Halo, " + startEmp.name;
+  $("#stPinStep").hidden = false; $("#stCashStep").hidden = true;
+  $("#stPin").value = ""; $("#stCash").value = ""; $("#stErr").textContent = "";
+  $("#stGo").textContent = "Lanjut";
+  openModal("mStart"); setTimeout(() => $("#stPin").focus(), 50);
+}
+async function submitStart() {
+  const cashStep = !$("#stCashStep").hidden;
+  if (!cashStep) {
+    startPin = $("#stPin").value.trim();
+    if (!/^\d{4,6}$/.test(startPin)) return ($("#stErr").textContent = "PIN 4 sampai 6 angka.");
+  }
+  const btn = $("#stGo"); setBusy(btn, "Memeriksa...");
+  const { data, error } = await sb.rpc("start_shift", {
+    p_store: storeId, p_employee: startEmp.id, p_pin: startPin,
+    p_opening_cash: cashStep ? parseNum($("#stCash").value) : null, p_device_name: "",
+  });
+  setBusy(btn);
+  if (error) return ($("#stErr").textContent = errMsg(error));
+  if (!data.ok && data.need_opening_cash) {
+    $("#stPinStep").hidden = true; $("#stCashStep").hidden = false; $("#stErr").textContent = "";
+    $("#stGo").textContent = "Mulai shift";
+    return setTimeout(() => $("#stCash").focus(), 50);
+  }
+  if (!data.ok) { $("#stErr").textContent = data.error; if (!cashStep) $("#stPin").value = ""; return; }
+  setShift(data.shift); startPin = "";
+  closeModal("mStart"); gate();
+  toast(data.resumed ? `Shift ${data.shift.employee_name} dilanjutkan` : `Shift dimulai. Selamat jualan, ${data.shift.employee_name}.`);
+}
+async function openShiftMenu() {
+  if (!shift) return;
+  $("#msTitle").textContent = "Shift " + shift.employee_name;
+  $("#msSince").textContent = `Mulai ${new Date(shift.opened_at).toLocaleString("id-ID", { weekday: "long", hour: "2-digit", minute: "2-digit" })}, kas awal ${rp(shift.opening_cash)}`;
+  $("#msCashOut").hidden = !can("cash_out");
+  $("#coErr").textContent = "";
+  $("#msSummary").innerHTML = can("view_shift") ? `<div class="empty">Memuat ringkasan...</div>` : "";
+  openModal("mShift");
+  if (can("view_shift")) loadShiftSummary();
+}
+function summaryTable(sm) {
+  return `<table class="ledger">
+    <tr><td>Kas awal</td><td>${rp(sm.opening_cash)}</td></tr>
+    <tr><td>Penjualan tunai</td><td>${rp(sm.cash_sales)}</td></tr>
+    ${sm.cash_out ? `<tr><td>Uang keluar</td><td>− ${rp(sm.cash_out)}</td></tr>` : ""}
+    <tr class="sum"><td>Seharusnya di laci</td><td>${rp(sm.expected_cash)}</td></tr>
+  </table>
+  <div class="muted" style="font-size:13px;margin-top:6px">${sm.tx_count} transaksi · QRIS ${rp(sm.qris_sales)} (masuk rekening, tidak di laci)</div>`;
+}
+async function loadShiftSummary() {
+  await flushQueue();
+  const { data, error } = await sb.rpc("shift_summary", { p_shift: shift.id });
+  if (error) return ($("#msSummary").innerHTML = `<div class="empty">${esc(errMsg(error))}</div>`);
+  const pending = queue.filter((t) => t.shift_id === shift.id).length;
+  $("#msSummary").innerHTML = summaryTable(data) +
+    (pending ? `<div class="note" style="margin-top:8px">${pending} penjualan belum terkirim dan belum masuk hitungan ini.</div>` : "") +
+    `<h3 style="margin:14px 0 4px">Penjualan shift ini</h3><div class="list">${data.transactions.length ? data.transactions.map((t) => `
+      <div class="it">
+        <div class="grow"><div><b class="num">${fmtTime(t.created_at)}</b> <span class="muted" style="font-size:12px">${esc(t.no)}</span></div>
+          <div class="muted" style="font-size:13px">${esc(t.items.map((i) => i.qty + "× " + i.name).join(", "))}</div></div>
+        <div class="right"><div class="num" style="font-weight:700;${t.voided ? "text-decoration:line-through;color:var(--muted)" : ""}">${rp(t.total)}</div>
+          ${t.voided ? `<span class="tag void">Batal</span>` : can("void_own") ? `<button class="btn ghost small" data-void="${t.id}" data-no="${esc(t.no)}">Batalkan</button>` : `<span class="tag ${t.method}">${t.method === "qris" ? "QRIS" : "Tunai"}</span>`}</div>
+      </div>`).join("") : `<div class="empty">Belum ada penjualan di shift ini.</div>`}</div>`;
+}
+async function voidSale(id, no) {
+  if (!confirm(`Batalkan transaksi ${no}? Transaksi tidak dihitung lagi di laporan.`)) return;
+  const { error } = await sb.rpc("void_own_sale", { p_shift: shift.id, p_tx: id });
+  if (error) return toast(errMsg(error));
+  toast("Transaksi dibatalkan"); loadShiftSummary();
+}
+async function submitCashOut() {
+  const amount = parseNum($("#coAmt").value), cat = $("#coCat").value.trim();
+  if (!amount) return ($("#coErr").textContent = "Isi nominalnya.");
+  if (!cat) return ($("#coErr").textContent = "Isi untuk apa uangnya dipakai.");
+  const btn = $("#coGo"); setBusy(btn, "Menyimpan...");
+  const { error } = await sb.rpc("cash_out", { p_shift: shift.id, p_amount: amount, p_cat: cat, p_note: $("#coNote").value.trim() });
+  setBusy(btn);
+  if (error) return ($("#coErr").textContent = errMsg(error));
+  $("#coAmt").value = $("#coCat").value = $("#coNote").value = ""; $("#coErr").textContent = "";
+  toast(`Uang keluar ${rp(amount)} dicatat`);
+  if (can("view_shift")) loadShiftSummary();
+}
+function openEndShift() {
+  if (cart.length && !confirm("Masih ada pesanan di keranjang yang belum dibayar. Tetap tutup shift?")) return;
+  closeModal("mShift");
+  $("#enTitle").textContent = "Tutup shift " + shift.employee_name;
+  $("#enForm").hidden = false; $("#enResult").innerHTML = ""; $("#enErr").textContent = "";
+  $("#enActions").innerHTML = `<div class="grow"></div><button class="btn ghost" data-close="mEnd">Batal</button><button class="btn danger" id="enGo">Tutup shift</button>`;
+  openModal("mEnd"); setTimeout(() => $("#enCash").focus(), 50);
+}
+async function submitEndShift() {
+  if ($("#enCash").value.trim() === "") return ($("#enErr").textContent = "Isi jumlah uang di laci (isi 0 kalau kosong).");
+  const btn = $("#enGo"); setBusy(btn, "Mengirim penjualan...");
+  await flushQueue();
+  const pending = queue.filter((t) => t.shift_id === shift.id).length;
+  if (pending) {
+    setBusy(btn);
+    return ($("#enErr").textContent = `Masih ada ${pending} penjualan belum terkirim. Tutup shift butuh internet supaya semua penjualan tercatat. Coba lagi saat ada sinyal.`);
+  }
+  if (!confirm(`Tutup shift dengan kas akhir ${rp(parseNum($("#enCash").value))}?`)) return setBusy(btn);
+  setBusy(btn, "Menutup...");
+  const { data, error } = await sb.rpc("end_shift", { p_shift: shift.id, p_closing_cash: parseNum($("#enCash").value), p_note: $("#enNote").value.trim() });
+  setBusy(btn);
+  if (error) return ($("#enErr").textContent = errMsg(error));   // isian tetap ada, bisa dicoba lagi
+  const name = shift.employee_name;
+  setShift(null); cart = []; renderCart();
+  $("#enForm").hidden = true; $("#enErr").textContent = "";
+  const sm = data.summary;
+  if (sm) {
+    const diff = sm.closing_cash - sm.expected_cash;
+    $("#enResult").innerHTML = summaryTable(sm) + `<table class="ledger" style="margin-top:6px"><tr><td>Dihitung</td><td>${rp(sm.closing_cash)}</td></tr></table>
+      <div class="change ${diff < 0 ? "bad" : "ok"}" style="margin-top:8px">${diff === 0 ? "Pas, tidak ada selisih" : `${diff > 0 ? "Lebih" : "Kurang"} ${rp(Math.abs(diff))}`}</div>`;
+  } else {
+    $("#enResult").innerHTML = `<div class="change ok">Shift ditutup. Terima kasih, ${esc(name)}.</div>`;
+  }
+  $("#enActions").innerHTML = `<div class="grow"></div><button class="btn primary" data-close="mEnd" id="enDone">Selesai</button>`;
+  $("#enCash").value = ""; $("#enNote").value = "";
+  gate();
+}
+
 /* ---------- Event ---------- */
 document.addEventListener("click", (e) => {
-  const t = e.target.closest("[data-pid],[data-cat],[data-inc],[data-dec],[data-close],[data-method],[data-cash]");
+  const t = e.target.closest("[data-pid],[data-cat],[data-inc],[data-dec],[data-close],[data-method],[data-cash],[data-pick],[data-void],#btnShiftMenu,#enGo");
   if (!t) return;
   const d = t.dataset;
-  if (d.pid) addToCart(d.pid);
+  if (t.id === "btnShiftMenu") openShiftMenu();
+  else if (t.id === "enGo") submitEndShift();
+  else if (d.pick) openStart(d.pick);
+  else if (d.void) voidSale(d.void, d.no);
+  else if (d.pid) addToCart(d.pid);
   else if (d.cat !== undefined) { activeCat = d.cat; renderCats(); renderProducts(); }
   else if (d.inc !== undefined) { cart[+d.inc].qty++; renderCart(); }
   else if (d.dec !== undefined) { const c = cart[+d.dec]; if (--c.qty <= 0) cart.splice(+d.dec, 1); renderCart(); if (!cart.length) setCartOpen(false); }
@@ -368,11 +584,18 @@ bindMoneyInput($("#cashIn"));
 $("#cashIn").addEventListener("input", updateChange);
 $("#cashIn").addEventListener("keydown", (e) => { if (e.key === "Enter" && !$("#btnFinish").disabled) finishPay(); });
 $("#btnFinish").onclick = finishPay;
+$("#stGo").onclick = submitStart;
+$("#stPin").addEventListener("keydown", (e) => { if (e.key === "Enter") submitStart(); });
+$("#stCash").addEventListener("keydown", (e) => { if (e.key === "Enter") submitStart(); });
+bindMoneyInput($("#stCash")); bindMoneyInput($("#enCash")); bindMoneyInput($("#coAmt"));
+$("#coGo").onclick = submitCashOut;
+$("#btnEndShift").onclick = openEndShift;
+window.addEventListener("offline", () => { if ($("#view-pick").classList.contains("active")) renderPick(); });
 $("#btnNewTx").onclick = () => closeModal("mReceipt");
 $("#btnPrint").onclick = () => window.print();
 $("#btnShare").onclick = () => lastTx && shareText(receiptText(shop, lastTx));
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") { $$(".modal.show").forEach((m) => m.classList.remove("show")); setCartOpen(false); } });
-window.addEventListener("online", () => { flushQueue(); refreshData(); });
+window.addEventListener("online", () => { flushQueue(); refreshData(true); });
 document.addEventListener("visibilitychange", () => { if (!document.hidden && storeId) { flushQueue(); refreshData(); } });
 setInterval(flushQueue, 20000);
 setInterval(renderHeader, 60000);
@@ -390,8 +613,8 @@ $("#installHint").textContent = installHintText("Kasir");
   sb = makeClient("inikasir-kasir");
   const cache = local.get(K.cache, null);
   if (storeId && cache && cache.storeId === storeId) {
-    shop = cache.shop; products = cache.products;
-    renderHeader(); renderCats(); renderCart(); show("sell");
+    shop = cache.shop; products = cache.products; employees = cache.employees || [];
+    renderHeader(); renderCats(); renderCart(); gate();
   }
   const { data: { session }, error } = await sb.auth.getSession();
   if (!session || !storeId) {

@@ -198,3 +198,14 @@ body.can-install .install-only{display:inline-flex!important;align-items:center}
   .modal{align-items:flex-start;padding:12px}
   .modal .box{max-height:calc(100dvh - 24px)}
 }
+
+/* Hak akses karyawan: baris centang dengan penjelasan, target sentuh 44px */
+.perm{display:flex;gap:10px;align-items:flex-start;padding:8px 0;font-size:14px;min-height:44px;cursor:pointer}
+.perm input{margin-top:3px;width:18px;height:18px;flex:none;accent-color:var(--leaf)}
+.perm .muted{font-size:13px}
+/* Pilih karyawan di HP kasir */
+.emp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.emp-btn{border:1px solid var(--line);background:var(--card);border-radius:var(--r-md);min-height:72px;padding:12px;font-size:17px;font-weight:700;text-align:left}
+.emp-btn:active{background:var(--leaf-soft)}
+.shiftbar{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--leaf-soft);color:var(--leaf);padding:6px 16px;font-size:14px}
+.shiftbar:empty{display:none}

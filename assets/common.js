@@ -41,6 +41,8 @@ function download(name, content, type) {
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
+// Tombol jadi tidak aktif + teks proses selama menunggu server; panggil tanpa teks untuk mengembalikan
+function setBusy(el, text) { if (!el) return; if (text && !el.disabled) el.dataset.label = el.textContent; el.disabled = !!text; el.textContent = text || el.dataset.label || el.textContent; }
 function bindMoneyInput(el) {
   el.addEventListener("input", () => { const n = parseNum(el.value); el.value = n ? n.toLocaleString("id-ID") : ""; });
 }
@@ -98,6 +100,7 @@ function receiptHTML(shop, tx) {
     <div class="c"><b style="font-size:15px">${esc(shop.name)}</b>${shop.address ? "<br>" + esc(shop.address) : ""}${shop.phone ? "<br>WA " + esc(shop.phone) : ""}</div>
     <hr>
     <div class="l"><span>${tx.no ? esc(tx.no) : "No. menyusul"}</span><span>${new Date(tx.time).toLocaleDateString("id-ID")} ${fmtTime(tx.time)}</span></div>
+    ${tx.employee_name ? `<div class="l"><span>Kasir</span><span>${esc(tx.employee_name)}</span></div>` : ""}
     <hr>
     ${tx.items.map((i) => `<div>${esc(i.name)}</div><div class="l"><span>&nbsp;${i.qty} x ${i.price.toLocaleString("id-ID")}</span><span>${(i.qty * i.price).toLocaleString("id-ID")}</span></div>`).join("")}
     <hr>
@@ -112,7 +115,9 @@ function receiptText(shop, tx) {
   const L = [];
   L.push(`*${shop.name}*`); if (shop.address) L.push(shop.address);
   if (tx.no) L.push(`No: ${tx.no}`);
-  L.push(`${new Date(tx.time).toLocaleDateString("id-ID")} ${fmtTime(tx.time)}`, "------------------");
+  L.push(`${new Date(tx.time).toLocaleDateString("id-ID")} ${fmtTime(tx.time)}`);
+  if (tx.employee_name) L.push(`Kasir: ${tx.employee_name}`);
+  L.push("------------------");
   tx.items.forEach((i) => L.push(i.name, `  ${i.qty} x ${rp(i.price)} = ${rp(i.qty * i.price)}`));
   L.push("------------------", `*TOTAL ${rp(tx.total)}*`, `Bayar (${tx.method === "qris" ? "QRIS" : "Tunai"}): ${rp(tx.paid)}`);
   if (tx.method === "tunai") L.push(`Kembali: ${rp(tx.change)}`);
