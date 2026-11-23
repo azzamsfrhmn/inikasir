@@ -201,20 +201,6 @@
       </div>
 
       <div class="card stack">
-        <h3>QRIS</h3>
-        <p class="muted" style="margin:0;font-size:14px">Upload foto atau screenshot QRIS statis BCA. Kalau kodenya terbaca, tiap transaksi di HP kasir muncul QR dengan nominal yang sudah terisi. Kalau tidak terbaca, yang ditampilkan foto QRIS aslinya.</p>
-        <input type="file" accept="image/*" id="qrisFile" class="in">
-        <div id="qrisStatus"></div>
-        <details>
-          <summary class="muted" style="font-size:13px;cursor:pointer">Atau tempel kode QRIS manual</summary>
-          <textarea class="in" id="qrisText" rows="4" style="margin-top:8px;font-family:monospace;font-size:12px" placeholder="00020101021126..."></textarea>
-          <button class="btn ghost" id="btnQrisText" style="margin-top:8px">Pakai kode ini</button>
-        </details>
-        <label class="row" style="font-size:14px"><input type="checkbox" id="setDynamic"> Isi nominal otomatis di QR (disarankan)</label>
-        <button class="btn danger" id="btnQrisDel">Hapus QRIS</button>
-      </div>
-
-      <div class="card stack">
         <h3>Akun</h3>
         <div class="muted" style="font-size:14px">Masuk sebagai <b id="accEmail"></b></div>
         <div class="row wrap">
@@ -301,7 +287,6 @@
 
 <script src="../config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 <script src="../assets/common.js"></script>
 <script>
 "use strict";
@@ -720,11 +705,9 @@ async function deleteProd() {
 let hasPin = false, devices = [];
 async function renderSettings() {
   $("#setName").value = shop.name; $("#setAddr").value = shop.address; $("#setPhone").value = shop.phone;
-  $("#setDynamic").checked = !!shop.dynamic_qris;
   $("#joinCode").textContent = shop.join_code;
   $("#linkKasir").value = BASE;
   $("#accEmail").textContent = user.email || "";
-  renderQrisStatus();
   renderOnboarding();
   const [pin, dev] = await Promise.all([
     sb.rpc("has_kasir_pin", { p_store: shop.id }),
@@ -745,56 +728,20 @@ async function renderSettings() {
 function renderOnboarding() {
   const steps = [
     [hasPin, "Atur PIN kasir", "di bagian Penjaga kasir"],
-    [!!(shop.qris_string || shop.qris_image), "Upload QRIS BCA", "di bagian QRIS"],
     [false, "Cek nama dan harga produk", "di menu Produk"],
     [devices.length > 0, "Sambungkan HP penjaga", "buka link kasir di HP itu"],
   ];
   const done = steps.filter((s) => s[0]).length;
-  $("#onboarding").style.display = hasPin && devices.length && (shop.qris_string || shop.qris_image) ? "none" : "";
+  $("#onboarding").style.display = hasPin && devices.length ? "none" : "";
   $("#onboarding").innerHTML = `<h3>Langkah awal (${done} dari ${steps.length})</h3>
     <ol style="margin:0;padding-left:20px;line-height:1.9">${steps.map(([ok, t, w]) => `<li${ok ? ' style="color:var(--muted);text-decoration:line-through"' : ""}><b>${t}</b> <span class="muted">${w}</span></li>`).join("")}</ol>`;
-}
-function renderQrisStatus() {
-  let html = "";
-  if (shop.qris_string) html += `<div class="change ok" style="text-align:left">Kode QRIS terbaca: ${esc(qrisMerchantName(shop.qris_string) || "nama merchant tidak tercantum")}</div>`;
-  else if (shop.qris_image) html += `<div class="note">QRIS tersimpan sebagai gambar saja (kodenya tidak terbaca). Pembeli harus mengetik nominal sendiri.</div>`;
-  else html += `<div class="muted" style="font-size:14px">Belum ada QRIS. Pilih foto QRIS di atas.</div>`;
-  if (shop.qris_image) html += `<img src="${esc(shop.qris_image)}" alt="QRIS tersimpan" width="180" style="max-width:180px;height:auto;border:1px solid var(--line);border-radius:var(--r-sm);margin-top:8px;display:block">`;
-  $("#qrisStatus").innerHTML = html;
 }
 async function updateShop(patch, okMsg) {
   const { data, error } = await sb.from("stores").update(patch).eq("id", shop.id).select().single();
   if (error) { toast(errMsg(error)); return false; }
-  shop = data; renderHeader(); renderQrisStatus(); renderOnboarding();
+  shop = data; renderHeader(); renderOnboarding();
   if (okMsg) toast(okMsg);
   return true;
-}
-function handleQrisFile(file) {
-  if (!file) return;
-  const img = new Image(), reader = new FileReader();
-  reader.onload = () => { img.src = reader.result; };
-  img.onload = async () => {
-    const maxSide = 700, sc = Math.min(1, maxSide / Math.max(img.width, img.height));
-    const c = document.createElement("canvas"); c.width = Math.round(img.width * sc); c.height = Math.round(img.height * sc);
-    const ctx = c.getContext("2d"); ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, c.width, c.height); ctx.drawImage(img, 0, 0, c.width, c.height);
-    const image = c.toDataURL("image/jpeg", 0.85);
-    let code = null;
-    if (window.jsQR) {
-      for (const side of [1600, 1000, 700]) {
-        const s2 = Math.min(1, side / Math.max(img.width, img.height));
-        const c2 = document.createElement("canvas"); c2.width = Math.round(img.width * s2); c2.height = Math.round(img.height * s2);
-        const x2 = c2.getContext("2d"); x2.drawImage(img, 0, 0, c2.width, c2.height);
-        const d = x2.getImageData(0, 0, c2.width, c2.height);
-        code = jsQR(d.data, d.width, d.height, { inversionAttempts: "attemptBoth" });
-        if (code) break;
-      }
-    }
-    const valid = code && !validateQris(code.data);
-    await updateShop({ qris_image: image, qris_string: valid ? code.data.trim() : "" },
-      valid ? "QRIS terbaca dan disimpan" : code ? "QR terbaca tapi: " + validateQris(code.data) : "Kode QR tidak terbaca, gambar tetap disimpan");
-  };
-  img.onerror = () => toast("Gambar tidak bisa dibuka");
-  reader.readAsDataURL(file);
 }
 async function savePin() {
   const pin = $("#pinIn").value.trim();
@@ -812,7 +759,7 @@ async function exportAll() {
       fetchAll(() => sb.from("cashflow").select("*").eq("store_id", shop.id).order("date")),
       fetchAll(() => sb.from("products").select("*").eq("store_id", shop.id)),
     ]);
-    const { qris_image, ...info } = shop;
+    const { qris_image, qris_string, dynamic_qris, ...info } = shop;
     download(`data_${shop.name.replace(/\W+/g, "_")}_${dayKey(new Date())}.json`, JSON.stringify({ toko: info, produk: pr, transaksi: tx, kas: cf }, null, 1), "application/json");
   } catch (e) { toast(errMsg(e)); }
 }
@@ -867,15 +814,6 @@ $("#btnAddProd").onclick = () => openProd(null);
 $("#pSave").onclick = saveProd;
 $("#pDelete").onclick = deleteProd;
 $("#btnSaveInfo").onclick = () => updateShop({ name: $("#setName").value.trim() || "Toko Saya", address: $("#setAddr").value.trim(), phone: $("#setPhone").value.trim() }, "Info toko disimpan");
-$("#qrisFile").addEventListener("change", (e) => { handleQrisFile(e.target.files[0]); e.target.value = ""; });
-$("#btnQrisText").onclick = async () => {
-  // hanya buang baris baru; spasi di dalam kode QRIS (misal nama merchant) harus tetap ada
-  const s = $("#qrisText").value.replace(/[\r\n\t]+/g, "").trim(), err = validateQris(s);
-  if (err) return toast(err);
-  if (await updateShop({ qris_string: s }, "Kode QRIS disimpan")) $("#qrisText").value = "";
-};
-$("#setDynamic").addEventListener("change", (e) => updateShop({ dynamic_qris: e.target.checked }));
-$("#btnQrisDel").onclick = () => { if (confirm("Hapus QRIS yang tersimpan?")) updateShop({ qris_string: "", qris_image: "" }, "QRIS dihapus"); };
 $("#btnSetPin").onclick = () => { $("#pinErr").textContent = ""; $("#pinIn").value = ""; openModal("mPin"); setTimeout(() => $("#pinIn").focus(), 50); };
 $("#pinSave").onclick = savePin;
 $("#pinIn").addEventListener("keydown", (e) => { if (e.key === "Enter") savePin(); });

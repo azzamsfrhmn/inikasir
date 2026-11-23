@@ -81,11 +81,11 @@
     <div class="change" id="changeBox"></div>
   </div>
   <div id="payQris" hidden>
-    <div class="qrwrap">
-      <div id="qrBox"></div>
-      <div class="muted" id="qrCaption" style="font-size:13px;text-align:center"></div>
+    <div style="text-align:center;padding:4px 0 14px">
+      <div class="muted" style="font-size:14px">Minta pembeli scan QRIS yang tercetak dan bayar</div>
+      <div class="num" id="qrisAmount" style="font-size:36px;font-weight:800;margin-top:4px">Rp0</div>
     </div>
-    <div class="note">Cek dulu notifikasi atau mutasi BCA. Tekan "Sudah dibayar" setelah uangnya benar-benar masuk.</div>
+    <div class="note">Tekan "Sudah dibayar" setelah melihat layar pembayaran berhasil di HP pembeli, dengan nominal dan nama toko yang benar.</div>
   </div>
   <button class="btn primary block" id="btnFinish" style="margin-top:16px">Selesaikan</button>
 </div></div>
@@ -105,7 +105,6 @@
 
 <script src="config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="assets/common.js"></script>
 <script>
 "use strict";
@@ -178,7 +177,7 @@ async function refreshData(force) {
   lastRefresh = Date.now();
   try {
     const [s, p] = await Promise.all([
-      sb.from("stores").select("id,name,address,phone,qris_string,qris_image,dynamic_qris").eq("id", storeId).maybeSingle(),
+      sb.from("stores").select("id,name,address,phone").eq("id", storeId).maybeSingle(),
       sb.from("products").select("id,name,price,cat,active").eq("store_id", storeId).eq("active", true).order("cat").order("name"),
     ]);
     if (s.error) throw s.error;
@@ -300,34 +299,14 @@ function setMethod(m) {
   $("#payTunai").hidden = m !== "tunai";
   $("#payQris").hidden = m !== "qris";
   $("#btnFinish").textContent = m === "qris" ? "Sudah dibayar" : "Selesaikan";
-  if (m === "qris") renderQr(); else updateChange();
+  if (m === "qris") { $("#qrisAmount").textContent = rp(cartTotal()); $("#btnFinish").disabled = false; }
+  else updateChange();
 }
 function updateChange() {
   const total = cartTotal(), paid = parseNum($("#cashIn").value), box = $("#changeBox");
   if (!paid) { box.className = "change"; box.textContent = ""; $("#btnFinish").disabled = false; return; }
   if (paid < total) { box.className = "change bad"; box.textContent = "Kurang " + rp(total - paid); $("#btnFinish").disabled = true; }
   else { box.className = "change ok"; box.textContent = "Kembalian " + rp(paid - total); $("#btnFinish").disabled = false; }
-}
-function renderQr() {
-  const total = cartTotal(), box = $("#qrBox"), cap = $("#qrCaption");
-  box.innerHTML = ""; $("#btnFinish").disabled = false;
-  if (shop.qris_string && shop.dynamic_qris && window.QRCode) {
-    try {
-      new QRCode(box, { text: qrisWithAmount(shop.qris_string, total), width: 480, height: 480, correctLevel: QRCode.CorrectLevel.M });
-      cap.innerHTML = `${esc(qrisMerchantName(shop.qris_string))}<br>Nominal ${rp(total)} sudah terisi`;
-      return;
-    } catch (e) { console.warn(e); }
-  }
-  if (shop.qris_image) {
-    box.innerHTML = `<img src="${esc(shop.qris_image)}" alt="QRIS" width="240" height="240">`;
-    cap.innerHTML = `Minta pembeli scan dan ketik nominal <b style="font-size:16px">${rp(total)}</b>`;
-  } else if (shop.qris_string && window.QRCode) {
-    new QRCode(box, { text: shop.qris_string, width: 480, height: 480, correctLevel: QRCode.CorrectLevel.M });
-    cap.innerHTML = `Minta pembeli scan dan ketik nominal <b style="font-size:16px">${rp(total)}</b>`;
-  } else {
-    box.innerHTML = `<div class="empty" style="width:240px">QRIS belum dipasang. Minta pemilik upload QRIS di halaman admin, atau terima tunai dulu.</div>`;
-    cap.textContent = ""; $("#btnFinish").disabled = true;
-  }
 }
 function finishPay() {
   const total = cartTotal();

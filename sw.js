@@ -1,11 +1,10 @@
 // Service worker: menyimpan file aplikasi di HP supaya halaman kasir tetap bisa dibuka
 // saat tidak ada sinyal. Data (Supabase) tidak pernah di-cache di sini; penjualan offline
 // disimpan oleh halaman kasir sendiri lalu dikirim saat online.
-const CACHE = "inikasir-v2";
+const CACHE = "inikasir-v3";
 const SHELL = [
   "./", "index.html", "config.js", "assets/app.css", "assets/common.js",
   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js",
-  "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js",
 ];
 
 self.addEventListener("install", (e) => {

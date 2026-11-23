@@ -69,48 +69,6 @@ function errMsg(e) {
   return m || "Terjadi kesalahan.";
 }
 
-/* ---------- QRIS (EMVCo) ---------- */
-function crc16(str) {
-  let crc = 0xffff;
-  for (let i = 0; i < str.length; i++) {
-    crc ^= str.charCodeAt(i) << 8;
-    for (let j = 0; j < 8; j++) crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) & 0xffff : (crc << 1) & 0xffff;
-  }
-  return crc.toString(16).toUpperCase().padStart(4, "0");
-}
-function parseTLV(s) {
-  const out = []; let i = 0;
-  while (i < s.length) {
-    const tag = s.substr(i, 2), len = parseInt(s.substr(i + 2, 2), 10);
-    if (!/^\d\d$/.test(tag) || isNaN(len)) throw new Error("Format QRIS rusak");
-    out.push({ tag, val: s.substr(i + 4, len) }); i += 4 + len;
-  }
-  if (i !== s.length) throw new Error("Panjang data QRIS tidak cocok");
-  return out;
-}
-const buildTLV = (list) => list.map((x) => x.tag + pad(x.val.length) + x.val).join("");
-function validateQris(s) {
-  s = (s || "").trim();
-  if (!s.startsWith("000201")) return "Bukan kode QRIS yang valid.";
-  if (!/6304[0-9A-Fa-f]{4}$/.test(s)) return "Kode QRIS tidak punya checksum.";
-  if (crc16(s.slice(0, -4)) !== s.slice(-4).toUpperCase()) return "Checksum QRIS tidak cocok (kode rusak atau terpotong).";
-  try { parseTLV(s); } catch (e) { return e.message; }
-  if (!s.includes("ID.CO.QRIS") && !s.includes("A000000677010111")) return "Kode terbaca, tapi sepertinya bukan QRIS Indonesia.";
-  return "";
-}
-function qrisWithAmount(base, amount) {
-  let tlv = parseTLV(base.trim()).filter((x) => !["54", "55", "56", "57", "63"].includes(x.tag));
-  tlv = tlv.map((x) => (x.tag === "01" ? { tag: "01", val: "12" } : x));
-  const amt = { tag: "54", val: String(Math.round(amount)) };
-  const idx = tlv.findIndex((x) => parseInt(x.tag, 10) > 54);
-  if (idx === -1) tlv.push(amt); else tlv.splice(idx, 0, amt);
-  const body = buildTLV(tlv) + "6304";
-  return body + crc16(body);
-}
-function qrisMerchantName(s) {
-  try { return (parseTLV(s).find((x) => x.tag === "59") || {}).val || ""; } catch (e) { return ""; }
-}
-
 /* ---------- Struk ---------- */
 // shop: {name, address, phone}; tx: {no, time, items:[{name,price,qty}], total, method, paid, change, voided}
 function receiptHTML(shop, tx) {

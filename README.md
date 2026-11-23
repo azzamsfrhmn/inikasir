@@ -2,7 +2,7 @@
 
 Aplikasi kasir sederhana untuk usaha jajanan: jualan di HP penjaga, laporan dan keuangan di halaman pemilik.
 
-- **Halaman kasir** (`/`): untuk penjaga. Hanya bisa mencatat penjualan (tunai atau QRIS). Tetap bisa jualan saat sinyal hilang; penjualan dikirim otomatis begitu online.
+- **Halaman kasir** (`/`): untuk penjaga. Hanya bisa mencatat penjualan, tunai atau QRIS (pembeli scan QRIS yang tercetak di toko). Tetap bisa jualan saat sinyal hilang; penjualan dikirim otomatis begitu online.
 - **Halaman admin** (`/admin/`): untuk pemilik. Daftar dan masuk pakai email. Berisi laporan, keuangan, riwayat, produk, dan pengaturan kasir. Bisa dibuka dari HP mana saja.
 
 Data disimpan di [Supabase](https://supabase.com) (paket gratis cukup). Aturan akses ada di database, jadi penjaga benar-benar tidak bisa membaca transaksi atau keuangan, bukan sekadar disembunyikan di tampilan.
@@ -38,7 +38,7 @@ Anon key aman ditaruh di sini karena semua akses dijaga aturan di database. **Ja
 
 ### 5. Mulai pakai
 1. Pemilik buka `/admin/`, **Daftar**, klik link konfirmasi di email, lalu **Buat toko**.
-2. Di **Setelan**: atur **PIN kasir**, upload **QRIS**, cek **Produk**.
+2. Di **Setelan**: atur **PIN kasir**, lalu cek nama dan harga di **Produk**.
 3. Di HP penjaga buka `/` (halaman kasir), masukkan **kode toko** dan **PIN kasir**. Tambahkan ke layar utama lewat menu Chrome.
 
 ## Catatan
