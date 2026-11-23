@@ -1,8 +1,7 @@
 {
-  "version": "1.4",
+  "version": "1.5",
   "date": "2026-11-24",
   "notes": [
-    "Stok sekarang punya tab sendiri di halaman Produk: stok masuk, koreksi, dan riwayat langsung dari daftar",
-    "Popup produk lebih ringkas: hanya nama, harga, kategori"
+    "Rekap stok per hari di tab Stok: masuk, terjual, koreksi, dan sisa tiap produk, bisa diunduh ke Excel"
   ]
 }

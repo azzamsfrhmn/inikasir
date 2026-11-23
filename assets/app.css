@@ -510,3 +510,13 @@ main:has(>#view-connect.active),main:has(>#view-auth.active){max-width:none;padd
 .stk-act{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 .stk-act .btn:not(.ghost){background:var(--leaf-soft);color:var(--leaf-ink);border-color:transparent}
 .stk-act .btn .ic{width:16px;height:16px}
+
+/* ---------- Rekap stok per hari ---------- */
+.sday{padding:12px 0;border-top:1px solid var(--line)}
+.sday:first-child{border-top:0;padding-top:0}
+.sday-h{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 12px;margin-bottom:6px}
+.sday-h .muted{font-size:12.5px}
+.stbl th,.stbl td{padding-left:6px;padding-right:6px}
+.stbl th:first-child,.stbl td:first-child{padding-left:0}
+.stbl th:last-child,.stbl td:last-child{padding-right:0}
+.stbl th{font-size:12px}
