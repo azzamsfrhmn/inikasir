@@ -1,0 +1,12 @@
+# Header untuk Cloudflare Pages.
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+
+# Service worker dan config harus selalu dicek ulang supaya HP cepat dapat versi baru.
+/sw.js
+  Cache-Control: no-cache
+/config.js
+  Cache-Control: no-cache

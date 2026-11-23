@@ -29,8 +29,15 @@ Data disimpan di [Supabase](https://supabase.com) (paket gratis cukup). Aturan a
 Di **Authentication**:
 1. **Sign In / Providers**: nyalakan **Allow anonymous sign-ins** (dipakai HP kasir, yang tidak punya email). Biarkan **Email** tetap menyala.
 2. **URL Configuration**:
-   - **Site URL**: `https://<akun-github>.github.io/inikasir/admin/`
-   - **Redirect URLs**: tambahkan `https://<akun-github>.github.io/inikasir/admin/`
+   - **Site URL**: `https://<alamat-situs>/admin/` (misalnya `https://laciku.pages.dev/admin/`)
+   - **Redirect URLs**: tambahkan `https://<alamat-situs>/admin/`
+
+### Hosting (Cloudflare Pages, gratis)
+Di Cloudflare: **Workers & Pages** > **Create** > **Pages** > **Connect to Git**, pilih repo ini, lalu:
+- **Build command**: `npm run build`
+- **Build output directory**: `dist`
+
+Hanya file aplikasi yang terbit (lihat `scripts/build.mjs`); SQL, uji, dan catatan rencana tidak ikut. Setiap push ke `main` otomatis terbit ulang.
 
 ### 4. Sambungkan aplikasi
 Buka **Project Settings** > **Data API** (atau **API**). Salin **Project URL** dan **anon public** key ke [`config.js`](config.js):
