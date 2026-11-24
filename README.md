@@ -30,6 +30,7 @@ Data disimpan di [Supabase](https://supabase.com) (paket gratis cukup). Aturan a
    - `008_realtime.sql`: penjualan & catatan dari HP kasir langsung muncul di admin tanpa muat ulang. Jalankan ulang setelah memasang 003/005 baru. Tidak butuh yang lain.
    - `009_kategori.sql`: pemilik membuat & mengurutkan kategori dulu (Produk > Kategori), lalu memilihnya saat menambah produk. Urutan ikut ke tab kategori di HP kasir. Tidak butuh yang lain.
    - `010_reset_hari_ini.sql`: tombol **Hapus data hari ini** di menu Akun untuk membersihkan hasil coba-coba (penjualan, catatan kas, buka/tutup kasir, pergerakan stok hari ini; stok dikembalikan). Tidak butuh yang lain.
+   - `011_reset_periode.sql`: tombol **Hapus data** di menu Akun bisa memilih hari ini, bulan ini, atau tahun ini. Tidak butuh yang lain (010 tidak wajib).
 
 ### 3. Atur login
 Di **Authentication**:

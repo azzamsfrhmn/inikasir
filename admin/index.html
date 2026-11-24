@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=32">
+<link rel="stylesheet" href="../assets/app.css?v=33">
 <link rel="manifest" href="../manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="../assets/icons/admin.svg">
 <link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/admin-192.png">
@@ -387,9 +387,9 @@
       </div>
 
       <div class="card stack danger-zone">
-        <h3>Hapus data hari ini</h3>
-        <p class="muted" style="margin:0;font-size:14px">Untuk membersihkan hasil coba-coba. Semua penjualan, catatan uang masuk/keluar, buka/tutup kasir, dan pergerakan stok <b>hari ini</b> dihapus, lalu stok kembali seperti awal hari. Data hari-hari sebelumnya tidak tersentuh.</p>
-        <div class="row wrap"><button class="btn danger" id="btnReset" data-ic="x">Hapus data hari ini</button></div>
+        <h3>Hapus data</h3>
+        <p class="muted" style="margin:0;font-size:14px">Untuk membersihkan hasil coba-coba. Pilih <b>hari ini</b>, <b>bulan ini</b>, atau <b>tahun ini</b>: semua penjualan, catatan uang masuk/keluar, buka/tutup kasir, dan pergerakan stok di periode itu dihapus, lalu stok kembali seperti awal periode. Data sebelum periode itu tidak tersentuh.</p>
+        <div class="row wrap"><button class="btn danger" id="btnReset" data-ic="x">Hapus data...</button></div>
       </div>
 
     </div>
@@ -478,12 +478,18 @@
 
 <!-- Hapus data hari ini -->
 <div class="modal" id="mReset"><div class="box stack" style="max-width:440px">
-  <h2 style="margin:0">Hapus data hari ini?</h2>
-  <div id="rsSummary" class="muted" style="font-size:14px">Menghitung data hari ini...</div>
+  <h2 style="margin:0">Hapus data</h2>
+  <div><div class="f">Periode yang dihapus</div>
+    <div class="seg seg3" id="rsPeriod" style="margin:0">
+      <button data-rsp="today" class="active">Hari ini</button>
+      <button data-rsp="month">Bulan ini</button>
+      <button data-rsp="year">Tahun ini</button>
+    </div></div>
+  <div id="rsSummary" class="muted" style="font-size:14px">Menghitung data...</div>
   <div class="note bad" style="margin:0">Data yang dihapus <b>tidak bisa dikembalikan</b>. Pastikan semua HP kasir sudah online, karena penjualan yang belum terkirim akan tetap masuk setelah ini.</div>
   <div><label class="f" for="rsConfirm">Ketik <b>HAPUS</b> untuk melanjutkan</label><input class="in" id="rsConfirm" autocomplete="off" autocapitalize="characters" placeholder="HAPUS"></div>
   <div class="err" id="rsErr"></div>
-  <div class="row modal-actions"><div class="grow"></div><button class="btn ghost" data-close="mReset">Batal</button><button class="btn danger" id="rsGo" disabled>Hapus data hari ini</button></div>
+  <div class="row modal-actions"><div class="grow"></div><button class="btn ghost" data-close="mReset">Batal</button><button class="btn danger" id="rsGo" disabled>Hapus data</button></div>
 </div></div>
 
 <!-- Kelola kategori -->
@@ -565,9 +571,9 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="../config.js?v=32"></script>
+<script src="../config.js?v=33"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="../assets/common.js?v=32"></script>
+<script src="../assets/common.js?v=33"></script>
 <script>
 "use strict";
 let sb = null, user = null, shop = null;
@@ -741,35 +747,55 @@ function enterApp(page) {
 }
 
 /* ================= Hapus data hari ini (migrasi 010) ================= */
-async function openReset() {
+let rsPeriod = "today";
+const RS = { today: "hari ini", month: "bulan ini", year: "tahun ini" };
+function rsRange(period) {
+  const now = new Date();
+  const from = period === "year" ? new Date(now.getFullYear(), 0, 1) : period === "month" ? new Date(now.getFullYear(), now.getMonth(), 1) : now;
+  return [dayKey(from), dayKey(now)];
+}
+function openReset() {
   $("#rsConfirm").value = ""; $("#rsGo").disabled = true; $("#rsErr").textContent = "";
-  $("#rsSummary").textContent = "Menghitung data hari ini...";
+  setRsPeriod("today");
   openModal("mReset");
-  const k = dayKey(new Date());
-  try {
-    const [tx, cf] = await Promise.all([fetchTx(k, k), fetchCashflow(k, k)]);
-    const sales = tx.filter((t) => !t.voided);
-    $("#rsSummary").innerHTML = `Yang akan dihapus untuk <b>${fmtDate(new Date())}</b>:
-      <ul class="rs-list"><li><b>${tx.length}</b> penjualan${sales.length ? ` (omzet ${rp(sales.reduce((a, t) => a + t.total, 0))})` : ""}</li>
-      <li><b>${cf.length}</b> catatan uang masuk/keluar</li><li>buka/tutup kasir dan pergerakan stok hari ini</li></ul>`;
-  } catch (e) { $("#rsSummary").textContent = "Semua penjualan, catatan kas, buka/tutup kasir, dan pergerakan stok hari ini."; }
   setTimeout(() => $("#rsConfirm").focus(), 60);
+}
+async function setRsPeriod(period) {
+  rsPeriod = period;
+  $$("#rsPeriod button").forEach((b) => b.classList.toggle("active", b.dataset.rsp === period));
+  $("#rsGo").textContent = "Hapus data " + RS[period];
+  $("#rsSummary").textContent = `Menghitung data ${RS[period]}...`;
+  const [a, b] = rsRange(period);
+  const label = period === "today" ? fmtDate(new Date()) : `${fmtDateShort(a)} sampai hari ini`;
+  try {
+    const [tx, cf] = await Promise.all([fetchTx(a, b), fetchCashflow(a, b)]);
+    if (rsPeriod !== period) return;   // sudah ganti pilihan
+    const sales = tx.filter((t) => !t.voided);
+    $("#rsSummary").innerHTML = `Yang akan dihapus untuk <b>${label}</b>:
+      <ul class="rs-list"><li><b>${tx.length}</b> penjualan${sales.length ? ` (omzet ${rp(sales.reduce((x, t) => x + t.total, 0))})` : ""}</li>
+      <li><b>${cf.length}</b> catatan uang masuk/keluar</li><li>buka/tutup kasir dan pergerakan stok di periode ini</li></ul>`;
+  } catch (e) { if (rsPeriod === period) $("#rsSummary").textContent = `Semua penjualan, catatan kas, buka/tutup kasir, dan pergerakan stok ${RS[period]}.`; }
 }
 async function doReset() {
   if ($("#rsConfirm").value.trim().toUpperCase() !== "HAPUS") return;
+  const period = rsPeriod;
+  if (period !== "today" && !confirm(`Yakin menghapus SEMUA data ${RS[period]}? Ini tidak bisa dikembalikan.`)) return;
   const btn = $("#rsGo"); setBusy(btn, "Menghapus...");
-  const { data, error } = await sb.rpc("reset_today", { p_store: shop.id });
+  let { data, error } = await sb.rpc("reset_period", { p_store: shop.id, p_period: period });
+  // migrasi 011 belum dipasang: hari ini masih bisa lewat fungsi lama (010)
+  if (error && period === "today" && /reset_period|PGRST202|schema cache/i.test(error.message || "")) ({ data, error } = await sb.rpc("reset_today", { p_store: shop.id }));
   setBusy(btn);
   if (error) {
-    $("#rsErr").textContent = /reset_today|PGRST202|schema cache|does not exist/i.test(error.message || "")
-      ? "Fitur ini butuh migrasi 010_reset_hari_ini.sql. Jalankan sekali di Supabase SQL Editor, lalu coba lagi."
+    $("#rsErr").textContent = /reset_|PGRST202|schema cache|does not exist/i.test(error.message || "")
+      ? "Fitur ini butuh migrasi 011_reset_periode.sql. Jalankan sekali di Supabase SQL Editor, lalu coba lagi."
       : errMsg(error);
     return;
   }
   closeModal("mReset");
-  toast(`Data hari ini dihapus: ${data.transactions} penjualan, ${data.cashflow} catatan kas`);
+  toast(`Data ${RS[period]} dihapus: ${data.transactions} penjualan, ${data.cashflow} catatan kas`);
   refreshToday(); liveRefresh();
 }
+$("#rsPeriod").addEventListener("click", (e) => { const b = e.target.closest("[data-rsp]"); if (b && b.dataset.rsp !== rsPeriod) setRsPeriod(b.dataset.rsp); });
 $("#btnReset").onclick = openReset;
 $("#rsGo").onclick = doReset;
 $("#rsConfirm").addEventListener("input", () => { $("#rsGo").disabled = $("#rsConfirm").value.trim().toUpperCase() !== "HAPUS"; });
