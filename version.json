@@ -1,7 +1,7 @@
 {
-  "version": "1.13",
-  "date": "2026-11-24",
+  "version": "1.14",
+  "date": "2026-11-25",
   "notes": [
-    "Halaman Keuangan sekarang langsung menampilkan hari ini"
+    "Pemilik bisa menghapus data hari ini (hasil coba-coba) dari menu Akun, stok kembali seperti awal hari"
   ]
 }

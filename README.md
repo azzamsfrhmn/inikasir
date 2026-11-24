@@ -29,6 +29,7 @@ Data disimpan di [Supabase](https://supabase.com) (paket gratis cukup). Aturan a
    - `007_nama_hp.sql`: HP kasir otomatis diberi nama "Kasir 1", "Kasir 2", dst., dan pemilik bisa ganti nama HP di Setelan. Tidak butuh yang lain.
    - `008_realtime.sql`: penjualan & catatan dari HP kasir langsung muncul di admin tanpa muat ulang. Jalankan ulang setelah memasang 003/005 baru. Tidak butuh yang lain.
    - `009_kategori.sql`: pemilik membuat & mengurutkan kategori dulu (Produk > Kategori), lalu memilihnya saat menambah produk. Urutan ikut ke tab kategori di HP kasir. Tidak butuh yang lain.
+   - `010_reset_hari_ini.sql`: tombol **Hapus data hari ini** di menu Akun untuk membersihkan hasil coba-coba (penjualan, catatan kas, buka/tutup kasir, pergerakan stok hari ini; stok dikembalikan). Tidak butuh yang lain.
 
 ### 3. Atur login
 Di **Authentication**:

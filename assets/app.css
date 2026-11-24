@@ -616,3 +616,8 @@ header.top .hdr-stat{margin-left:auto}
 .qty button:disabled{opacity:.35;cursor:not-allowed}
 
 .note.bad{background:var(--bad-soft);color:var(--bad)}
+
+/* ---------- Hapus data hari ini ---------- */
+.danger-zone{border:1px solid var(--bad-soft)}
+.danger-zone h3{color:var(--bad)}
+.rs-list{margin:8px 0 0;padding-left:18px;display:grid;gap:4px;color:var(--ink)}
