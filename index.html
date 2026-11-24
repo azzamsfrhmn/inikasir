@@ -20,6 +20,24 @@
 <link rel="apple-touch-icon" href="assets/icons/kasir-180.png">
 <style>
   body{background:var(--card)}
+
+  /* Banner berjalan */
+  .ticker{background:var(--ink);color:#fff;overflow:hidden;position:relative;font-size:13.5px;padding-top:var(--safe-t)}
+  .ticker::before,.ticker::after{content:"";position:absolute;top:0;bottom:0;width:40px;z-index:1;pointer-events:none}
+  .ticker::before{left:0;background:linear-gradient(90deg,var(--ink),transparent)}
+  .ticker::after{right:0;background:linear-gradient(270deg,var(--ink),transparent)}
+  .tick-track{display:flex;width:max-content;animation:tick 55s linear infinite}
+  .ticker:hover .tick-track,.ticker:focus-within .tick-track{animation-play-state:paused}
+  .tick-row{display:flex;margin:0;padding:0;list-style:none}
+  .tick-row li{display:flex;align-items:center;gap:6px;white-space:nowrap;padding:10px 0;color:rgba(255,255,255,.72)}
+  .tick-row li b{color:#fff;font-weight:700}
+  .tick-row li::after{content:"";width:6px;height:6px;border-radius:50%;background:#8fd1a3;margin:0 22px 0 16px;flex:none}
+  @keyframes tick{to{transform:translateX(-50%)}}
+  @media (prefers-reduced-motion:reduce){
+    .tick-track{animation:none}
+    .ticker{overflow-x:auto;scrollbar-width:none}
+    .tick-row[aria-hidden]{display:none}
+  }
   .wrap{max-width:1160px;margin:0 auto;padding:0 20px}
   .lnav{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.85);-webkit-backdrop-filter:saturate(1.6) blur(12px);backdrop-filter:saturate(1.6) blur(12px);border-bottom:1px solid transparent;transition:border-color var(--t-med)}
   .lnav.scrolled{border-bottom-color:var(--line)}
@@ -141,6 +159,11 @@
 </head>
 <body>
 
+<!-- Banner berjalan: pesan singkat untuk pelaku UMKM. Diam (bisa digeser) kalau pengguna mematikan animasi. -->
+<div class="ticker" role="region" aria-label="Keunggulan IniKasir">
+  <div class="tick-track"><ul class="tick-row"><li><b>Gratis untuk mulai</b> daftar 1 menit, tanpa kartu kredit</li><li><b>Tanpa beli mesin kasir</b> cukup HP Android yang sudah ada</li><li><b>Pakai QRIS Anda sendiri</b> IniKasir tidak memotong sepeser pun</li><li><b>Sinyal hilang? Tetap jualan</b> penjualan terkirim otomatis saat online</li><li><b>Pantau omzet dari rumah</b> setiap penjualan langsung masuk ke HP pemilik</li><li><b>Uang laci ketahuan</b> selisih kas terlihat saat tutup toko</li><li><b>Stok habis, kasir berhenti jual</b> tidak ada lagi jual barang yang kosong</li><li><b>Cocok untuk gerobak, warung, dan UMKM kuliner</b> naik kelas mulai hari ini</li></ul><ul class="tick-row" aria-hidden="true"><li><b>Gratis untuk mulai</b> daftar 1 menit, tanpa kartu kredit</li><li><b>Tanpa beli mesin kasir</b> cukup HP Android yang sudah ada</li><li><b>Pakai QRIS Anda sendiri</b> IniKasir tidak memotong sepeser pun</li><li><b>Sinyal hilang? Tetap jualan</b> penjualan terkirim otomatis saat online</li><li><b>Pantau omzet dari rumah</b> setiap penjualan langsung masuk ke HP pemilik</li><li><b>Uang laci ketahuan</b> selisih kas terlihat saat tutup toko</li><li><b>Stok habis, kasir berhenti jual</b> tidak ada lagi jual barang yang kosong</li><li><b>Cocok untuk gerobak, warung, dan UMKM kuliner</b> naik kelas mulai hari ini</li></ul></div>
+</div>
+
 <nav class="lnav" id="lnav">
   <div class="wrap">
     <a class="logo" href="./"><img src="assets/icons/kasir.svg" alt="" width="34" height="34">IniKasir</a>
@@ -181,17 +204,17 @@
 
     <div class="stage" aria-hidden="true">
       <div class="phone"><div class="screen">
-        <div class="ph-top"><img src="assets/icons/kasir.svg" alt=""><div><b>Otak Otak Siliwangi</b><span>Kasir buka sejak 07.30</span></div></div>
-        <div class="ph-chips"><i>Semua</i><i>Otak-otak</i><i>Minuman</i></div>
+        <div class="ph-top"><img src="assets/icons/kasir.svg" alt=""><div><b>Nama Toko Anda</b><span>Kasir buka sejak 07.30</span></div></div>
+        <div class="ph-chips"><i>Semua</i><i>Makanan</i><i>Minuman</i></div>
         <div class="ph-grid">
-          <div class="ph-t on"><em>3</em><b>Otak-otak ikan</b><span>Rp2.000</span></div>
-          <div class="ph-t"><b>Otak-otak keju</b><span>Rp3.000</span></div>
-          <div class="ph-t on"><em>1</em><b>Es teh</b><span>Rp3.000</span></div>
-          <div class="ph-t"><b>Siomay</b><span>Rp5.000</span></div>
-          <div class="ph-t"><b>Isi telur</b><span>Rp3.000</span></div>
-          <div class="ph-t"><b>Paket 10</b><span>Rp18.000</span></div>
+          <div class="ph-t on"><em>3</em><b>Produk Anda</b><span>Rp10.000</span></div>
+          <div class="ph-t"><b>Menu andalan</b><span>Rp15.000</span></div>
+          <div class="ph-t on"><em>1</em><b>Minuman</b><span>Rp5.000</span></div>
+          <div class="ph-t"><b>Camilan</b><span>Rp8.000</span></div>
+          <div class="ph-t"><b>Produk baru</b><span>Rp12.000</span></div>
+          <div class="ph-t"><b>Paket hemat</b><span>Rp25.000</span></div>
         </div>
-        <div class="ph-bar"><span>4 item · <b>Rp9.000</b></span><b>Bayar</b></div>
+        <div class="ph-bar"><span>4 item · <b>Rp35.000</b></span><b>Bayar</b></div>
       </div></div>
       <div class="float f-rev"><small>Omzet hari ini</small><b>Rp1.284.000<span class="up">+12%</span></b>
         <div class="bars"><i style="height:38%"></i><i style="height:55%"></i><i style="height:46%"></i><i style="height:70%"></i><i style="height:62%"></i><i style="height:84%"></i><i style="height:100%"></i></div></div>
