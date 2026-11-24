@@ -1,8 +1,9 @@
 {
-  "version": "1.11",
+  "version": "1.12",
   "date": "2026-11-24",
   "notes": [
-    "Produk yang stoknya habis tidak bisa dijual, dan jumlah di pesanan tidak bisa melebihi sisa stok",
-    "Begitu pemilik menambah stok di admin, HP kasir langsung bisa menjual lagi"
+    "Semua produk wajib punya stok: produk yang stoknya belum diisi atau habis tidak bisa dijual di kasir",
+    "Tab Stok menampilkan produk yang belum bisa dijual dengan tombol Isi stok",
+    "Produk baru langsung masuk daftar stok, tinggal diisi jumlahnya"
   ]
 }

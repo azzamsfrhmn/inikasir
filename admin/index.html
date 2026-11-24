@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=28">
+<link rel="stylesheet" href="../assets/app.css?v=29">
 <link rel="manifest" href="../manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="../assets/icons/admin.svg">
 <link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/admin-192.png">
@@ -482,11 +482,11 @@
 
 <!-- Mulai lacak stok -->
 <div class="modal" id="mStockStart"><div class="box stack" style="max-width:400px">
-  <h2 id="ssTitle">Mulai lacak stok</h2>
-  <p class="muted" style="margin:0;font-size:14px">Stok berkurang otomatis setiap terjual, dan HP kasir menampilkan sisa stok di kartu produk.</p>
+  <h2 id="ssTitle">Isi stok</h2>
+  <p class="muted" style="margin:0;font-size:14px">Produk baru bisa dijual di HP kasir setelah stoknya diisi. Stok berkurang otomatis setiap terjual.</p>
   <div><label class="f" for="ssQty">Stok sekarang (hitung yang ada)</label><input class="in num" id="ssQty" inputmode="numeric" placeholder="0" style="font-size:20px;font-weight:700"></div>
   <div class="err" id="ssErr"></div>
-  <div class="row modal-actions"><div class="grow"></div><button class="btn ghost" data-close="mStockStart">Batal</button><button class="btn primary" id="ssSave">Mulai lacak</button></div>
+  <div class="row modal-actions"><div class="grow"></div><button class="btn ghost" data-close="mStockStart">Batal</button><button class="btn primary" id="ssSave">Simpan stok</button></div>
 </div></div>
 
 <!-- Koreksi stok -->
@@ -512,7 +512,6 @@
 <div class="modal" id="mStockLog"><div class="box stack">
   <div class="row" style="justify-content:space-between"><h2 style="margin:0" id="slTitle">Riwayat stok</h2><button class="btn ghost small" data-close="mStockLog">Tutup</button></div>
   <div class="list" id="slList"></div>
-  <div class="row" style="border-top:1px solid var(--line);padding-top:12px"><span class="muted grow" style="font-size:13px">Tidak perlu menghitung stok produk ini lagi?</span><button class="btn ghost small" id="slStop">Berhenti lacak</button></div>
 </div></div>
 
 <!-- Catatan kas -->
@@ -550,9 +549,9 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="../config.js?v=28"></script>
+<script src="../config.js?v=29"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="../assets/common.js?v=28"></script>
+<script src="../assets/common.js?v=29"></script>
 <script>
 "use strict";
 let sb = null, user = null, shop = null;
@@ -1224,7 +1223,8 @@ let editingPid = null, costMap = {}, stockReady = false;
 const KIND = { masuk: "Stok masuk", koreksi: "Koreksi", terjual: "Terjual", batal: "Batal (kembali)", awal: "Stok awal" };
 const LOW_STOCK = 5;
 function stockBadge(p) {
-  if (!stockReady || !p.track_stock) return "";
+  if (!stockReady) return "";
+  if (!p.track_stock) return `<span class="tag void">Stok belum diisi</span>`;
   if (p.stock < 0) return `<span class="tag void">Stok ${p.stock}, perlu dicek</span>`;
   if (p.stock === 0) return `<span class="tag void">Habis</span>`;
   return `<span class="tag ${p.stock <= LOW_STOCK ? "void" : "tunai"}">Stok ${p.stock}</span>`;
@@ -1251,7 +1251,7 @@ async function loadProducts() {
 }
 /* ---------- Saring produk (cari & kategori), dipakai tab Daftar produk dan Stok ---------- */
 let prodQ = "", prodCat = "";   // prodCat: "" semua, "__low" hampir habis, selain itu nama kategori
-const isLow = (p) => p.track_stock && p.stock <= LOW_STOCK;
+const isLow = (p) => !p.track_stock || p.stock <= LOW_STOCK;   // belum diisi = tidak bisa dijual
 function prodMatch(p) {
   if (prodQ && !p.name.toLowerCase().includes(prodQ)) return false;
   if (prodCat === "__low") return isLow(p);
@@ -1265,7 +1265,7 @@ function renderProdCats() {
   const low = products.filter(isLow).length;
   const chip = (v, label) => `<button class="chip${prodCat === v ? " on" : ""}" data-pcat="${esc(v)}">${label}</button>`;
   $("#prodCats").innerHTML = chip("", "Semua") +
-    (prodTab === "stok" && stockReady && low ? chip("__low", `Hampir habis (${low})`) : "") +
+    (prodTab === "stok" && stockReady && low ? chip("__low", `Perlu diisi (${low})`) : "") +
     (cats.length > 1 ? cats.map((c) => chip(c, esc(c || "Tanpa kategori"))).join("") : "");
 }
 const noMatch = () => `<div class="empty">Tidak ada produk yang cocok${prodQ ? ` dengan "${esc(prodQ)}"` : ""}.</div>`;
@@ -1290,10 +1290,12 @@ function renderStockSummary() {
     const tracked = products.filter((p) => p.track_stock);
     const value = tracked.reduce((s, p) => s + Math.max(0, p.stock) * (costMap[p.id] || 0), 0);
     const low = tracked.filter((p) => p.stock <= LOW_STOCK);
+    const empty = products.filter((p) => p.active && !p.track_stock);
     const noCost = products.filter((p) => p.active && !costMap[p.id]).length;
-    $("#prodSummary").innerHTML = tracked.length || noCost < products.length
+    $("#prodSummary").innerHTML = products.length
       ? `<table class="ledger"><tr><td>Nilai stok (stok × modal)</td><td>${rp(value)}</td></tr>
-          <tr><td>Produk dilacak stoknya</td><td>${tracked.length} dari ${products.length}</td></tr></table>
+          <tr><td>Produk siap dijual</td><td>${products.filter((p) => p.active && p.track_stock && p.stock > 0).length} dari ${products.filter((p) => p.active).length}</td></tr></table>
+        ${empty.length ? `<div class="note bad" style="margin-top:8px"><b>Belum bisa dijual, stok belum diisi:</b> ${empty.map((p) => esc(p.name)).join(", ")}. Tekan <b>Isi stok</b> di daftar bawah.</div>` : ""}
         ${low.length ? `<div class="note" style="margin-top:8px">Hampir habis (≤ ${LOW_STOCK}): ${low.map((p) => `${esc(p.name)} (${p.stock})`).join(", ")}</div>` : ""}
         ${noCost ? `<p class="muted" style="font-size:13px;margin:8px 0 0">${noCost} produk belum diisi harga belinya, jadi modalnya dihitung Rp0 di laporan.</p>` : ""}`
       : `<p style="margin:0;font-size:14px"><b>Mulai pakai stok & modal:</b> buka tiap produk, isi <b>harga beli</b>, lalu centang <b>Lacak stok</b> dan isi stok awal. Laporan akan menghitung modal barang terjual (HPP) dan laba bersih yang sebenarnya.</p>`;
@@ -1313,21 +1315,21 @@ function setProdTab(t) {
 }
 function renderStockList(reloadDays) {
   if (!stockReady) return setProdTab("produk");
-  const rank = (p) => (!p.track_stock ? 3 : p.stock <= 0 ? 0 : p.stock <= LOW_STOCK ? 1 : 2);
+  const rank = (p) => (!p.track_stock ? 0 : p.stock <= 0 ? 1 : p.stock <= LOW_STOCK ? 2 : 3);
   const list = products.filter(prodMatch).sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name));
   $("#stockList").innerHTML = !products.length ? `<div class="empty">Belum ada produk. Tambahkan dulu di tab Daftar produk.</div>`
     : !list.length ? noMatch() : list.map((p) => {
-    const t = p.track_stock, low = t && p.stock <= LOW_STOCK;
-    const state = !t ? "Stok tidak dilacak" : p.stock < 0 ? "Minus, perlu dicek" : p.stock === 0 ? "Habis" : low ? "Hampir habis" : "Aman";
+    const t = p.track_stock, low = !t || p.stock <= LOW_STOCK;
+    const state = !t ? "Stok belum diisi, belum bisa dijual" : p.stock < 0 ? "Minus, perlu dicek" : p.stock === 0 ? "Habis, tidak bisa dijual" : low ? "Hampir habis" : "Aman";
     return `<div class="stk${p.active ? "" : " off"}">
       <div class="stk-top">
         <div class="grow"><div style="font-weight:600">${esc(p.name)}</div>
-          <div class="stk-state ${!t ? "" : low ? "bad" : "ok"}">${state}${p.active ? "" : " · disembunyikan dari kasir"}</div></div>
+          <div class="stk-state ${low ? "bad" : "ok"}">${state}${p.active ? "" : " · disembunyikan dari kasir"}</div></div>
         ${t ? `<div class="stk-n${low ? " low" : ""}">${p.stock}<small>pcs</small></div>` : ""}
       </div>
       <div class="stk-act">${t
         ? `<button class="btn small" data-sin="${p.id}" data-ic="plus">Stok masuk</button><button class="btn ghost small" data-sfix="${p.id}">Koreksi</button><button class="btn ghost small" data-slog="${p.id}">Riwayat</button>`
-        : `<button class="btn ghost small" data-sstart="${p.id}">Mulai lacak stok</button>`}</div>
+        : `<button class="btn small" data-sstart="${p.id}" data-ic="plus">Isi stok</button>`}</div>
     </div>`;
   }).join("");
   applyIcons($("#stockList"));
@@ -1409,25 +1411,18 @@ $("#btnStkCsv").onclick = exportStockCsv;
 
 function openStockStart() {
   const p = curProd(); if (!p) return;
-  $("#ssTitle").textContent = "Lacak stok: " + p.name;
+  $("#ssTitle").textContent = "Isi stok: " + p.name;
   $("#ssQty").value = ""; $("#ssErr").textContent = "";
   openModal("mStockStart"); setTimeout(() => $("#ssQty").focus(), 50);
 }
 async function saveStockStart() {
-  if ($("#ssQty").value.trim() === "") return ($("#ssErr").textContent = "Isi stok sekarang (isi 0 kalau belum ada).");
+  if (!parseNum($("#ssQty").value)) return ($("#ssErr").textContent = "Isi jumlah stok yang ada sekarang.");
   const btn = $("#ssSave"); setBusy(btn, "Menyimpan...");
   let { error } = await sb.from("products").update({ track_stock: true }).eq("id", editingPid);
   if (!error) ({ error } = await sb.rpc("set_stock", { p_product: editingPid, p_qty: parseNum($("#ssQty").value), p_note: "Stok awal" }));
   setBusy(btn);
   if (error) return ($("#ssErr").textContent = errMsg(error));
-  closeModal("mStockStart"); await loadProducts(); toast("Stok mulai dilacak");
-}
-async function stopTracking() {
-  const p = curProd(); if (!p) return;
-  if (!confirm(`Berhenti melacak stok ${p.name}? Kasir tidak lagi melihat sisa stoknya. Riwayat stok lama tetap tersimpan.`)) return;
-  const { error } = await sb.from("products").update({ track_stock: false }).eq("id", p.id);
-  if (error) return toast(errMsg(error));
-  closeModal("mStockLog"); await loadProducts(); toast("Stok tidak dilacak lagi");
+  closeModal("mStockStart"); await loadProducts(); toast("Stok disimpan. Produk bisa dijual di HP kasir.");
 }
 $("#prodTabs").addEventListener("click", (e) => { const b = e.target.closest("[data-ptab]"); if (!b) return; setProdTab(b.dataset.ptab); renderProdList(); renderStockList(false); if (prodTab === "stok") renderStockDays(); });
 $("#stockList").addEventListener("click", (e) => {
@@ -1436,7 +1431,6 @@ $("#stockList").addEventListener("click", (e) => {
   if (d.sin) openStockIn(); else if (d.sfix) openStockFix(); else if (d.slog) openStockLog(); else openStockStart();
 });
 $("#ssSave").onclick = saveStockStart;
-$("#slStop").onclick = stopTracking;
 
 /* ---------- Kategori (diatur pemilik, migrasi 009) ---------- */
 // Urutan dari stores.categories, ditambah kategori lama di produk yang belum masuk daftar
@@ -1558,7 +1552,7 @@ async function saveProd() {
   const btn = $("#pSave"); setBusy(btn, "Menyimpan...");
   let id = editingPid, error;
   if (id) ({ error } = await sb.from("products").update(row).eq("id", id));
-  else { const r = await sb.from("products").insert({ ...row, store_id: shop.id }).select("id").single(); error = r.error; id = r.data && r.data.id; }
+  else { const r = await sb.from("products").insert({ ...row, store_id: shop.id, ...(stockReady ? { track_stock: true } : {}) }).select("id").single(); error = r.error; id = r.data && r.data.id; }
   if (!error && stockReady) {
     const cost = parseNum($("#pCost").value);
     if (cost !== (costMap[id] || 0)) ({ error } = await sb.from("product_costs").upsert({ product_id: id, store_id: shop.id, cost }));
@@ -1567,7 +1561,7 @@ async function saveProd() {
   if (error) { if (!editingPid && id) editingPid = id; return ($("#pErr").textContent = errMsg(error)); }
   const isNew = !editingPid;
   closeModal("mProd"); loadProducts();
-  toast(isNew && stockReady ? "Produk ditambahkan. Atur stoknya di tab Stok." : "Produk disimpan. HP kasir ikut berubah dalam 1 menit.");
+  toast(isNew && stockReady ? "Produk ditambahkan. Isi stoknya di tab Stok supaya bisa dijual." : "Produk disimpan. HP kasir langsung ikut berubah.");
 }
 async function deleteProd() {
   if (!editingPid || !confirm("Hapus produk ini? Riwayat penjualan lama tetap aman, tapi riwayat stoknya ikut terhapus.")) return;

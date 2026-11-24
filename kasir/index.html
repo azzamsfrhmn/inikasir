@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=28">
+<link rel="stylesheet" href="../assets/app.css?v=29">
 <link rel="manifest" href="../manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="../assets/icons/kasir.svg">
 <link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/kasir-192.png">
@@ -217,9 +217,9 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="../config.js?v=28"></script>
+<script src="../config.js?v=29"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="../assets/common.js?v=28"></script>
+<script src="../assets/common.js?v=29"></script>
 <script>
 "use strict";
 const K = { store: "inikasir-kasir-store", cache: "inikasir-kasir-cache", queue: "inikasir-kasir-queue", shift: "inikasir-kasir-shift", cash: "inikasir-kasir-cash",
@@ -420,11 +420,11 @@ function renderProducts() {
   const q = $("#search").value.trim().toLowerCase();
   const list = products.filter((p) => (activeCat === "Semua" || p.cat === activeCat) && (!q || p.name.toLowerCase().includes(q)));
   $("#prodGrid").innerHTML = list.length ? list.map((p) => {
-    const inCart = cart.find((c) => c.pid === p.id), out = p.track_stock && p.stock <= 0;
+    const inCart = cart.find((c) => c.pid === p.id), out = stockLeft(p.id) <= 0;
     return `<button class="prod ${inCart ? "on" : ""}${out ? " out" : ""}" data-pid="${p.id}"${out ? ` aria-disabled="true" aria-label="${esc(p.name)}, stok habis"` : ""}>
       ${inCart ? `<span class="badge">${inCart.qty}</span>` : ""}
       <div class="nm">${esc(p.name)}</div>
-      <div class="pr num">${rp(p.price)}${p.track_stock ? ` <span class="stk ${p.stock <= 0 ? "out" : p.stock <= 5 ? "low" : ""}">${p.stock <= 0 ? "Habis" : "Sisa " + p.stock}</span>` : ""}</div>
+      <div class="pr num">${rp(p.price)}${"track_stock" in p ? ` <span class="stk ${stockLeft(p.id) <= 0 ? "out" : stockLeft(p.id) <= 5 ? "low" : ""}">${!p.track_stock || p.stock <= 0 ? "Habis" : "Sisa " + p.stock}</span>` : ""}</div>
     </button>`;
   }).join("") : (q ? `<div class="empty" style="grid-column:1/-1">Tidak ada produk bernama "${esc(q)}".</div>`
     : `<div class="empty" style="grid-column:1/-1">Belum ada produk. Pemilik bisa menambahkannya di halaman admin.</div>`);
@@ -448,11 +448,20 @@ function renderCart() {
   renderProducts();
 }
 /* ---------- Batas stok ----------
-   Produk yang dilacak stoknya tidak bisa dijual melebihi sisa stok. Kalau habis, penjaga
-   menunggu pemilik menambah stok di admin; HP kasir langsung tahu lewat realtime. */
-const stockLeft = (pid) => { const p = products.find((x) => x.id === pid); return p && p.track_stock ? p.stock : Infinity; };
+   Semua produk wajib punya stok: tidak bisa dijual melebihi sisa stok, dan produk yang stoknya
+   belum diisi pemilik dianggap 0. Penjaga menunggu pemilik mengisi stok di admin; HP kasir
+   langsung tahu lewat realtime. Toko tanpa fitur stok (migrasi 003 belum dipasang) tidak dibatasi. */
+const stockLeft = (pid) => {
+  const p = products.find((x) => x.id === pid);
+  if (!p || !("track_stock" in p)) return Infinity;
+  return p.track_stock ? p.stock : 0;
+};
 const overStock = () => cart.filter((c) => c.qty > stockLeft(c.pid));
-function stockMsg(name, left) { return left <= 0 ? `Stok ${name} habis. Tunggu pemilik menambah stok di admin.` : `Stok ${name} tinggal ${left}.`; }
+function stockMsg(name, left) {
+  const p = products.find((x) => x.name === name);
+  if (p && "track_stock" in p && !p.track_stock) return `Stok ${name} belum diisi. Tunggu pemilik mengisi stok di admin.`;
+  return left <= 0 ? `Stok ${name} habis. Tunggu pemilik menambah stok di admin.` : `Stok ${name} tinggal ${left}.`;
+}
 // stok dari server belum menghitung penjualan di HP ini yang belum terkirim
 function applyPendingStock(list) {
   queue.filter((t) => !t.op && t.items).forEach((t) => t.items.forEach((i) => {
