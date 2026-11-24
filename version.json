@@ -1,7 +1,8 @@
 {
-  "version": "1.14",
+  "version": "1.15",
   "date": "2026-11-25",
   "notes": [
-    "Pemilik bisa menghapus data hari ini (hasil coba-coba) dari menu Akun, stok kembali seperti awal hari"
+    "Data dari HP kasir di Laporan, Keuangan, Riwayat, dan Produk sekarang selalu masuk sendiri tanpa muat ulang",
+    "Sambungan langsung otomatis tersambung lagi setelah HP tidur atau sinyal hilang"
   ]
 }

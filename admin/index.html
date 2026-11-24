@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=31">
+<link rel="stylesheet" href="../assets/app.css?v=32">
 <link rel="manifest" href="../manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="../assets/icons/admin.svg">
 <link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/admin-192.png">
@@ -565,9 +565,9 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="../config.js?v=31"></script>
+<script src="../config.js?v=32"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="../assets/common.js?v=31"></script>
+<script src="../assets/common.js?v=32"></script>
 <script>
 "use strict";
 let sb = null, user = null, shop = null;
@@ -801,9 +801,44 @@ function startLive() {
     liveOk = status === "SUBSCRIBED";
     const dot = $("#liveDot");
     dot.classList.toggle("on", liveOk);
-    dot.title = liveOk ? "Tersambung langsung: data dari HP kasir masuk otomatis" : "Diperbarui tiap 30 detik";
+    dot.title = liveOk ? "Tersambung langsung: data dari HP kasir masuk otomatis" : "Menyambung ulang... data tetap dicek tiap 10 detik";
     if (liveOk && !was) liveRefresh();   // tersambung lagi: ambil yang terlewat
+    // putus (HP tidur, sinyal hilang, sesi login diperbarui): sambung ulang sendiri
+    if (liveOk) healTries = 0;
+    if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") healLive(Math.min(60000, 5000 * 2 ** healTries++));
   });
+}
+// Buat ulang sambungan realtime dengan token login terbaru
+let healT = null, healTries = 0;
+function healLive(delay = 0) {
+  clearTimeout(healT);
+  healT = setTimeout(async () => {
+    if (!shop || !user) return;
+    if (live) { const old = live; live = null; liveOk = false; try { await sb.removeChannel(old); } catch (e) { /* abaikan */ } }
+    try { const { data: { session } } = await sb.auth.getSession(); if (session) sb.realtime.setAuth(session.access_token); } catch (e) { /* abaikan */ }
+    startLive();
+  }, delay);
+}
+/* Cadangan kalau realtime tidak sampai: tiap 10 detik bandingkan "sidik" data hari ini
+   (penjualan, catatan kas, produk/stok, buka-tutup kasir). Halaman dimuat ulang hanya kalau ada yang berubah. */
+let liveFP = "";
+async function liveFingerprint() {
+  const k = dayKey(new Date()), from = startOfDay(k).toISOString();
+  const [t, c, p, s] = await Promise.all([
+    sb.from("transactions").select("id,voided,total").eq("store_id", shop.id).gte("created_at", from).order("id"),
+    sb.from("cashflow").select("id,amount,type").eq("store_id", shop.id).eq("date", k).order("id"),
+    sb.from("products").select("*").eq("store_id", shop.id).order("id"),
+    sb.from("cash_sessions").select("id,closed_at,closing_cash").eq("store_id", shop.id).gte("opened_at", from).order("id"),
+  ]);
+  if (t.error || c.error || p.error) return null;   // gagal (mis. offline): jangan dianggap berubah
+  return JSON.stringify([k, t.data, c.data, p.data, s.error ? null : s.data]);
+}
+async function pollLive() {
+  if (!shop || !user || document.hidden) return;
+  const fp = await liveFingerprint().catch(() => null);
+  if (!fp) return;
+  if (liveFP && fp !== liveFP) liveRefresh();
+  liveFP = fp;
 }
 function onLive(table, p) {
   if (table === "transactions" && p.eventType === "INSERT" && p.new && !p.new.voided)
@@ -828,7 +863,8 @@ async function liveRefresh() {
   finally { quiet = false; liveRunning = false; window.scrollTo(0, y); }
 }
 setInterval(() => { if (liveDirty) liveRefresh(); }, 4000);
-setInterval(() => { if (!liveOk && !document.hidden) liveRefresh(); }, 30000);
+setInterval(pollLive, 10000);
+window.addEventListener("online", () => { healLive(); liveRefresh(); });
 
 /* ================= Ambil data ================= */
 // Ambil semua baris (Supabase membatasi 1000 baris per permintaan)
@@ -2056,7 +2092,11 @@ $("#shFrom").addEventListener("change", renderShifts);
 $("#shTo").addEventListener("change", renderShifts);
 $("#btnShiftCsv").onclick = exportShiftCsv;
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") $$(".modal.show").forEach((m) => m.classList.remove("show")); });
-document.addEventListener("visibilitychange", () => { if (!document.hidden && shop) liveRefresh(); });
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden || !shop) return;
+  liveRefresh(); pollLive();
+  if (!liveOk) healLive();   // kembali ke aplikasi: pastikan realtime tersambung lagi
+});
 setInterval(renderHeader, 60000);
 
 /* ================= Init ================= */

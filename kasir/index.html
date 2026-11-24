@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=31">
+<link rel="stylesheet" href="../assets/app.css?v=32">
 <link rel="manifest" href="../manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="../assets/icons/kasir.svg">
 <link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/kasir-192.png">
@@ -217,9 +217,9 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="../config.js?v=31"></script>
+<script src="../config.js?v=32"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="../assets/common.js?v=31"></script>
+<script src="../assets/common.js?v=32"></script>
 <script>
 "use strict";
 const K = { store: "inikasir-kasir-store", cache: "inikasir-kasir-cache", queue: "inikasir-kasir-queue", shift: "inikasir-kasir-shift", cash: "inikasir-kasir-cash",
@@ -773,14 +773,33 @@ setInterval(flushQueue, 20000);
 setInterval(() => { if (storeId && !document.hidden) refreshData(); }, 60000);
 // Perubahan produk dari admin (stok ditambah, harga diganti) langsung masuk ke HP kasir (migrasi 008)
 let liveProd = null, liveProdT = null;
+let liveProdOk = false, liveProdHeal = null, liveProdTries = 0;
 function startLiveProducts() {
   if (liveProd || !sb || !storeId) return;
   liveProd = sb.channel("kasir-produk-" + storeId)
     .on("postgres_changes", { event: "*", schema: "public", table: "products", filter: `store_id=eq.${storeId}` }, () => {
       clearTimeout(liveProdT); liveProdT = setTimeout(() => refreshData(true), 800);
     })
-    .subscribe();
+    .subscribe((status) => {
+      const was = liveProdOk;
+      liveProdOk = status === "SUBSCRIBED";
+      if (liveProdOk && !was) refreshData(true);   // tersambung (lagi): ambil perubahan yang terlewat
+      if (liveProdOk) liveProdTries = 0;
+      if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") healLiveProducts(Math.min(60000, 5000 * 2 ** liveProdTries++));
+    });
 }
+// Sambung ulang dengan token terbaru (HP tidur, sinyal hilang, sesi diperbarui)
+function healLiveProducts(delay = 0) {
+  clearTimeout(liveProdHeal);
+  liveProdHeal = setTimeout(async () => {
+    if (!sb || !storeId) return;
+    if (liveProd) { const old = liveProd; liveProd = null; liveProdOk = false; try { await sb.removeChannel(old); } catch (e) { /* abaikan */ } }
+    try { const { data: { session } } = await sb.auth.getSession(); if (session) sb.realtime.setAuth(session.access_token); } catch (e) { /* abaikan */ }
+    startLiveProducts();
+  }, delay);
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden && storeId && !liveProdOk) healLiveProducts(); });
+window.addEventListener("online", () => { if (storeId) healLiveProducts(); });
 setInterval(renderHeader, 60000);
 
 /* ---------- Mulai ---------- */
