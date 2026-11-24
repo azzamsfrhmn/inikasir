@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=29">
+<link rel="stylesheet" href="../assets/app.css?v=30">
 <link rel="manifest" href="../manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="../assets/icons/admin.svg">
 <link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/admin-192.png">
@@ -549,9 +549,9 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="../config.js?v=29"></script>
+<script src="../config.js?v=30"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="../assets/common.js?v=29"></script>
+<script src="../assets/common.js?v=30"></script>
 <script>
 "use strict";
 let sb = null, user = null, shop = null;
@@ -2015,7 +2015,7 @@ $("#installHint").textContent = installHintText("IniKasir");
 (async function init() {
   renderHeader();
   $("#histDate").value = dayKey(new Date());
-  setRange("today"); setFinRange("month"); setStkRange("7"); setShiftRange("7", true);
+  setRange("today"); setFinRange("today"); setStkRange("7"); setShiftRange("7", true);
   if (!CONFIGURED) return renderNotConfigured($("main"));
   if (!window.supabase) return showLoading("Gagal memuat aplikasi. Periksa koneksi internet.", true);
   // Error dari link email (misal link kedaluwarsa)

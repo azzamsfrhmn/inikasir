@@ -1,9 +1,7 @@
 {
-  "version": "1.12",
+  "version": "1.13",
   "date": "2026-11-24",
   "notes": [
-    "Semua produk wajib punya stok: produk yang stoknya belum diisi atau habis tidak bisa dijual di kasir",
-    "Tab Stok menampilkan produk yang belum bisa dijual dengan tombol Isi stok",
-    "Produk baru langsung masuk daftar stok, tinggal diisi jumlahnya"
+    "Halaman Keuangan sekarang langsung menampilkan hari ini"
   ]
 }
