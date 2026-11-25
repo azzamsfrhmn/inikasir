@@ -31,6 +31,7 @@ Data disimpan di [Supabase](https://supabase.com) (paket gratis cukup). Aturan a
    - `009_kategori.sql`: pemilik membuat & mengurutkan kategori dulu (Produk > Kategori), lalu memilihnya saat menambah produk. Urutan ikut ke tab kategori di HP kasir. Tidak butuh yang lain.
    - `010_reset_hari_ini.sql`: tombol **Hapus data hari ini** di menu Akun untuk membersihkan hasil coba-coba (penjualan, catatan kas, buka/tutup kasir, pergerakan stok hari ini; stok dikembalikan). Tidak butuh yang lain.
    - `011_reset_periode.sql`: tombol **Hapus data** di menu Akun bisa memilih hari ini, bulan ini, atau tahun ini. Tidak butuh yang lain (010 tidak wajib).
+   - `012_karyawan_input.sql`: karyawan mencatat **belanja** (tunai/QRIS kios) dan **menambah stok bahan** dari HP kasir (tidak bisa mengubah/menghapus), pemilik melihat **saldo tunai & rekening**, mengelola **bahan** (tab Produk → Bahan), dan mencatat **kasbon karyawan**. Sudah termasuk isi 011.
 
 ### 3. Atur login
 Di **Authentication**:

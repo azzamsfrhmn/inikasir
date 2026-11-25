@@ -621,3 +621,27 @@ header.top .hdr-stat{margin-left:auto}
 .danger-zone{border:1px solid var(--bad-soft)}
 .danger-zone h3{color:var(--bad)}
 .rs-list{margin:8px 0 0;padding-left:18px;display:grid;gap:4px;color:var(--ink)}
+
+/* ---------- Kasir: tab Jualan / Belanja / Stok ---------- */
+.ktabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:4px;margin:12px 16px 0;background:var(--sunk);border-radius:var(--r-sm);max-width:640px}
+@media (min-width:672px){.ktabs{margin:12px auto 0}}
+.ktabs[hidden]{display:none}
+.ktabs button{position:relative;display:flex;align-items:center;justify-content:center;gap:6px;border:0;background:transparent;min-height:44px;font-weight:600;color:var(--muted);border-radius:8px;transition:background var(--t-fast),color var(--t-fast)}
+.ktabs button .ic{width:18px;height:18px}
+.ktabs button.active{background:var(--card);color:var(--ink);font-weight:700;box-shadow:0 1px 3px rgba(18,23,20,.12)}
+.kdot{min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--bad);color:#fff;font-size:11px;font-weight:800;line-height:18px;text-align:center}
+.kpage{display:grid;gap:12px;max-width:640px;margin:0 auto}
+.kchips{flex-wrap:wrap;margin:0;padding:0;overflow:visible}
+.kpage .stk-top .btn{flex:none}
+
+/* ---------- Saldo tunai & rekening ---------- */
+.bal{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.bal>div{background:var(--sunk);border-radius:var(--r-sm);padding:12px 14px;min-width:0}
+.bal span{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--muted)}
+.bal span .ic{width:16px;height:16px}
+.bal b{display:block;font-size:20px;font-weight:800;letter-spacing:-.02em;margin-top:2px;overflow-wrap:anywhere}
+.bal .tot{grid-column:1/-1;background:var(--leaf-soft)}
+.bal .tot span,.bal .tot b{color:var(--leaf-ink)}
+@media (min-width:640px){.bal{grid-template-columns:1fr 1fr 1fr}.bal .tot{grid-column:auto}}
+.danger-text{color:var(--bad)}
+#prodTabs .kdot{display:inline-block;margin-left:4px}

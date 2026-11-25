@@ -1,7 +1,11 @@
 {
-  "version": "1.16",
+  "version": "1.17",
   "date": "2026-11-25",
   "notes": [
-    "Hapus data di menu Akun sekarang bisa memilih hari ini, bulan ini, atau tahun ini"
+    "Karyawan bisa mencatat belanja (tunai atau QRIS kios) dari HP kasir",
+    "Karyawan bisa menambah stok bahan dan melihat sisa stok bahan & produk",
+    "Pemilik: saldo tunai, rekening, dan total di menu Keuangan",
+    "Pemilik: daftar bahan (tambah, kurangi, koreksi) di menu Produk",
+    "Pemilik: catat kasbon karyawan, bayar, atau potong gaji"
   ]
 }

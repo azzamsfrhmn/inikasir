@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=33">
+<link rel="stylesheet" href="../assets/app.css?v=34">
 <link rel="manifest" href="../manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="../assets/icons/kasir.svg">
 <link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/kasir-192.png">
@@ -34,6 +34,11 @@
   </div>
 </header>
 <div class="shiftbar" id="shiftBar"></div>
+<nav class="ktabs" id="kTabs" hidden aria-label="Menu kasir">
+  <button data-ktab="sell" class="active" data-ic="receipt">Jualan</button>
+  <button data-ktab="belanja" data-ic="wallet">Belanja</button>
+  <button data-ktab="stok" data-ic="box">Stok<span class="kdot" id="kStokDot" hidden></span></button>
+</nav>
 <div class="banner" id="syncBanner"></div>
 
 <main>
@@ -117,6 +122,51 @@
       </div>
     </div>
     <button class="cartbar hide" id="cartBar"><span><span id="cartBarCount">0 item</span> · <b id="cartBarTotal">Rp0</b></span><b>Bayar</b></button>
+  </section>
+
+  <!-- Belanja: karyawan hanya mencatat, tidak bisa mengubah atau menghapus -->
+  <section class="page" id="view-belanja">
+    <div class="kpage">
+      <form class="card stack" id="expForm" autocomplete="off">
+        <div>
+          <h2 style="margin:0 0 4px">Catat belanja</h2>
+          <p class="muted" style="margin:0;font-size:14px">Setiap beli bahan, es batu, gas, plastik, atau keperluan lain. Setelah disimpan tidak bisa diubah. Kalau salah, kabari pemilik.</p>
+        </div>
+        <div><label class="f" for="exAmt">Nominal (Rp)</label><input class="in num" id="exAmt" inputmode="numeric" style="font-size:22px;font-weight:700"></div>
+        <div><label class="f" for="exCat">Untuk apa</label>
+          <div class="chips kchips" id="exCats" role="group" aria-label="Pilih jenis belanja"></div>
+          <input class="in" id="exCat" maxlength="40" placeholder="Atau tulis sendiri" style="margin-top:8px"></div>
+        <div><div class="f">Bayar pakai</div>
+          <div class="seg" id="exVia" style="margin:0">
+            <button type="button" data-via="tunai" class="active" data-ic="cash">Uang laci</button>
+            <button type="button" data-via="bank" data-ic="qr">QRIS kios</button>
+          </div></div>
+        <div><label class="f" for="exNote">Keterangan (opsional)</label><input class="in" id="exNote" maxlength="120" placeholder="Contoh: ikan tenggiri 2 kg"></div>
+        <div class="err" id="exErr"></div>
+        <button class="btn primary block" id="exGo">Simpan belanja</button>
+      </form>
+      <div class="card">
+        <h3 style="margin-bottom:4px">Belanja hari ini dari HP ini</h3>
+        <div class="list" id="exList"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stok: lihat sisa, tambah stok bahan yang datang -->
+  <section class="page" id="view-stok">
+    <div class="kpage">
+      <div id="stokAlert"></div>
+      <div class="card">
+        <h3 style="margin-bottom:4px">Stok bahan</h3>
+        <p class="muted" style="margin:0 0 4px;font-size:14px">Bahan datang? Ketuk <b>Tambah</b> dan isi jumlahnya. Stok menipis? Kabari pemilik.</p>
+        <div id="matList"></div>
+      </div>
+      <div class="card">
+        <h3 style="margin-bottom:4px">Stok produk</h3>
+        <p class="muted" style="margin:0 0 4px;font-size:14px">Diisi pemilik di admin. Berkurang otomatis setiap terjual.</p>
+        <div id="kProdStock"></div>
+      </div>
+    </div>
   </section>
 </main>
 
@@ -215,15 +265,27 @@
   <div class="row modal-actions" id="enActions"><div class="grow"></div><button class="btn ghost" data-close="mEnd">Batal</button><button class="btn danger" id="enGo">Tutup shift</button></div>
 </div></div>
 
+<!-- Tambah stok bahan -->
+<div class="modal" id="mMat"><div class="box stack" style="max-width:400px">
+  <h2 id="mmTitle" style="margin:0">Tambah stok</h2>
+  <div class="muted" id="mmNow" style="font-size:14px"></div>
+  <div><label class="f" for="mmQty">Jumlah yang datang</label>
+    <div class="row"><input class="in num grow" id="mmQty" inputmode="decimal" autocomplete="off" style="font-size:22px;font-weight:700"><b id="mmUnit" style="min-width:44px"></b></div></div>
+  <div><label class="f" for="mmNote">Keterangan (opsional)</label><input class="in" id="mmNote" maxlength="120" placeholder="Contoh: dari pasar"></div>
+  <p class="muted" style="font-size:13px;margin:0">Setelah disimpan tidak bisa diubah. Kalau salah, kabari pemilik.</p>
+  <div class="err" id="mmErr"></div>
+  <div class="row modal-actions"><div class="grow"></div><button class="btn ghost" data-close="mMat">Batal</button><button class="btn primary" id="mmGo">Simpan</button></div>
+</div></div>
+
 <div class="toast" id="toast"></div>
 
-<script src="../config.js?v=33"></script>
+<script src="../config.js?v=34"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="../assets/common.js?v=33"></script>
+<script src="../assets/common.js?v=34"></script>
 <script>
 "use strict";
 const K = { store: "inikasir-kasir-store", cache: "inikasir-kasir-cache", queue: "inikasir-kasir-queue", shift: "inikasir-kasir-shift", cash: "inikasir-kasir-cash",
-  code: "inikasir-kasir-code" };
+  code: "inikasir-kasir-code", exp: "inikasir-kasir-belanja" };
 let sb = null;
 let storeId = local.get(K.store, null);
 let shop = null, products = [];
@@ -236,23 +298,40 @@ let employees = [];                    // karyawan aktif (kosong = toko tanpa si
 let shift = local.get(K.shift, null);  // shift yang sedang berjalan di HP ini
 let cashOn = false;                    // fitur kas harian aktif (migrasi 005 sudah dipasang)
 let cashSession = local.get(K.cash, null);  // kasir yang sedang dibuka di HP ini {id, opened_at, opening_cash}
+let materials = null;                  // stok bahan; null = fitur belum dipasang (migrasi 012)
+let kTab = "sell";                     // tab yang dibuka: sell (Jualan), belanja, stok
+let expLog = local.get(K.exp, []);     // belanja yang dicatat dari HP ini (untuk ditampilkan; kasir tidak bisa membaca keuangan)
+let exVia = "tunai", matSel = null;
+const EXP_QUICK = ["Bahan baku", "Es batu", "Gas / bahan bakar", "Kemasan / plastik", "Lainnya"];
+const inputOn = () => Array.isArray(materials);
+const saveCache = () => local.set(K.cache, { storeId, shop, products, employees, cashOn, devName, materials });
 
 /* ---------- Tampilan ---------- */
 function show(view) {
-  ["loading", "connect", "open", "pick", "sell"].forEach((v) => {
+  ["loading", "connect", "open", "pick", "sell", "belanja", "stok"].forEach((v) => {
     const el = $("#view-" + v);
     el.classList.toggle("active", v === view);
     if (v === "loading") el.style.display = v === view ? "" : "none";
   });
+  $("#kTabs").hidden = !["sell", "belanja", "stok"].includes(view) || !inputOn();
+  $$("#kTabs button").forEach((b) => { b.classList.toggle("active", b.dataset.ktab === view); b.setAttribute("aria-current", b.dataset.ktab === view ? "page" : "false"); });
   $("#cartBar").classList.toggle("hide", view !== "sell" || !cart.length);
+}
+function setKTab(t) {
+  if (t !== kTab) window.scrollTo(0, 0);
+  kTab = t;
+  if (t === "belanja") renderExp();
+  if (t === "stok") renderStock();
+  gate();
 }
 // Toko yang punya karyawan aktif wajib buka shift dulu sebelum jualan
 function gate() {
   if (!shop) return;
   if (employees.length && !shift) { renderPick(); show("pick"); }
   else if (!employees.length && cashOn && !cashSession) { show("open"); setTimeout(() => $("#opCash").focus(), 60); }
-  else show("sell");
+  else show(inputOn() ? kTab : "sell");
   renderShiftBar();
+  renderStokDot();
 }
 function renderShiftBar() {
   if (shift) {
@@ -272,7 +351,7 @@ function renderHeader() {
 }
 function updateBanner() {
   const n = queue.length, sales = queue.filter((t) => !t.op).length;
-  const what = sales === n ? `${n} penjualan` : sales ? `${sales} penjualan dan catatan kasir` : "Catatan buka/tutup kasir";
+  const what = sales === n ? `${n} penjualan` : sales ? `${sales} penjualan dan ${n - sales} catatan lain` : `${n} catatan`;
   $("#syncBanner").textContent = !n ? "" :
     queueError ? `${what} belum terkirim: ${queueError}` :
     `${what} tersimpan di HP dan akan terkirim otomatis saat ada internet.`;
@@ -329,13 +408,14 @@ async function refreshData(force) {
   if (!force && Date.now() - lastRefresh < 60000) return;
   lastRefresh = Date.now();
   try {
-    const [s, p, e, cs, cc, me] = await Promise.all([
+    const [s, p, e, cs, cc, me, mt] = await Promise.all([
       sb.from("stores").select("*").eq("id", storeId).maybeSingle(),
       sb.from("products").select("*").eq("store_id", storeId).eq("active", true).order("cat").order("name"),
       sb.from("employees").select("id,name,perms").eq("store_id", storeId).eq("active", true).order("name"),
       sb.rpc("current_shift", { p_store: storeId }),
       sb.rpc("current_cash", { p_store: storeId }),
       sb.from("store_members").select("device_name").eq("store_id", storeId).eq("role", "kasir").maybeSingle(),
+      sb.from("materials").select("id,name,unit,stock,min_stock").eq("store_id", storeId).eq("active", true).order("name"),
     ]);
     if (s.error) throw s.error;
     if (p.error) throw p.error;
@@ -351,9 +431,12 @@ async function refreshData(force) {
     if (cc.error) { if (/current_cash|PGRST202|does not exist|schema cache/i.test(cc.error.message || "")) cashOn = false; }
     else { cashOn = true; reconcileCash(cc.data); }
     if (!me.error && me.data) devName = me.data.device_name || "";
-    local.set(K.cache, { storeId, shop, products, employees, cashOn, devName });
+    if (!mt.error) materials = applyPendingMaterials(mt.data.map((m) => ({ ...m, stock: +m.stock, min_stock: +m.min_stock })));
+    else if (!isNetworkError(mt.error)) materials = null;   // tabel bahan belum ada (migrasi 012)
+    saveCache();
     renderHeader(); renderCats(); renderCart();
     gate();
+    if (kTab === "stok") renderStock();
     startLiveProducts();
   } catch (e) {
     if (!shop) {
@@ -372,6 +455,16 @@ async function flushQueue() {
   try {
     while (queue.length) {
       const tx = queue[0];
+      if (tx.op === "expense" || tx.op === "material") {   // belanja & stok bahan masuk (migrasi 012)
+        const r = tx.op === "expense"
+          ? await sb.rpc("record_expense", { p_id: tx.id, p_store: tx.store_id, p_amount: tx.amount, p_cat: tx.cat, p_via: tx.via, p_note: tx.note, p_time: tx.time })
+          : await sb.rpc("material_add", { p_id: tx.id, p_material: tx.material_id, p_qty: tx.qty, p_note: tx.note, p_time: tx.time });
+        // bahan sudah dihapus pemilik: catatan ini tidak bisa dikirim, lepaskan supaya antrean tidak macet
+        if (r.error && !/Bahan tidak ditemukan/.test(r.error.message || "")) { queueError = isNetworkError(r.error) ? "" : errMsg(r.error); break; }
+        queueError = ""; queue.shift(); local.set(K.queue, queue);
+        if (kTab === "belanja") renderExp();
+        continue;
+      }
       if (tx.op) {   // catatan buka / tutup kasir
         const r = tx.op === "open"
           ? await sb.rpc("open_cash", { p_id: tx.id, p_store: tx.store_id, p_opening: tx.opening, p_time: tx.time })
@@ -483,6 +576,111 @@ function setCartOpen(open) {
   renderCart();
 }
 
+/* ---------- Belanja ---------- */
+function renderExp() {
+  const cur = $("#exCat").value.trim();
+  $("#exCats").innerHTML = EXP_QUICK.map((c) => `<button type="button" class="chip${cur === c ? " on" : ""}" data-excat="${esc(c)}">${esc(c)}</button>`).join("");
+  $$("#exVia button").forEach((b) => b.classList.toggle("active", b.dataset.via === exVia));
+  const today = dayKey(new Date());
+  const list = expLog.filter((x) => dayKey(x.time) === today);
+  const pend = new Set(queue.filter((t) => t.op === "expense").map((t) => t.id));
+  const sum = (via) => list.filter((x) => !via || x.via === via).reduce((t, x) => t + x.amount, 0);
+  $("#exList").innerHTML = list.length ? list.map((x) => `
+    <div class="it">
+      <div class="grow"><div style="font-weight:600">${esc(x.cat)}</div>
+        <div class="muted" style="font-size:13px">${fmtTime(x.time)} · ${x.via === "tunai" ? "Tunai" : "QRIS kios"}${x.note ? " · " + esc(x.note) : ""}${pend.has(x.id) ? ` · <span style="color:var(--warn)">belum terkirim</span>` : ""}</div></div>
+      <div class="num amt-out">−${rp(x.amount)}</div>
+    </div>`).join("") + `<table class="ledger" style="margin-top:8px"><tr><td>Tunai</td><td>${rp(sum("tunai"))}</td></tr><tr><td>QRIS kios</td><td>${rp(sum("bank"))}</td></tr><tr class="sum"><td>Total belanja</td><td>${rp(sum())}</td></tr></table>`
+    : `<div class="empty">Belum ada belanja yang dicatat hari ini.</div>`;
+}
+function submitExpense(e) {
+  e.preventDefault();
+  const amount = parseNum($("#exAmt").value), cat = $("#exCat").value.trim(), note = $("#exNote").value.trim();
+  $("#exErr").textContent = "";
+  if (!amount) { $("#exErr").textContent = "Isi nominal belanja."; return $("#exAmt").focus(); }
+  if (!cat) { $("#exErr").textContent = "Pilih atau tulis untuk apa belanjanya."; return $("#exCat").focus(); }
+  if (!confirm(`Simpan belanja "${cat}" ${rp(amount)} pakai ${exVia === "tunai" ? "uang laci" : "QRIS kios"}?\nSetelah disimpan tidak bisa diubah.`)) return;
+  const ex = { op: "expense", id: uuid(), store_id: storeId, amount, cat, via: exVia, note, time: new Date().toISOString() };
+  queue.push(ex); local.set(K.queue, queue);
+  const week = Date.now() - 7 * 864e5;
+  expLog = [{ id: ex.id, amount, cat, via: exVia, note, time: ex.time }, ...expLog].filter((x) => new Date(x.time) > week).slice(0, 200);
+  local.set(K.exp, expLog);
+  $("#exAmt").value = ""; $("#exCat").value = ""; $("#exNote").value = ""; exVia = "tunai";
+  renderExp(); updateBanner(); toast(`Belanja ${rp(amount)} tercatat`);
+  flushQueue();
+}
+
+/* ---------- Stok bahan & produk (karyawan hanya bisa menambah stok bahan) ---------- */
+const fmtQty = (n) => Number(n).toLocaleString("id-ID", { maximumFractionDigits: 2 });
+// "1,5" atau "1.5" = satu setengah; "1.000" atau "1.000,5" = ribuan
+function parseQty(v) {
+  v = String(v).trim().replace(/\s/g, "");
+  if (v.includes(",")) v = v.replace(/\./g, "").replace(",", ".");
+  else if (/^\d{1,3}(\.\d{3})+$/.test(v)) v = v.replace(/\./g, "");
+  const n = Number(v);
+  return isFinite(n) ? Math.round(n * 100) / 100 : NaN;
+}
+const matState = (m) => (m.stock <= 0 ? "out" : m.min_stock > 0 && m.stock <= m.min_stock ? "low" : "");
+const prodState = (p) => (!p.track_stock || p.stock <= 0 ? "out" : p.stock <= 5 ? "low" : "");
+function applyPendingMaterials(list) {
+  queue.filter((t) => t.op === "material").forEach((t) => { const m = list.find((x) => x.id === t.material_id); if (m) m.stock += t.qty; });
+  return list;
+}
+function renderStokDot() {
+  const n = inputOn() ? materials.filter((m) => matState(m)).length : 0;
+  $("#kStokDot").hidden = !n;
+  $("#kStokDot").textContent = n || "";
+}
+function renderStock() {
+  if (!inputOn()) return;
+  const rank = { out: 0, low: 1, "": 2 };
+  const mats = [...materials].sort((a, b) => rank[matState(a)] - rank[matState(b)] || a.name.localeCompare(b.name));
+  const lowM = mats.filter((m) => matState(m)), tracked = products.filter((p) => "track_stock" in p);
+  const lowP = tracked.filter((p) => prodState(p));
+  const state = (st) => (st === "out" ? "Habis" : st === "low" ? "Menipis" : "Aman");
+  $("#stokAlert").innerHTML = lowM.length || lowP.length
+    ? `<div class="note bad"><b>Perlu dikabari ke pemilik:</b> ${[...lowM.map((m) => `${esc(m.name)} (${fmtQty(m.stock)} ${esc(m.unit)})`), ...lowP.map((p) => `${esc(p.name)} (${p.track_stock ? p.stock : 0})`)].join(", ")}</div>` : "";
+  $("#matList").innerHTML = mats.length ? mats.map((m) => { const st = matState(m); return `
+    <div class="stk">
+      <div class="stk-top">
+        <div class="grow"><div style="font-weight:600">${esc(m.name)}</div>
+          <div class="stk-state ${st ? "bad" : "ok"}">${state(st)}${m.min_stock > 0 ? ` · batas ${fmtQty(m.min_stock)} ${esc(m.unit)}` : ""}</div></div>
+        <div class="stk-n${st ? " low" : ""}">${fmtQty(m.stock)}<small>${esc(m.unit)}</small></div>
+        <button class="btn small" data-matadd="${m.id}" data-ic="plus">Tambah</button>
+      </div>
+    </div>`; }).join("")
+    : `<div class="empty">Belum ada bahan. Pemilik menambahkan daftar bahan di admin, menu Produk, tab Bahan.</div>`;
+  const prods = [...tracked].sort((a, b) => rank[prodState(a)] - rank[prodState(b)] || a.name.localeCompare(b.name));
+  $("#kProdStock").innerHTML = prods.length ? prods.map((p) => { const st = prodState(p); return `
+    <div class="stk">
+      <div class="stk-top">
+        <div class="grow"><div style="font-weight:600">${esc(p.name)}</div><div class="stk-state ${st ? "bad" : "ok"}">${!p.track_stock ? "Belum diisi pemilik" : state(st)}</div></div>
+        <div class="stk-n${st ? " low" : ""}">${p.track_stock ? p.stock : 0}<small>pcs</small></div>
+      </div>
+    </div>`; }).join("") : `<div class="empty">Belum ada produk.</div>`;
+  applyIcons($("#matList"));
+  renderStokDot();
+}
+function openMatAdd(id) {
+  matSel = materials.find((m) => m.id === id); if (!matSel) return;
+  $("#mmTitle").textContent = "Tambah stok " + matSel.name;
+  $("#mmNow").textContent = `Sisa sekarang ${fmtQty(matSel.stock)} ${matSel.unit}`;
+  $("#mmUnit").textContent = matSel.unit;
+  $("#mmQty").value = ""; $("#mmNote").value = ""; $("#mmErr").textContent = "";
+  openModal("mMat"); setTimeout(() => $("#mmQty").focus(), 60);
+}
+function submitMatAdd() {
+  if (!matSel) return;
+  const qty = parseQty($("#mmQty").value);
+  if (!(qty > 0) || qty > 1000000) return ($("#mmErr").textContent = "Isi jumlah yang datang, contoh 2 atau 1,5.");
+  const t = { op: "material", id: uuid(), store_id: storeId, material_id: matSel.id, qty, note: $("#mmNote").value.trim(), time: new Date().toISOString() };
+  queue.push(t); local.set(K.queue, queue);
+  matSel.stock = Math.round((matSel.stock + qty) * 100) / 100; saveCache();
+  closeModal("mMat"); renderStock(); updateBanner();
+  toast(`Stok ${matSel.name} +${fmtQty(qty)} ${matSel.unit}`);
+  flushQueue();
+}
+
 /* ---------- Bayar ---------- */
 function openPay() {
   if (!cart.length) return;
@@ -534,7 +732,7 @@ function finishPay() {
   queue.push(tx); local.set(K.queue, queue);
   // kurangi sisa stok di layar sekarang juga (server tetap jadi patokan saat sinkron)
   tx.items.forEach((i) => { const p = products.find((x) => x.id === i.product_id); if (p && p.track_stock) p.stock -= i.qty; });
-  local.set(K.cache, { storeId, shop, products, employees, cashOn, devName });
+  saveCache();
   lastTx = tx;
   cart = []; renderCart();
   closeModal("mPay");
@@ -729,10 +927,14 @@ async function submitEndShift() {
 
 /* ---------- Event ---------- */
 document.addEventListener("click", (e) => {
-  const t = e.target.closest("[data-pid],[data-cat],[data-inc],[data-dec],[data-close],[data-method],[data-cash],[data-pick],[data-void],#btnShiftMenu,#enGo,#btnCloseCash,#clGo");
+  const t = e.target.closest("[data-pid],[data-cat],[data-inc],[data-dec],[data-close],[data-method],[data-cash],[data-pick],[data-void],[data-ktab],[data-excat],[data-via],[data-matadd],#btnShiftMenu,#enGo,#btnCloseCash,#clGo");
   if (!t) return;
   const d = t.dataset;
-  if (t.id === "btnCloseCash") openCloseCash();
+  if (d.ktab) setKTab(d.ktab);
+  else if (d.excat) { $("#exCat").value = d.excat; renderExp(); }
+  else if (d.via) { exVia = d.via; renderExp(); }
+  else if (d.matadd) openMatAdd(d.matadd);
+  else if (t.id === "btnCloseCash") openCloseCash();
   else if (t.id === "clGo") submitCloseCash();
   else if (t.id === "btnShiftMenu") openShiftMenu();
   else if (t.id === "enGo") submitEndShift();
@@ -756,6 +958,11 @@ bindMoneyInput($("#cashIn"));
 $("#cashIn").addEventListener("input", updateChange);
 $("#cashIn").addEventListener("keydown", (e) => { if (e.key === "Enter" && !$("#btnFinish").disabled) finishPay(); });
 $("#btnFinish").onclick = finishPay;
+$("#expForm").addEventListener("submit", submitExpense);
+$("#exCat").addEventListener("input", () => $$("#exCats .chip").forEach((b) => b.classList.toggle("on", b.dataset.excat === $("#exCat").value.trim())));
+bindMoneyInput($("#exAmt"));
+$("#mmGo").onclick = submitMatAdd;
+$("#mmQty").addEventListener("keydown", (e) => { if (e.key === "Enter") submitMatAdd(); });
 $("#stGo").onclick = submitStart;
 $("#stPin").addEventListener("keydown", (e) => { if (e.key === "Enter") submitStart(); });
 $("#stCash").addEventListener("keydown", (e) => { if (e.key === "Enter") submitStart(); });
@@ -776,10 +983,12 @@ let liveProd = null, liveProdT = null;
 let liveProdOk = false, liveProdHeal = null, liveProdTries = 0;
 function startLiveProducts() {
   if (liveProd || !sb || !storeId) return;
+  const onChange = () => { clearTimeout(liveProdT); liveProdT = setTimeout(() => refreshData(true), 800); };
   liveProd = sb.channel("kasir-produk-" + storeId)
-    .on("postgres_changes", { event: "*", schema: "public", table: "products", filter: `store_id=eq.${storeId}` }, () => {
-      clearTimeout(liveProdT); liveProdT = setTimeout(() => refreshData(true), 800);
-    })
+    .on("postgres_changes", { event: "*", schema: "public", table: "products", filter: `store_id=eq.${storeId}` }, onChange);
+  // stok bahan ditambah karyawan lain / diubah pemilik (hanya kalau tabelnya sudah ada, supaya channel tidak gagal)
+  if (inputOn()) liveProd.on("postgres_changes", { event: "*", schema: "public", table: "materials", filter: `store_id=eq.${storeId}` }, onChange);
+  liveProd
     .subscribe((status) => {
       const was = liveProdOk;
       liveProdOk = status === "SUBSCRIBED";
@@ -818,6 +1027,7 @@ initUpdates(() => !cart.length);
   const cache = local.get(K.cache, null);
   if (storeId && cache && cache.storeId === storeId) {
     shop = cache.shop; products = cache.products; employees = cache.employees || []; cashOn = !!cache.cashOn; devName = cache.devName || "";
+    materials = Array.isArray(cache.materials) ? cache.materials : null;
     renderHeader(); renderCats(); renderCart(); gate();
   }
   const { data: { session }, error } = await sb.auth.getSession();
