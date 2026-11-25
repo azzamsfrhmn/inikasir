@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=34">
+<link rel="stylesheet" href="../assets/app.css?v=35">
 <link rel="manifest" href="../manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="../assets/icons/kasir.svg">
 <link rel="apple-touch-icon" href="../assets/icons/kasir-180.png">
@@ -42,7 +42,7 @@
   <button class="btn ghost install-only choose-install" data-install>Pasang IniKasir di layar utama</button>
 </main>
 
-<script src="../config.js?v=34"></script>
+<script src="../config.js?v=35"></script>
 <script>
 // Keadaan tiap peran dibaca dari simpanan HP saja (tanpa internet), supaya halaman ini cepat
 (function () {
@@ -56,7 +56,7 @@
   document.getElementById("adminState").textContent = email ? "Masuk sebagai " + email : "Masuk dengan email pemilik toko.";
 })();
 </script>
-<script src="../assets/common.js?v=34"></script>
+<script src="../assets/common.js?v=35"></script>
 <script>
 document.getElementById("installHint").textContent = installHintText("IniKasir");
 if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("../sw.js").catch(() => {});

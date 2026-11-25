@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=34">
+<link rel="stylesheet" href="../assets/app.css?v=35">
 <link rel="manifest" href="../manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="../assets/icons/kasir.svg">
 <link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/kasir-192.png">
@@ -155,14 +155,16 @@
   <!-- Stok: lihat sisa, tambah stok bahan yang datang -->
   <section class="page" id="view-stok">
     <div class="kpage">
+      <div class="seg" id="stokTabs" style="margin-bottom:12px">
+        <button data-stab="bahan" class="active">Bahan<span class="kdot" id="stDotB" hidden></span></button>
+        <button data-stab="produk">Produk<span class="kdot" id="stDotP" hidden></span></button>
+      </div>
       <div id="stokAlert"></div>
-      <div class="card">
-        <h3 style="margin-bottom:4px">Stok bahan</h3>
+      <div class="card" id="stBahan">
         <p class="muted" style="margin:0 0 4px;font-size:14px">Bahan datang? Ketuk <b>Tambah</b> dan isi jumlahnya. Stok menipis? Kabari pemilik.</p>
         <div id="matList"></div>
       </div>
-      <div class="card">
-        <h3 style="margin-bottom:4px">Stok produk</h3>
+      <div class="card" id="stProduk" hidden>
         <p class="muted" style="margin:0 0 4px;font-size:14px">Diisi pemilik di admin. Berkurang otomatis setiap terjual.</p>
         <div id="kProdStock"></div>
       </div>
@@ -279,9 +281,9 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="../config.js?v=34"></script>
+<script src="../config.js?v=35"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="../assets/common.js?v=34"></script>
+<script src="../assets/common.js?v=35"></script>
 <script>
 "use strict";
 const K = { store: "inikasir-kasir-store", cache: "inikasir-kasir-cache", queue: "inikasir-kasir-queue", shift: "inikasir-kasir-shift", cash: "inikasir-kasir-cash",
@@ -626,8 +628,10 @@ function applyPendingMaterials(list) {
   queue.filter((t) => t.op === "material").forEach((t) => { const m = list.find((x) => x.id === t.material_id); if (m) m.stock += t.qty; });
   return list;
 }
+let stokTab = "bahan";
+$("#stokTabs").addEventListener("click", (e) => { const b = e.target.closest("[data-stab]"); if (!b) return; stokTab = b.dataset.stab; renderStock(); });
 function renderStokDot() {
-  const n = inputOn() ? materials.filter((m) => matState(m)).length : 0;
+  const n = inputOn() ? materials.filter((m) => matState(m)).length + products.filter((p) => "track_stock" in p && prodState(p)).length : 0;
   $("#kStokDot").hidden = !n;
   $("#kStokDot").textContent = n || "";
 }
@@ -638,8 +642,13 @@ function renderStock() {
   const lowM = mats.filter((m) => matState(m)), tracked = products.filter((p) => "track_stock" in p);
   const lowP = tracked.filter((p) => prodState(p));
   const state = (st) => (st === "out" ? "Habis" : st === "low" ? "Menipis" : "Aman");
-  $("#stokAlert").innerHTML = lowM.length || lowP.length
-    ? `<div class="note bad"><b>Perlu dikabari ke pemilik:</b> ${[...lowM.map((m) => `${esc(m.name)} (${fmtQty(m.stock)} ${esc(m.unit)})`), ...lowP.map((p) => `${esc(p.name)} (${p.track_stock ? p.stock : 0})`)].join(", ")}</div>` : "";
+  const isB = stokTab === "bahan";
+  $$("#stokTabs button").forEach((b) => b.classList.toggle("active", b.dataset.stab === stokTab));
+  $("#stBahan").hidden = !isB; $("#stProduk").hidden = isB;
+  const dot = (el, n) => { el.hidden = !n; el.textContent = n || ""; };
+  dot($("#stDotB"), lowM.length); dot($("#stDotP"), lowP.length);
+  const lowList = isB ? lowM.map((m) => `${esc(m.name)} (${fmtQty(m.stock)} ${esc(m.unit)})`) : lowP.map((p) => `${esc(p.name)} (${p.track_stock ? p.stock : 0})`);
+  $("#stokAlert").innerHTML = lowList.length ? `<div class="note bad"><b>Perlu dikabari ke pemilik:</b> ${lowList.join(", ")}</div>` : "";
   $("#matList").innerHTML = mats.length ? mats.map((m) => { const st = matState(m); return `
     <div class="stk">
       <div class="stk-top">
@@ -732,7 +741,7 @@ function finishPay() {
   queue.push(tx); local.set(K.queue, queue);
   // kurangi sisa stok di layar sekarang juga (server tetap jadi patokan saat sinkron)
   tx.items.forEach((i) => { const p = products.find((x) => x.id === i.product_id); if (p && p.track_stock) p.stock -= i.qty; });
-  saveCache();
+  saveCache(); renderStokDot();
   lastTx = tx;
   cart = []; renderCart();
   closeModal("mPay");

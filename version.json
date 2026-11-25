@@ -1,11 +1,7 @@
 {
-  "version": "1.17",
-  "date": "2026-11-25",
+  "version": "1.18",
+  "date": "2026-11-26",
   "notes": [
-    "Karyawan bisa mencatat belanja (tunai atau QRIS kios) dari HP kasir",
-    "Karyawan bisa menambah stok bahan dan melihat sisa stok bahan & produk",
-    "Pemilik: saldo tunai, rekening, dan total di menu Keuangan",
-    "Pemilik: daftar bahan (tambah, kurangi, koreksi) di menu Produk",
-    "Pemilik: catat kasbon karyawan, bayar, atau potong gaji"
+    "Halaman Stok di kasir dibagi dua: Bahan dan Produk, masing-masing dengan tanda yang menipis"
   ]
 }

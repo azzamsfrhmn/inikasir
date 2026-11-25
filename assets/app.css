@@ -644,4 +644,4 @@ header.top .hdr-stat{margin-left:auto}
 .bal .tot span,.bal .tot b{color:var(--leaf-ink)}
 @media (min-width:640px){.bal{grid-template-columns:1fr 1fr 1fr}.bal .tot{grid-column:auto}}
 .danger-text{color:var(--bad)}
-#prodTabs .kdot{display:inline-block;margin-left:4px}
+#prodTabs .kdot,#stokTabs .kdot{display:inline-block;margin-left:4px}
